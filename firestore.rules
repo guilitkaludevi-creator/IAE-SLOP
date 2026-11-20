@@ -31,6 +31,24 @@ service cloud.firestore {
     //   - Consentement strict : `consent` doit obligatoirement valoir `true`.
     //   - Immutabilité : La date de création `createdAt` et l'`email` ne peuvent pas être altérés.
     //
+    // Collection : posts
+    // Document ID : Identifiant automatique Firestore ({postId})
+    //
+    // Fields :
+    //   - id        : string    (obligatoire, 10 à 100 caractères) - UUID auto-généré
+    //   - type      : string    (obligatoire, enum: "job_offer" | "event" | "announcement") - Type de publication
+    //   - author    : string    (obligatoire, 1 à 80 caractères) - Nom de l'auteur
+    //   - title     : string    (obligatoire, 1 à 200 caractères) - Titre du post
+    //   - content   : string    (obligatoire, 1 à 2000 caractères) - Contenu du post
+    //   - date      : string    (optionnel, 0 à 100 caractères) - Date ISO pour événements
+    //   - location  : string    (optionnel, 0 à 100 caractères) - Lieu de l'événement
+    //   - createdAt : timestamp (obligatoire, horodatage récent serveur) - Date de publication
+    //
+    // Invariants de sécurité (posts) :
+    //   - Création ouverte avec validation stricte du schéma et des types.
+    //   - Mise à jour et suppression réservées aux administrateurs (Custom Claim admin).
+    //   - Immutabilité : `id` et `createdAt` ne peuvent pas être modifiés.
+    //
     // ===============================================================
 
     // ===============================================================
@@ -131,6 +149,35 @@ service cloud.firestore {
       return isAdmin() || isEmailOwner(resource.data.email);
     }
 
+    // ---------------------------------------------------------------
+    // Domain Validator : posts (timeline / fil d'actualités)
+    // ---------------------------------------------------------------
+
+    // Valide la structure et les contraintes d'un document post
+    function isValidPost(data) {
+      let requiredFields = ['id', 'type', 'author', 'title', 'content', 'createdAt'];
+      let allowedFields  = ['id', 'type', 'author', 'title', 'content', 'date', 'location', 'createdAt'];
+      let validTypes     = ['job_offer', 'event', 'announcement'];
+
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             // Champ id : identifiant UUID auto-généré (10 à 100 caractères)
+             validStringLength('id', 10, 100) &&
+             // Champ type : catégorie du post (offre emploi, événement, annonce)
+             validStringLength('type', 1, 30) &&
+             data.type in validTypes &&
+             // Champ author : nom de l'auteur (1 à 80 caractères)
+             validStringLength('author', 1, 80) &&
+             // Champ title : titre du post (1 à 200 caractères)
+             validStringLength('title', 1, 200) &&
+             // Champ content : contenu du post (1 à 2000 caractères)
+             validStringLength('content', 1, 2000) &&
+             // Champ date : optionnel, date ISO pour les événements (0 à 100 caractères)
+             (!('date' in data) || (data.date is string && data.date.size() <= 100)) &&
+             // Champ location : optionnel, lieu de l'événement (0 à 100 caractères)
+             (!('location' in data) || (data.location is string && data.location.size() <= 100));
+    }
+
     // ===============================================================
     // Collection Rules
     // ===============================================================
@@ -148,6 +195,27 @@ service cloud.firestore {
 
       // 4. Suppression contrôlée (bloquée par défaut pour les tiers / anonymes)
       allow delete: if canDeleteAlumni();
+    }
+
+    // ---------------------------------------------------------------
+    // Collection : posts (fil d'actualités / offres / événements)
+    // ---------------------------------------------------------------
+
+    match /posts/{postId} {
+      // 1. Lecture publique du fil d'actualités
+      allow read: if true;
+
+      // 2. Création d'un post avec validation stricte de schéma
+      allow create: if isValidPost(request.resource.data) &&
+                       isValidCreationTime(request.resource.data.createdAt);
+
+      // 3. Modification réservée aux administrateurs
+      allow update: if isAdmin() &&
+                       isValidPost(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'createdAt']);
+
+      // 4. Suppression réservée aux administrateurs
+      allow delete: if isAdmin();
     }
 
     // ===============================================================

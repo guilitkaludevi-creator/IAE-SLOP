@@ -1,4 +1,4 @@
-﻿@layer tokens, reset, shell, components, pages, responsive, motion;
+@layer tokens, reset, shell, components, pages, responsive, motion;
 
 @layer tokens {
   :root {
@@ -77,9 +77,9 @@
 
 @layer shell {
   body::before { content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none; background: radial-gradient(ellipse 75% 50% at 78% -8%, rgba(58, 148, 160, .12), transparent 65%), radial-gradient(ellipse 58% 55% at -12% 70%, rgba(78, 102, 178, .09), transparent 64%); }
-  .ambient { position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(60px); opacity: .16; transform: translate3d(0,0,0); }
+  .ambient { position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(60px); opacity: .10; transform: translate3d(0,0,0); will-change: transform; }
   .ambient-a { width: 390px; height: 390px; top: 20%; right: -250px; background: #39bbab; animation: ambient-drift 17s ease-in-out infinite alternate; }
-  .ambient-b { width: 310px; height: 310px; left: 14%; bottom: -250px; background: #6369c9; opacity: .12; animation: ambient-drift 22s ease-in-out -5s infinite alternate-reverse; }
+  .ambient-b { width: 310px; height: 310px; left: 14%; bottom: -250px; background: #6369c9; opacity: .08; animation: ambient-drift 22s ease-in-out -5s infinite alternate-reverse; }
   @keyframes ambient-drift { to { translate: -16px 20px; scale: 1.07; } }
   .app-shell { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr); }
   .sidebar { position: sticky; top: 0; display: flex; flex-direction: column; height: 100vh; min-height: 680px; padding: 26px 16px 18px; border-right: 1px solid var(--stroke); background: rgba(10, 19, 30, .65); backdrop-filter: blur(22px) saturate(1.25); -webkit-backdrop-filter: blur(22px) saturate(1.25); z-index: 20; }
@@ -1203,12 +1203,15 @@
     background: var(--surface-strong);
     border: 1px solid var(--stroke-strong);
     box-shadow: var(--shadow);
-    z-index: 999;
+    z-index: 9999;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    animation: notif-enter .2s var(--ease-out);
   }
+  .notif-popover[hidden] { display: none !important; }
+  @keyframes notif-enter { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: none; } }
   .notif-header {
     display: flex;
     align-items: center;
@@ -1379,4 +1382,57 @@
     padding-top: 10px;
     border-top: 1px solid var(--stroke);
     font-size: 12px;
+  }
+
+
+  /* --- RH TABBED SECTIONS --- */
+  .rh-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+    background: var(--surface-soft);
+    border-radius: 14px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .rh-tabs::-webkit-scrollbar { display: none; }
+  .rh-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 650;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all .2s var(--ease-out);
+    min-height: 44px;
+  }
+  .rh-tab:hover { color: var(--text); background: rgba(255,255,255,.06); }
+  .rh-tab:active { transform: scale(.97); }
+  .rh-tab.is-active {
+    color: var(--text);
+    background: var(--surface);
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    font-weight: 700;
+  }
+  .rh-tab-panel { display: none; animation: rh-tab-in .25s var(--ease-out); }
+  .rh-tab-panel.is-active { display: block; }
+  @keyframes rh-tab-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* --- IMPROVED TRANSITIONS --- */
+  .content-card, .glass-panel, .focus-card, .software-card, .convention-card, .peer-card, .actor-card, .etp-source-card, .timeline-post {
+    transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .2s var(--ease-out);
+  }
+  .content-card:active, .focus-card:active, .software-card:active { transform: scale(.98); }
+
+  /* --- RESPONSIVE AMBIENT FIX --- */
+  @media (max-width: 768px) {
+    .ambient { display: none !important; }
   }

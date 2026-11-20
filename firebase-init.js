@@ -152,3 +152,124 @@ export async function deleteAlumniFromFirestore(id) {
 window.saveAlumniToFirestore = saveAlumniToFirestore;
 window.subscribeToAlumni = subscribeToAlumni;
 window.deleteAlumniFromFirestore = deleteAlumniFromFirestore;
+
+/**
+ * Enregistre un post (annonce/événement) dans Cloud Firestore (collection "posts")
+ * @param {Object} postData Données du post
+ * @returns {Promise<string>} Identifiant du document créé
+ */
+export async function savePostToFirestore(postData) {
+  if (!db) {
+    throw new Error("Firestore n'est pas encore initialisé ou inaccessible.");
+  }
+  const cleanData = {
+    type: String(postData.type || "job_offer").trim(),
+    title: String(postData.title || "").trim().slice(0, 120),
+    organization: String(postData.organization || "").trim().slice(0, 100),
+    location: String(postData.location || "").trim().slice(0, 80),
+    content: String(postData.content || "").trim().slice(0, 600),
+    contract: String(postData.contract || "").trim().slice(0, 80),
+    contact: String(postData.contact || "").trim().slice(0, 120),
+    eventDate: String(postData.eventDate || "").trim().slice(0, 80),
+    authorName: String(postData.author?.name || "Membre Alumni").trim().slice(0, 80),
+    authorRole: String(postData.author?.role || "").trim().slice(0, 100),
+    authorAvatar: String(postData.author?.avatar || "MA").trim().slice(0, 4),
+    authorLinkedin: String(postData.author?.linkedin || "").trim().slice(0, 200),
+    likes: Number(postData.likes) || 0,
+    commentsCount: Number(postData.commentsCount) || 0,
+    rsvp: postData.rsvp || null,
+    createdAt: serverTimestamp()
+  };
+  const docRef = await addDoc(collection(db, "posts"), cleanData);
+  console.log("[Firestore] Nouveau post créé :", docRef.id);
+  return docRef.id;
+}
+
+/**
+ * Écoute en temps réel les posts de la collection "posts"
+ * @param {Function} onUpdate Callback recevant la liste actualisée des posts
+ * @param {Function} onError Callback en cas d'erreur
+ * @returns {Function} Fonction pour couper l'écouteur
+ */
+export function subscribeToPostsFirestore(onUpdate, onError) {
+  if (!db) {
+    if (onError) onError(new Error("Firestore non disponible"));
+    return () => {};
+  }
+  try {
+    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    return onSnapshot(q, (snapshot) => {
+      const list = snapshot.docs.map(docSnap => {
+        const d = docSnap.data();
+        let createdAtIso = new Date().toISOString();
+        if (d.createdAt && typeof d.createdAt.toDate === "function") {
+          createdAtIso = d.createdAt.toDate().toISOString();
+        }
+        // Calculate relative date
+        const now = new Date();
+        const created = new Date(createdAtIso);
+        const diffMs = now - created;
+        const diffMin = Math.floor(diffMs / 60000);
+        const diffH = Math.floor(diffMs / 3600000);
+        const diffD = Math.floor(diffMs / 86400000);
+        let dateLabel = "À l'instant";
+        if (diffD > 0) dateLabel = `Il y a ${diffD} jour${diffD > 1 ? "s" : ""}`;
+        else if (diffH > 0) dateLabel = `Il y a ${diffH} heure${diffH > 1 ? "s" : ""}`;
+        else if (diffMin > 1) dateLabel = `Il y a ${diffMin} minutes`;
+
+        return {
+          id: docSnap.id,
+          type: d.type || "job_offer",
+          title: d.title || "",
+          organization: d.organization || "",
+          location: d.location || "",
+          content: d.content || "",
+          contract: d.contract || "",
+          contact: d.contact || "",
+          eventDate: d.eventDate || "",
+          author: {
+            name: d.authorName || "Membre Alumni",
+            role: d.authorRole || "",
+            avatar: d.authorAvatar || "MA",
+            linkedin: d.authorLinkedin || ""
+          },
+          likes: d.likes || 0,
+          commentsCount: d.commentsCount || 0,
+          isLiked: false,
+          rsvp: d.rsvp || undefined,
+          date: dateLabel,
+          createdAt: createdAtIso,
+          isRemote: true
+        };
+      });
+      console.log(`[Firestore] ${list.length} posts synchronisés en temps réel`);
+      if (typeof onUpdate === "function") onUpdate(list);
+    }, (err) => {
+      console.warn("[Firestore] Problème d'écoute posts :", err.message);
+      if (typeof onError === "function") onError(err);
+    });
+  } catch (err) {
+    console.warn("[Firestore] Exception abonnement posts :", err.message);
+    if (typeof onError === "function") onError(err);
+    return () => {};
+  }
+}
+
+/**
+ * Supprime un post de Firestore
+ * @param {string} id ID du document
+ */
+export async function deletePostFromFirestore(id) {
+  if (!db || !id) return;
+  try {
+    await deleteDoc(doc(db, "posts", id));
+    console.log("[Firestore] Post supprimé :", id);
+  } catch (err) {
+    console.warn("[Firestore] Impossible de supprimer le post :", err.message);
+    throw err;
+  }
+}
+
+window.savePostToFirestore = savePostToFirestore;
+window.subscribeToPostsFirestore = subscribeToPostsFirestore;
+window.deletePostFromFirestore = deletePostFromFirestore;

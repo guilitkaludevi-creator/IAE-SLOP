@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
 "use strict";
 
 const { ACTORS, CONVENTIONS, DOCUMENTS, ESTABLISHMENTS, FAQ, JOBS, MAP_EDGES, MAP_NODES, MEETINGS, NAV, RESEARCH_AREAS, SOFTWARES, SOURCES, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS } = window.MOSAQUE_DATA;
@@ -46,12 +46,12 @@ const state = {
   queries: { establishments:"", jobs:"", meetings:"", documents:"", actors:"", faq:"", software:"", peers:"", supportJobs:"", qualityTools:"", laws:"" },
   favorites: readJSON(STORE.favorites, []),
   docChecks: readJSON(STORE.checks, {}),
-  peers: readJSON(STORE.peers, (SAMPLE_PEERS && SAMPLE_PEERS.length) ? SAMPLE_PEERS : []),
+  peers: readJSON(STORE.peers, []),
   mapFilter: "Tout",
   auth: readJSON(STORE.auth, { isUnlocked: true, plan: "universal", role: "dirigeant" }),
-  posts: readJSON(STORE.posts, TIMELINE_POSTS || []),
+  posts: readJSON(STORE.posts, []),
   rsvps: readJSON(STORE.rsvps, {}),
-  notifs: readJSON(STORE.notifs, SAMPLE_NOTIFICATIONS || []),
+  notifs: readJSON(STORE.notifs, []),
   editingPeerId: null,
   notifsOpen: false,
   timelineComposeType: "job_offer",
@@ -224,7 +224,7 @@ function navMarkup() {
 function syncNavigation() {
   $("#desktop-nav").innerHTML = navMarkup();
   $$('.bottom-link').forEach(link => {
-    const toolsPage = ["reunions","documents","rh","logiciels","qualite","rex","audit","politique"].includes(state.page);
+    const toolsPage = ["reunions","documents","rh","logiciels","qualite","rex","audit","politique","timeline"].includes(state.page);
     const active = link.dataset.nav === state.page || (toolsPage && link.dataset.nav === "documents");
     link.classList.toggle("is-active", active);
     if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
@@ -273,6 +273,7 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
       logiciels:renderSoftware,
       carte:renderMap,
       reseau:renderNetwork,
+      timeline:renderTimeline,
       qualite:renderQuality,
       rex:renderRex,
       politique:renderHealthPolicy,
@@ -292,6 +293,8 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
     if (page === "reseau") {
       renderPeerList();
       peerMultiSelect.init();
+    }
+    if (page === "timeline") {
       const feed = $("#timeline-feed");
       if (feed) feed.innerHTML = renderTimelinePosts();
     }
@@ -608,14 +611,26 @@ function renumberEtptRows() {
 }
 function renderFaq() {
   return `<section class="page" aria-labelledby="faq-title">${sectionHead("BOÎTE À OUTILS · RH & RECRUTEMENT", "Les bons repères RH, <span class=\"text-gradient\">calculés et prêts à l’emploi.</span>", "Conventions, temps de travail, recrutement et effectifs. Les règles dépendent du statut, de l’accord applicable, du calendrier de l’établissement et des délégations.", `<button class="button subtle" data-nav="logiciels">${icon("layers",16)}Logiciels métiers</button><button class="button subtle" data-action="open-sources">${icon("book",16)}Sources</button>`)}
-    <div class="rh-jumpbar" aria-label="Accès rapide"><button class="pill" data-action="scroll-tool-section" data-target="outil-etp">Calcul ETP</button><button class="pill" data-action="scroll-tool-section" data-target="outil-forfait">Forfait jours</button><button class="pill" data-action="scroll-tool-section" data-target="conventions">Conventions</button><button class="pill" data-action="scroll-tool-section" data-target="outil-fiche-poste">Fiche de poste</button><button class="pill" data-action="scroll-tool-section" data-target="faq-search">Questions RH</button></div>
-    <div class="rh-calculator-grid section-block">${renderEtpCalculator()}${renderForfaitCalculator()}</div>
-    <section class="section-block" id="conventions"><div class="section-title-row"><div><span class="eyebrow">DROIT SOCIAL · REPÈRES DE BRANCHE</span><h2>Conventions et statuts courants</h2><p>Quelques repères fréquents ; le champ conventionnel de l’employeur doit toujours être confirmé.</p></div></div><div class="convention-grid">${renderConventionCards()}</div><div class="notice section-block">${icon("info",17)}<span><strong>Vérification pratique.</strong> Regardez l’intitulé et l’IDCC sur le bulletin de paie, recherchez l’employeur avec son SIRET, puis relisez le champ d’application, la convention consolidée, les avenants et les accords d’entreprise. L’APE est un indice, pas à lui seul la preuve de la convention applicable.</span></div>${sourceLinks(["collectiveAgreement"])}</section>
-    ${renderRecruitmentGuides()}
-    ${renderJobDescriptionBuilder()}
-    <section class="section-block" id="etp-disponibles"><div class="section-title-row"><div><span class="eyebrow">OÙ CHERCHER LES MOYENS</span><h2>Retrouver les ETP réellement disponibles</h2><p>Le chiffre dépend de la question posée : autorisation, budget, postes pourvus ou présence réelle.</p></div></div><div class="etp-source-grid"><article class="etp-source-card"><strong>Emplois autorisés / financés</strong><span>Notifications de financement, CPOM, budget prévisionnel ou EPRD/ERRD selon le secteur et le cadre de l’établissement ; tableau d’emplois pour le public.</span></article><article class="etp-source-card"><strong>Postes pourvus</strong><span>Tableau des effectifs RH, contrats, quotités, paie et date d’arrêté. Déduire les vacances et distinguer les postes ouverts des personnes recrutées.</span></article><article class="etp-source-card"><strong>Capacité présente</strong><span>Planning, absences, restrictions, formation, intérim, heures supplémentaires, repos et compétences minimales nécessaires au service.</span></article><article class="etp-source-card"><strong>À rapprocher</strong><span>Budget RH, masse salariale, remplacements et ETP par service/métier. Faire valider les définitions par RH et finances avant de comparer.</span></article></div><p class="formula-note">Un poste budgété vacant n’est pas une personne disponible ; un effectif physique n’est pas une capacité équivalente temps plein. Documentez la date, le périmètre et la définition de chaque chiffre.</p>${sourceLinks(["etpGuide","cnsaData"])}</section>
-    <section class="section-block" id="faq-search"><div class="section-title-row"><div><span class="eyebrow">RÉPONSES COURTES · ${FAQ.length} REPÈRES</span><h2>Questions RH fréquentes</h2><p>Recherche par thème, sigle ou situation.</p></div></div><div class="faq-layout"><div><label class="search-box"><span data-icon="search"></span><input class="form-control" id="faq-query" type="search" placeholder="Convention, forfait jours, entretien, ETP…" aria-label="Rechercher une réponse RH"></label><div class="faq-list section-block" id="faq-results">${renderFaqList()}</div></div><aside class="faq-aside glass-panel"><span class="eyebrow">POSTURE DE MANAGER</span><h3>Écouter · cadrer · tracer</h3><p>Pour une situation individuelle, protégez la confidentialité, partez des faits, vérifiez le cadre applicable et sollicitez RH ou juridique au bon moment.</p><div class="separator"></div><span class="tag gold">Repères pédagogiques</span><p style="margin-top:10px">Ces réponses facilitent le premier repérage ; elles ne remplacent ni les textes à jour, ni les accords collectifs, ni une analyse individualisée par les personnes habilitées.</p>${sourceLinks(["duerp","cse","servicePublicWork"])}</aside></div></section>
-  </section>`;
+    <div class="rh-tabs" role="tablist" aria-label="Sections RH">
+      <button class="rh-tab is-active" data-rh-tab="calculateurs" role="tab" aria-selected="true">${icon("chart",14)} Calculateurs</button>
+      <button class="rh-tab" data-rh-tab="conventions" role="tab" aria-selected="false">${icon("file",14)} Conventions</button>
+      <button class="rh-tab" data-rh-tab="recrutement" role="tab" aria-selected="false">${icon("briefcase",14)} Recrutement</button>
+      <button class="rh-tab" data-rh-tab="questions" role="tab" aria-selected="false">${icon("info",14)} Questions RH</button>
+    </div>
+    <div class="rh-tab-panel is-active" data-rh-panel="calculateurs">
+      <div class="rh-calculator-grid section-block">${renderEtpCalculator()}${renderForfaitCalculator()}</div>
+      <section class="section-block" id="etp-disponibles"><div class="section-title-row"><div><span class="eyebrow">OÙ CHERCHER LES MOYENS</span><h2>Retrouver les ETP réellement disponibles</h2><p>Le chiffre dépend de la question posée : autorisation, budget, postes pourvus ou présence réelle.</p></div></div><div class="etp-source-grid"><article class="etp-source-card"><strong>Emplois autorisés / financés</strong><span>Notifications de financement, CPOM, budget prévisionnel ou EPRD/ERRD selon le secteur et le cadre de l'établissement ; tableau d'emplois pour le public.</span></article><article class="etp-source-card"><strong>Postes pourvus</strong><span>Tableau des effectifs RH, contrats, quotités, paie et date d'arrêté. Déduire les vacances et distinguer les postes ouverts des personnes recrutées.</span></article><article class="etp-source-card"><strong>Capacité présente</strong><span>Planning, absences, restrictions, formation, intérim, heures supplémentaires, repos et compétences minimales nécessaires au service.</span></article><article class="etp-source-card"><strong>À rapprocher</strong><span>Budget RH, masse salariale, remplacements et ETP par service/métier. Faire valider les définitions par RH et finances avant de comparer.</span></article></div><p class="formula-note">Un poste budgété vacant n'est pas une personne disponible ; un effectif physique n'est pas une capacité équivalente temps plein. Documentez la date, le périmètre et la définition de chaque chiffre.</p>${sourceLinks(["etpGuide","cnsaData"])}</section>
+    </div>
+    <div class="rh-tab-panel" data-rh-panel="conventions">
+      <section class="section-block" id="conventions"><div class="section-title-row"><div><span class="eyebrow">DROIT SOCIAL · REPÈRES DE BRANCHE</span><h2>Conventions et statuts courants</h2><p>Quelques repères fréquents ; le champ conventionnel de l'employeur doit toujours être confirmé.</p></div></div><div class="convention-grid">${renderConventionCards()}</div><div class="notice section-block">${icon("info",17)}<span><strong>Vérification pratique.</strong> Regardez l'intitulé et l'IDCC sur le bulletin de paie, recherchez l'employeur avec son SIRET, puis relisez le champ d'application, la convention consolidée, les avenants et les accords d'entreprise. L'APE est un indice, pas à lui seul la preuve de la convention applicable.</span></div>${sourceLinks(["collectiveAgreement"])}</section>
+    </div>
+    <div class="rh-tab-panel" data-rh-panel="recrutement">
+      ${renderRecruitmentGuides()}
+      ${renderJobDescriptionBuilder()}
+    </div>
+    <div class="rh-tab-panel" data-rh-panel="questions">
+      <section class="section-block" id="faq-search"><div class="section-title-row"><div><span class="eyebrow">RÉPONSES COURTES · ${FAQ.length} REPÈRES</span><h2>Questions RH fréquentes</h2><p>Recherche par thème, sigle ou situation.</p></div></div><div class="faq-layout"><div><label class="search-box"><span data-icon="search"></span><input class="form-control" id="faq-query" type="search" placeholder="Convention, forfait jours, entretien, ETP…" aria-label="Rechercher une réponse RH"></label><div class="faq-list section-block" id="faq-results">${renderFaqList()}</div></div><aside class="faq-aside glass-panel"><span class="eyebrow">POSTURE DE MANAGER</span><h3>Écouter · cadrer · tracer</h3><p>Pour une situation individuelle, protégez la confidentialité, partez des faits, vérifiez le cadre applicable et sollicitez RH ou juridique au bon moment.</p><div class="separator"></div><span class="tag gold">Repères pédagogiques</span><p style="margin-top:10px">Ces réponses facilitent le premier repérage ; elles ne remplacent ni les textes à jour, ni les accords collectifs, ni une analyse individualisée par les personnes habilitées.</p>${sourceLinks(["duerp","cse","servicePublicWork"])}</aside></div></section>
+    </div>  </section>`;
 }
 function softwareCards(list=SOFTWARES) {
   if(!list.length) return `<div class="empty-state"><strong>Aucun logiciel correspondant</strong>Essayez un autre terme ou un acronyme.</div>`;
@@ -732,14 +747,14 @@ function renderMap() {
       <div class="peer-list" id="peer-list"></div><p class="field-hint" style="margin-top:12px">L’annuaire local n’est visible que dans le même navigateur. Pour un usage collectif, la prochaine étape sera l’authentification et les règles d’accès Firebase.</p>
     </section></div>
 
-    <!-- FIL D'ACTUALITÉS & ÉVÉNEMENTS ALUMNI (TIMELINE) -->
-    <div class="section-block" style="margin-top:36px">
-      <div class="section-title-row">
-        <div>
-          <span class="eyebrow">COMMUNAUTÉ ALUMNI · ANNONCES & ÉVÉNEMENTS</span>
-          <h2>Fil d'actualité des établissements & opportunités</h2>
-          <p>Offres d'alternance et de stage, invitations aux job datings et événements inter-établissements avec confirmation de participation.</p>
-        </div>
+  </section>`;
+}
+
+function renderTimeline() {
+  return `<section class="page" aria-labelledby="timeline-title">${sectionHead("COMMUNAUTÉ ALUMNI · ANNONCES & ÉVÉNEMENTS", "Le fil d'actualité, <span class=\"text-gradient\">en temps réel.</span>", "Publiez des offres d'alternance, invitez aux job datings et événements inter-établissements avec confirmation de participation.", `<button class="button subtle" data-nav="reseau">${icon("userplus", 15)} Annuaire Alumni</button>`)}
+
+    <div class="section-block">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
         <button class="button primary" data-action="toggle-post-form">${icon("message", 15)} Publier une annonce</button>
       </div>
 
@@ -2937,6 +2952,18 @@ document.addEventListener("click", event => {
     return;
   }
 
+  // RH tabs handler
+  const rhTab = actionEl.closest("[data-rh-tab]");
+  if (rhTab && rhTab.role === "tab") {
+    const tabId = rhTab.dataset.rhTab;
+    $$(".rh-tab").forEach(t => { t.classList.toggle("is-active", t.dataset.rhTab === tabId); t.setAttribute("aria-selected", String(t.dataset.rhTab === tabId)); });
+    $$(".rh-tab-panel").forEach(p => p.classList.toggle("is-active", p.dataset.rhPanel === tabId));
+    // Re-init calculators when switching to calculateurs tab
+    if (tabId === "calculateurs") { renumberEtptRows(); calculateEtp(); syncForfaitCalendar(); }
+    if (tabId === "questions") { const input = $("#faq-query"); if (input) { input.value = state.queries.faq; applyFilter("faq"); } }
+    return;
+  }
+
   if (action === "toggle-notifications") {
     toggleNotifications();
     return;
@@ -3246,6 +3273,14 @@ document.addEventListener("submit", event => {
     }
     state.posts = [newPost, ...(state.posts || [])];
     writeJSON(STORE.posts, state.posts);
+    // Sync to Firestore
+    if (typeof window.savePostToFirestore === "function") {
+      window.savePostToFirestore(newPost)
+        .then(() => showToast("🎉 Annonce publiée et synchronisée avec le réseau !"))
+        .catch(err => {
+          console.warn("[Firestore] Synchronisation post différée :", err.message);
+        });
+    }
     form.reset();
     showToast("🎉 Annonce publiée sur le fil d'actualités du réseau !");
     const feed = $("#timeline-feed");
@@ -3353,6 +3388,7 @@ function initFirestoreSync() {
   const poll = () => {
     attempts++;
     if (typeof window.subscribeToAlumni === "function") {
+      // Subscribe to alumni
       window.subscribeToAlumni((remoteAlumni) => {
         if (remoteAlumni && remoteAlumni.length) {
           const map = new Map(state.peers.map(p => [p.email || p.id, p]));
@@ -3364,6 +3400,23 @@ function initFirestoreSync() {
       }, () => {
         // Mode silencieux : règles de sécurité en attente de déploiement
       });
+      // Subscribe to posts (real-time)
+      if (typeof window.subscribeToPostsFirestore === "function") {
+        window.subscribeToPostsFirestore((remotePosts) => {
+          if (remotePosts && remotePosts.length) {
+            const map = new Map(state.posts.map(p => [p.id, p]));
+            remotePosts.forEach(r => map.set(r.id, { ...map.get(r.id), ...r }));
+            state.posts = Array.from(map.values()).sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+            writeJSON(STORE.posts, state.posts);
+            if (state.page === "timeline") {
+              const feed = $("#timeline-feed");
+              if (feed) { feed.innerHTML = renderTimelinePosts(); hydrateIcons(feed); }
+            }
+          }
+        }, () => {
+          // Mode silencieux : règles de sécurité posts en attente
+        });
+      }
     } else if (attempts < 10) {
       setTimeout(poll, 300);
     }
