@@ -292,6 +292,8 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
     if (page === "reseau") {
       renderPeerList();
       peerMultiSelect.init();
+      const feed = $("#timeline-feed");
+      if (feed) feed.innerHTML = renderTimelinePosts();
     }
     if (sidebar.classList.contains("is-open")) closeMenu();
     const heading = $("h1", stage);
@@ -729,6 +731,59 @@ function renderMap() {
       <div class="network-tools"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="peer-query" type="search" placeholder="Nom, rôle, mot-clé…" aria-label="Rechercher une personne"></label><select class="form-control" id="peer-experience-filter" aria-label="Filtrer par expérience"><option value="Tout">Toutes les expériences</option>${RESEARCH_AREAS.map(item => `<option>${esc(item)}</option>`).join("")}</select><select class="form-control" id="peer-region-filter" aria-label="Filtrer par région"><option value="Tout">Toutes les régions</option>${regionOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div>
       <div class="peer-list" id="peer-list"></div><p class="field-hint" style="margin-top:12px">L’annuaire local n’est visible que dans le même navigateur. Pour un usage collectif, la prochaine étape sera l’authentification et les règles d’accès Firebase.</p>
     </section></div>
+
+    <!-- FIL D'ACTUALITÉS & ÉVÉNEMENTS ALUMNI (TIMELINE) -->
+    <div class="section-block" style="margin-top:36px">
+      <div class="section-title-row">
+        <div>
+          <span class="eyebrow">COMMUNAUTÉ ALUMNI · ANNONCES & ÉVÉNEMENTS</span>
+          <h2>Fil d'actualité des établissements & opportunités</h2>
+          <p>Offres d'alternance et de stage, invitations aux job datings et événements inter-établissements avec confirmation de participation.</p>
+        </div>
+        <button class="button primary" data-action="toggle-post-form">${icon("message", 15)} Publier une annonce</button>
+      </div>
+
+      <!-- Formulaire de publication -->
+      <div class="glass-panel" id="timeline-post-form-wrap" style="padding:20px;margin-bottom:20px;display:none;border:1px solid rgba(135,199,247,0.3)">
+        <h3 style="font-size:16px;margin:0 0 12px">Créer un post alumni (Offre de poste ou Événement)</h3>
+        <form id="timeline-post-form">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
+            <div>
+              <label class="field-label">Type d'annonce *</label>
+              <select name="type" class="form-control" required>
+                <option value="job_offer">Offre d'emploi / Alternance / Stage</option>
+                <option value="event">Événement / Job Dating / Rencontre</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Titre de l'annonce *</label>
+              <input type="text" name="title" class="form-control" placeholder="Ex: Recrutement Alternant Direction Adjointe" required maxlength="120">
+            </div>
+            <div>
+              <label class="field-label">Établissement / Organisme *</label>
+              <input type="text" name="organization" class="form-control" placeholder="Ex: MAS Les Tournesols (GHU)" required maxlength="100">
+            </div>
+            <div>
+              <label class="field-label">Lieu / Ville *</label>
+              <input type="text" name="location" class="form-control" placeholder="Ex: Paris 14e (75)" required maxlength="80">
+            </div>
+          </div>
+          <div style="margin-bottom:12px">
+            <label class="field-label">Description détaillée *</label>
+            <textarea name="content" class="form-control" rows="3" placeholder="Présentez les missions, profils recherchés, dates clés et modalités d'inscription..." required maxlength="600"></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px">
+            <button type="button" class="button subtle" data-action="toggle-post-form">Annuler</button>
+            <button type="submit" class="button primary">${icon("send", 14)} Diffuser l'annonce</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Feed des posts -->
+      <div id="timeline-feed" class="timeline-feed">
+        ${renderTimelinePosts()}
+      </div>
+    </div>
   </section>`;
 }
 
@@ -2399,6 +2454,381 @@ function renderAudit() {
     `)}
 
     ${sourceLinks(["auditHas","hasEsms","anapAudit","cofrac"])}
+  </section>`;
+}
+
+function renderSecu() {
+  const secu = SECURITY_SOCIALE;
+  const isUnlocked = isPremiumUnlocked();
+
+  return `<section class="page" aria-labelledby="secu-title">
+    ${renderAccessStatusBar()}
+    ${sectionHead("PROTECTION SOCIALE & FINANCEMENT DE LA SANTÉ", "La Sécurité Sociale, <span class=\"text-gradient\">moteur financier et régulateur.</span>", "Comprendre les ordonnances de 1945, l'architecture des 5 branches (dont la Branche Autonomie), l'enveloppe ONDAM, les modèles de tarification (T2A, forfaits soins, CPOM) et la matrice comparative 'Qui paie quoi' pour 9 catégories d'établissements.", `<button class="button subtle" data-nav="etablissements">${icon("building",16)}Établissements</button>`)}
+
+    <!-- Principes Fondateurs 1945 -->
+    <div class="glass-panel" style="padding:22px;margin-bottom:24px;border-left:4px solid var(--sky)">
+      <div style="display:flex;align-items:flex-start;gap:14px">
+        <span class="icon-bubble" style="background:rgba(135,199,247,0.15);color:var(--sky);padding:10px">${icon("shield", 22)}</span>
+        <div>
+          <span class="eyebrow" style="color:var(--sky)">FONDATIONS DE 1945 · LAROQUE & CROIZAT</span>
+          <h2 style="font-size:18px;font-weight:750;margin:4px 0 8px;color:var(--text)">${esc(secu.history.founders)}</h2>
+          <blockquote style="font-style:italic;color:var(--text-2);margin:0 0 14px;font-size:13px;line-height:1.5">« ${esc(secu.history.quote)} »</blockquote>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+            ${secu.history.principles.map(p => `
+              <div style="background:rgba(255,255,255,0.03);border:1px solid var(--stroke);border-radius:10px;padding:10px 12px">
+                <strong style="color:var(--text);font-size:12.5px;display:block;margin-bottom:3px">${esc(p.title)}</strong>
+                <span style="color:var(--text-2);font-size:11.5px">${esc(p.desc)}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Les 5 Branches -->
+    <div class="section-block">
+      <div class="section-title-row">
+        <div>
+          <h2>Les 5 Branches de la Sécurité Sociale & Leurs Liens avec le Manager</h2>
+          <p>De la Maladie à la 5e Branche Autonomie (Loi 2020), les caisses de tutelle et financeurs de vos établissements.</p>
+        </div>
+      </div>
+      <div class="result-grid">
+        ${secu.branches.map(b => `
+          <article class="content-card">
+            <div class="card-top">
+              <div class="card-title-line">
+                <span class="icon-bubble" style="background:rgba(135,199,247,0.12);color:var(--${b.color || 'sky'})">${icon(b.icon || "shield", 18)}</span>
+                <div>
+                  <span class="eyebrow">${esc(b.budget)} · ${esc(b.pilot)}</span>
+                  <h3 style="font-size:15px">${esc(b.name)}</h3>
+                </div>
+              </div>
+            </div>
+            <p class="card-copy" style="margin-top:8px">${esc(b.scope)}</p>
+            <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.02);border:1px solid var(--stroke);border-radius:10px;font-size:11.5px">
+              <strong style="color:var(--text);display:block;margin-bottom:2px">🏥 Lien Établissements :</strong>
+              <span style="color:var(--text-2)">${esc(b.esmsLink)}</span>
+            </div>
+            <div style="margin-top:8px;padding:10px;background:rgba(98,222,184,0.04);border:1px solid rgba(98,222,184,0.15);border-radius:10px;font-size:11.5px">
+              <strong style="color:var(--mint);display:block;margin-bottom:2px">💼 Action Directeur :</strong>
+              <span style="color:var(--text-2)">${esc(b.managerAction)}</span>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- ONDAM -->
+    <div class="section-block">
+      <div class="section-title-row">
+        <div>
+          <h2>L'ONDAM : Le Plafond National de Dépenses de Santé</h2>
+          <p>Le cadre macro-économique annuel qui conditionne les enveloppes budgétaires des hôpitaux et des ESSMS.</p>
+        </div>
+      </div>
+      <div class="glass-panel" style="padding:24px;border-radius:18px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--stroke);padding-bottom:14px;margin-bottom:16px">
+          <div>
+            <span class="eyebrow">${esc(secu.ondam.name)}</span>
+            <p style="font-size:13px;color:var(--text-2);margin:6px 0 0;line-height:1.5">${esc(secu.ondam.role)}</p>
+          </div>
+          <span class="tag mint" style="font-size:12px">${icon("check", 12)} Plafond voté par le Parlement (LFSS)</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px">
+          ${(secu.ondam.subObjectives || []).map(item => `
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--stroke);border-radius:12px;padding:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <strong style="color:var(--text);font-size:13.5px">${esc(item.name)}</strong>
+                <span class="tag sky" style="font-size:10px">${esc(item.share)}</span>
+              </div>
+              <p style="font-size:11.5px;color:var(--text-2);margin:0">${esc(item.desc)}</p>
+            </div>
+          `).join("")}
+        </div>
+        <div style="padding:12px 14px;background:rgba(248,211,136,0.06);border:1px solid rgba(248,211,136,0.2);border-radius:12px;font-size:12px">
+          <strong style="color:var(--gold);display:block;margin-bottom:2px">Impact concret pour le Directeur :</strong>
+          <span style="color:var(--text-2)">${esc(secu.ondam.impactManager)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modèles de Tarification -->
+    <div class="section-block">
+      <div class="section-title-row">
+        <div>
+          <h2>Les Principaux Mécanismes de Tarification</h2>
+          <p>De la T2A à la tarification ternaire des EHPAD, les modèles économiques régissant les recettes de vos structures.</p>
+        </div>
+      </div>
+      <div class="result-grid">
+        ${(secu.fundingMechanisms || []).map(m => `
+          <article class="content-card">
+            <span class="eyebrow">${esc(m.target || m.facility || "Régulation financière")}</span>
+            <h3 style="font-size:16px;margin:4px 0">${esc(m.name)}</h3>
+            <p class="card-copy" style="margin-top:6px">${esc(m.desc || m.description || "")}</p>
+          </article>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- 6 Interactions Directeur & Sécu + Matrice Qui Paie Quoi (Campus Gate) -->
+    ${isUnlocked ? `
+      <div class="section-block">
+        <div class="section-title-row">
+          <div>
+            <h2>Les 6 Interactions Directes Directeur — Sécurité Sociale</h2>
+            <p>Facturation FIDES, contrôles d'activité T2A, contentieux avec le médecin-conseil, subventions TMS CARSAT et accès aux droits des usagers.</p>
+          </div>
+        </div>
+        <div class="result-grid">
+          ${secu.managerInteractions.map(inter => `
+            <article class="content-card">
+              <div class="card-top">
+                <div class="card-title-line">
+                  <span class="icon-bubble">${esc(inter.num)}</span>
+                  <div>
+                    <h3>${esc(inter.title)}</h3>
+                  </div>
+                </div>
+              </div>
+              <p class="card-copy" style="margin-top:8px">${esc(inter.detail)}</p>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="section-title-row">
+          <div>
+            <h2>Matrice Comparative 'Qui Paie Quoi' par Type d'Établissement</h2>
+            <p>Répartition précise entre Assurance Maladie, Département, Résident et Complémentaires sur 9 types de structures.</p>
+          </div>
+        </div>
+        <div class="table-wrap glass-panel" style="overflow-x:auto">
+          <table class="data-table" style="width:100%;font-size:12px;border-collapse:collapse">
+            <thead>
+              <tr style="text-align:left;border-bottom:1px solid var(--stroke-strong)">
+                <th style="padding:10px">Établissement</th>
+                <th style="padding:10px">Section Soins</th>
+                <th style="padding:10px">Section Dépendance</th>
+                <th style="padding:10px">Section Hébergement</th>
+                <th style="padding:10px">Part Usager / Reste à charge</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${secu.whoPaysWhat.map(row => `
+                <tr style="border-bottom:1px solid var(--stroke)">
+                  <td style="padding:10px;font-weight:600;color:var(--text)">${esc(row.facility)}</td>
+                  <td style="padding:10px;color:var(--sky)">${esc(row.soins)}</td>
+                  <td style="padding:10px;color:var(--mint)">${esc(row.dependance)}</td>
+                  <td style="padding:10px;color:var(--gold)">${esc(row.hebergement)}</td>
+                  <td style="padding:10px;color:var(--text-2)">${esc(row.userPart)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ` : paywallGate("Matrice Comparative 'Qui Paie Quoi' & 6 Interactions Directeur (45% Campus)", "Accédez à la matrice des flux financiers pour les 9 catégories d'établissements et aux 6 protocoles de négociation avec la CPAM et la CARSAT.", `
+      <div class="section-block">
+        <div class="result-grid">
+          ${secu.managerInteractions.slice(0, 2).map(inter => `
+            <article class="content-card">
+              <span class="icon-bubble">${esc(inter.num)}</span>
+              <h3>${esc(inter.title)}</h3>
+              <p class="card-copy">${esc(inter.detail)}</p>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+    `)}
+
+    ${sourceLinks(["ameli", "cnsa", "cnsaFunding", "hospital"])}
+  </section>`;
+}
+
+function renderSubscription() {
+  const isUnlocked = isPremiumUnlocked();
+  const pricing = PRICING_DATA;
+  const currentPlan = state.auth?.plan || (isUnlocked ? "universal" : "freemium");
+  const profile = state.auth?.profile || {};
+
+  return `<section class="page" aria-labelledby="sub-title">
+    ${renderAccessStatusBar()}
+    ${sectionHead("ABONNEMENT & TARIFICATION CAMPUS", "Formules d'accès, tarifs écoles et gestion des profils", "Accès complet aux 16 métiers institutionnels (HAS, ARS, ANAP, Sécurité Sociale), aux modules REX & Audit approfondis, au calculateur ETPT et à l'annuaire réseau illimité.", `<button class="button subtle" data-action="toggle-freemium-test">${icon("rotate", 15)}Basculer mode ${isUnlocked ? "Freemium (55%)" : "Débloqué (100%)"}</button>`)}
+
+    <!-- Bannière Statut Actuel -->
+    <div class="glass-panel" style="padding:22px;margin-bottom:24px;border-left:4px solid ${isUnlocked ? 'var(--mint)' : 'var(--gold)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px">
+        <div>
+          <span class="eyebrow">${isUnlocked ? "CAMPUS DÉBLOQUÉ · ACCÈS 100%" : "ESPACE FREEMIUM · 55% DES RESSOURCES LIBRES"}</span>
+          <h2 style="font-size:20px;font-weight:750;margin:4px 0 6px;color:var(--text)">
+            ${isUnlocked ? "👑 Vous disposez de l'accès intégral illimité" : "🔒 Vous utilisez la version découverte de Mosaïque Santé"}
+          </h2>
+          <p style="font-size:13px;color:var(--text-2);margin:0;max-width:650px">
+            ${isUnlocked 
+              ? `Formule active : <strong>${esc(currentPlan)}</strong>. Tous les 41 métiers, la matrice de la Sécu, les fiches d'audit et l'annuaire complet sont ouverts.`
+              : `55% des modules sont accessibles gratuitement (fiches métiers clés, panorama des 28 structures, principes de la Sécu, FAQ RH). Débloquez les 45% réservés aux abonnés via votre école ou un pass individuel.`}
+          </p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${isUnlocked 
+            ? `<button class="button subtle" data-action="reset-auth-profile">${icon("reset", 14)}Verrouiller (mode test)</button>`
+            : `<button class="button primary" data-action="quick-unlock-universal">${icon("spark", 15)}Débloquer via code maître</button>`}
+        </div>
+      </div>
+    </div>
+
+    <!-- Saisie Code Maître Universel -->
+    <div class="glass-panel" style="padding:22px;margin-bottom:28px;background:rgba(248,211,136,0.04);border:1px dashed rgba(248,211,136,0.3)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span class="icon-bubble" style="background:rgba(248,211,136,0.15);color:var(--gold);padding:8px">${icon("spark", 18)}</span>
+        <div>
+          <h3 style="font-size:15px;color:var(--gold);margin:0">Vous avez un code partenaire ou un code maître ?</h3>
+          <span style="font-size:12px;color:var(--text-2)">Entrez votre clé d'accès universelle pour déverrouiller immédiatement 100% de l'application.</span>
+        </div>
+      </div>
+      <form id="master-code-form" style="display:flex;gap:8px;max-width:520px;flex-wrap:wrap">
+        <input type="text" id="master-code-input" placeholder="Ex: MOSAIQUE-MASTER-2026" value="${isUnlocked ? 'MOSAIQUE-MASTER-2026' : ''}" style="flex:1;min-width:200px;padding:10px 14px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.2);color:var(--text);font-family:monospace;font-size:13px;text-transform:uppercase" required />
+        <button type="submit" class="button primary">${icon("check", 14)}Activer mon code</button>
+      </form>
+      <span style="display:block;margin-top:8px;font-size:11.5px;color:var(--muted)">Clé maître universelle fournie par le créateur : <code>MOSAIQUE-MASTER-2026</code></span>
+    </div>
+
+    <!-- Formules Écoles & Universités -->
+    <div class="section-block">
+      <div class="section-title-row">
+        <div>
+          <h2>Formules Établissements d'Enseignement (Écoles, Universités, IAE, EHESP)</h2>
+          <p>Abonnements de cohorte avec gestion centralisée des étudiants, accès enseignants et mises à jour réglementaires.</p>
+        </div>
+      </div>
+      <div class="pricing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px">
+        ${pricing.tiers.schools.map(t => `
+          <article class="pricing-card glass-panel${t.popular ? ' is-popular' : ''}" style="position:relative;padding:24px;border-radius:18px;display:flex;flex-direction:column;justify-content:space-between;${t.popular ? 'border:1px solid var(--mint);box-shadow:0 0 25px rgba(98,222,184,0.1)' : ''}">
+            ${t.popular ? `<span style="position:absolute;top:12px;right:14px;font-size:10px;font-weight:700;color:var(--mint);background:rgba(98,222,184,0.15);padding:3px 8px;border-radius:10px">RECOMMANDÉ</span>` : ''}
+            <div>
+              <span class="eyebrow" style="color:var(--sky)">${esc(t.students)}</span>
+              <h3 style="font-size:20px;font-weight:800;margin:6px 0 2px">${esc(t.name)}</h3>
+              <div style="display:flex;align-items:baseline;gap:4px;margin:12px 0 6px">
+                <span style="font-size:32px;font-weight:800;color:var(--text)">${esc(t.price)}</span>
+                <span style="color:var(--text-2);font-size:12px">${esc(t.period)}</span>
+              </div>
+              <span style="display:inline-block;font-size:11.5px;color:var(--mint);font-weight:600;margin-bottom:14px">${esc(t.perStudent)}</span>
+              <ul class="bullet-list" style="margin-top:10px;font-size:12.5px">
+                ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
+              </ul>
+            </div>
+            <button class="button ${t.popular ? 'primary' : 'subtle'}" style="margin-top:20px;width:100%" data-action="simulate-subscribe" data-plan="${esc(t.name)}">
+              ${icon("briefcase", 15)}Souscrire pour mon école
+            </button>
+          </article>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- Formules Individuelles & Étudiants -->
+    <div class="section-block">
+      <div class="section-title-row">
+        <div>
+          <h2>Formules Individuelles & Pass Étudiant</h2>
+          <p>Pour les étudiants autonomes préparant un concours (D3S, CAFDES, DH) ou les professionnels hors convention école.</p>
+        </div>
+      </div>
+      <div class="pricing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
+        ${pricing.tiers.individuals.map(t => `
+          <article class="pricing-card glass-panel${t.popular ? ' is-popular' : ''}" style="position:relative;padding:22px;border-radius:16px;display:flex;flex-direction:column;justify-content:space-between;${t.popular ? 'border:1px solid var(--gold);box-shadow:0 0 25px rgba(248,211,136,0.1)' : ''}">
+            ${t.badge ? `<span style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;color:var(--gold);background:rgba(248,211,136,0.15);padding:3px 8px;border-radius:10px">${esc(t.badge)}</span>` : ''}
+            <div>
+              <h3 style="font-size:17px;font-weight:750;margin:0 0 6px">${esc(t.name)}</h3>
+              <div style="display:flex;align-items:baseline;gap:4px;margin:8px 0 4px">
+                <span style="font-size:28px;font-weight:800;color:var(--text)">${esc(t.price)}</span>
+                <span style="color:var(--text-2);font-size:12px">${esc(t.period)}</span>
+              </div>
+              <span style="display:inline-block;font-size:11.5px;color:var(--text-2);margin-bottom:12px">${esc(t.subtitle)}</span>
+              <ul class="bullet-list" style="margin-top:8px;font-size:12px">
+                ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
+              </ul>
+            </div>
+            <button class="button ${t.popular ? 'primary' : 'subtle'}" style="margin-top:18px;width:100%" data-action="simulate-subscribe" data-plan="${esc(t.name)}">
+              ${icon("star", 14)}Choisir cette formule
+            </button>
+          </article>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- Formule Établissement (Pack CODIR) -->
+    <div class="section-block">
+      <div class="section-title-row">
+        <div>
+          <h2>Formule Établissement de Santé / ESSMS (Pack CODIR)</h2>
+          <p>Équipez votre direction, votre responsable qualité et vos cadres de santé.</p>
+        </div>
+      </div>
+      <div class="glass-panel" style="padding:24px;border-radius:18px">
+        ${pricing.tiers.etablissement.map(t => `
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+            <div>
+              <span class="eyebrow" style="color:var(--mint)">5 LICENCES ÉQUIPE DIRECTION</span>
+              <h3 style="font-size:20px;font-weight:800;margin:4px 0">${esc(t.name)} — ${esc(t.price)} ${esc(t.period)}</h3>
+              <p style="font-size:13px;color:var(--text-2);margin:0 0 10px">${esc(t.subtitle)}</p>
+              <ul class="bullet-list" style="font-size:12.5px">
+                ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
+              </ul>
+            </div>
+            <button class="button primary" data-action="simulate-subscribe" data-plan="${esc(t.name)}">
+              ${icon("building", 16)}Souscrire pour l'établissement
+            </button>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- Fiche d'identification apprenant -->
+    <div class="section-block">
+      <div class="section-title-row">
+        <div>
+          <h2>Identification & Rattachement Promotion</h2>
+          <p>Personnalisez votre expérience en renseignant votre école ou organisme gestionnaire.</p>
+        </div>
+      </div>
+      <div class="glass-panel" style="padding:22px;border-radius:18px">
+        <form id="auth-profile-form">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px">Nom et Prénom</label>
+              <input type="text" name="name" value="${esc(profile.name || '')}" placeholder="Ex: Alexandre Dupont" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.15);color:var(--text);font-size:13px" />
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px">Adresse Email</label>
+              <input type="email" name="email" value="${esc(profile.email || '')}" placeholder="alexandre@etablissement.fr" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.15);color:var(--text);font-size:13px" />
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px">Profil / Statut</label>
+              <select name="role" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.15);color:var(--text);font-size:13px">
+                <option value="Étudiant Master MES" ${profile.role === "Étudiant Master MES" ? "selected" : ""}>Étudiant Master MES (IAE)</option>
+                <option value="Élève Directeur (EHESP)" ${profile.role === "Élève Directeur (EHESP)" ? "selected" : ""}>Élève Directeur D3S/DH/CAFDES (EHESP)</option>
+                <option value="Directeur d'Établissement" ${profile.role === "Directeur d'Établissement" ? "selected" : ""}>Directeur / Adjoint d'Établissement</option>
+                <option value="Cadre de Santé / Soignant" ${profile.role === "Cadre de Santé / Soignant" ? "selected" : ""}>Cadre de Santé / IDEC / Soignant</option>
+                <option value="Responsable Qualité" ${profile.role === "Responsable Qualité" ? "selected" : ""}>Responsable Qualité / Gestion des Risques</option>
+                <option value="Autre" ${profile.role === "Autre" ? "selected" : ""}>Autre profil du secteur</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px">Établissement / École de rattachement</label>
+              <input type="text" name="school" value="${esc(profile.school || '')}" placeholder="Ex: IAE Paris-Est, EHESP, GHU Paris" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.15);color:var(--text);font-size:13px" />
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button type="submit" class="button primary">${icon("check", 15)}Enregistrer mon profil apprenant</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    ${sourceLinks(["iae", "ehesp", "d3s", "cafdes"])}
   </section>`;
 }
 
