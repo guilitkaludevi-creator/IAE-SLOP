@@ -12,6 +12,7 @@
     --stroke-strong: rgba(175, 205, 225, .26);
     --text: #f4f8fb;
     --text-soft: #cbdde9;
+    --text-2: #cbdde9;
     --muted: #93a9b9;
     --faint: #728795;
     --mint: #62deb8;
@@ -46,6 +47,7 @@
     --stroke-strong: rgba(24, 60, 78, .22);
     --text: #11222d;
     --text-soft: #2c4451;
+    --text-2: #2c4451;
     --muted: #5a717e;
     --faint: #718691;
     --mint: #15846f;
@@ -1435,4 +1437,312 @@
   /* --- RESPONSIVE AMBIENT FIX --- */
   @media (max-width: 768px) {
     .ambient { display: none !important; }
+  }
+
+
+  /* --- PEER CARD FLEX UPGRADE --- */
+  .peer-card {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 16px 18px;
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .2s var(--ease-out);
+  }
+  .peer-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--stroke-strong);
+    box-shadow: var(--shadow-soft);
+  }
+  .peer-avatar {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 13px;
+    color: #0b2520;
+    background: linear-gradient(140deg, #a0e8d5, #8bbfe9);
+  }
+  .peer-card-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* --- SÉCURITÉ SOCIALE & FINANCEMENT (PAGE LISIBLE & AÉRÉE) --- */
+  .secu-hero-card {
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    border-left: 4px solid var(--sky);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--stroke);
+    border-left-width: 4px;
+  }
+  .secu-principles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .secu-principle-item {
+    background: var(--surface-soft);
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    padding: 14px;
+    line-height: 1.55;
+  }
+  .secu-principle-item strong {
+    display: block;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .secu-principle-item span {
+    font-size: 12px;
+    color: var(--text-soft);
+    line-height: 1.55;
+  }
+
+  .secu-branch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .secu-branch-card {
+    padding: 22px;
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .2s var(--ease-out);
+  }
+  .secu-branch-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+    border-color: var(--stroke-strong);
+  }
+  .secu-branch-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .secu-branch-title {
+    font-size: 16px;
+    font-weight: 750;
+    margin: 2px 0 0;
+    color: var(--text);
+  }
+  .secu-branch-scope {
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .secu-callout {
+    padding: 12px 14px;
+    border-radius: 11px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .secu-callout.esms {
+    background: rgba(135, 199, 247, 0.08);
+    border: 1px solid rgba(135, 199, 247, 0.22);
+    color: var(--text-soft);
+  }
+  .secu-callout.manager {
+    background: rgba(98, 222, 184, 0.08);
+    border: 1px solid rgba(98, 222, 184, 0.22);
+    color: var(--text-soft);
+  }
+  .secu-callout strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 12px;
+  }
+  .secu-callout.esms strong { color: var(--sky); }
+  .secu-callout.manager strong { color: var(--mint); }
+
+  .secu-ondam-box {
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+  }
+  .secu-subobj-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .secu-subobj-card {
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--stroke);
+    background: var(--surface-soft);
+  }
+  .secu-subobj-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .secu-subobj-head strong { font-size: 13.5px; color: var(--text); }
+
+  .secu-tarification-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .secu-tarification-card {
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    transition: transform .2s var(--ease-out), border-color .2s;
+  }
+  .secu-tarification-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--stroke-strong);
+  }
+  .secu-tarification-card h3 {
+    font-size: 16px;
+    margin: 6px 0 8px;
+    color: var(--text);
+  }
+  .secu-tarification-card p {
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .secu-interaction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .secu-interaction-card {
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    transition: transform .2s var(--ease-out), border-color .2s;
+  }
+  .secu-interaction-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--stroke-strong);
+  }
+  .secu-interaction-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .secu-interaction-num {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(135, 199, 247, 0.16);
+    color: var(--sky);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 13px;
+    flex: 0 0 30px;
+  }
+  .secu-interaction-header h3 {
+    margin: 0;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .secu-interaction-card p {
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Matrice Qui Paie Quoi responsive */
+  .secu-table-wrap {
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+    border: 1px solid var(--stroke);
+    background: var(--surface);
+    box-shadow: var(--shadow-soft);
+  }
+  .secu-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    min-width: 680px;
+  }
+  .secu-table th {
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-weight: 700;
+    text-align: left;
+    border-bottom: 2px solid var(--stroke-strong);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .secu-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--stroke);
+    color: var(--text-soft);
+    line-height: 1.55;
+    vertical-align: top;
+  }
+  .secu-table tr:hover td {
+    background: var(--surface-soft);
+  }
+  .secu-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .secu-matrix-cards {
+    display: none;
+  }
+  @media (max-width: 768px) {
+    .secu-table-wrap { display: none; }
+    .secu-matrix-cards {
+      display: grid;
+      gap: 12px;
+    }
+    .secu-matrix-card {
+      padding: 18px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+    }
+    .secu-matrix-card h3 {
+      font-size: 15px;
+      color: var(--text);
+      margin: 0 0 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--stroke);
+    }
+    .secu-matrix-item {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px;
+      font-size: 12px;
+      margin-bottom: 6px;
+      line-height: 1.45;
+    }
+    .secu-matrix-item strong {
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .secu-matrix-item span {
+      color: var(--text-soft);
+    }
   }

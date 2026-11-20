@@ -612,10 +612,10 @@ function renumberEtptRows() {
 function renderFaq() {
   return `<section class="page" aria-labelledby="faq-title">${sectionHead("BOÎTE À OUTILS · RH & RECRUTEMENT", "Les bons repères RH, <span class=\"text-gradient\">calculés et prêts à l’emploi.</span>", "Conventions, temps de travail, recrutement et effectifs. Les règles dépendent du statut, de l’accord applicable, du calendrier de l’établissement et des délégations.", `<button class="button subtle" data-nav="logiciels">${icon("layers",16)}Logiciels métiers</button><button class="button subtle" data-action="open-sources">${icon("book",16)}Sources</button>`)}
     <div class="rh-tabs" role="tablist" aria-label="Sections RH">
-      <button class="rh-tab is-active" data-rh-tab="calculateurs" role="tab" aria-selected="true">${icon("chart",14)} Calculateurs</button>
-      <button class="rh-tab" data-rh-tab="conventions" role="tab" aria-selected="false">${icon("file",14)} Conventions</button>
-      <button class="rh-tab" data-rh-tab="recrutement" role="tab" aria-selected="false">${icon("briefcase",14)} Recrutement</button>
-      <button class="rh-tab" data-rh-tab="questions" role="tab" aria-selected="false">${icon("info",14)} Questions RH</button>
+      <button class="rh-tab is-active" data-action="rh-tab" data-rh-tab="calculateurs" role="tab" aria-selected="true">${icon("chart",14)} Calculateurs</button>
+      <button class="rh-tab" data-action="rh-tab" data-rh-tab="conventions" role="tab" aria-selected="false">${icon("file",14)} Conventions</button>
+      <button class="rh-tab" data-action="rh-tab" data-rh-tab="recrutement" role="tab" aria-selected="false">${icon("briefcase",14)} Recrutement</button>
+      <button class="rh-tab" data-action="rh-tab" data-rh-tab="questions" role="tab" aria-selected="false">${icon("info",14)} Questions RH</button>
     </div>
     <div class="rh-tab-panel is-active" data-rh-panel="calculateurs">
       <div class="rh-calculator-grid section-block">${renderEtpCalculator()}${renderForfaitCalculator()}</div>
@@ -759,20 +759,21 @@ function renderTimeline() {
       </div>
 
       <!-- Formulaire de publication -->
-      <div class="glass-panel" id="timeline-post-form-wrap" style="padding:20px;margin-bottom:20px;display:none;border:1px solid rgba(135,199,247,0.3)">
-        <h3 style="font-size:16px;margin:0 0 12px">Créer un post alumni (Offre de poste ou Événement)</h3>
+      <div class="glass-panel" id="timeline-post-form-wrap" style="padding:22px;margin-bottom:24px;display:none;border:1px solid rgba(135,199,247,0.35);border-radius:var(--radius-lg)">
+        <h3 style="font-size:17px;margin:0 0 14px;color:var(--text)">Créer un post alumni (Offre de poste, Événement ou Annonce)</h3>
         <form id="timeline-post-form">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px">
             <div>
-              <label class="field-label">Type d'annonce *</label>
-              <select name="type" class="form-control" required>
-                <option value="job_offer">Offre d'emploi / Alternance / Stage</option>
-                <option value="event">Événement / Job Dating / Rencontre</option>
+              <label class="field-label">Type de publication *</label>
+              <select name="type" class="form-control" required id="timeline-post-type-select">
+                <option value="job_offer">💼 Offre d'emploi / Alternance / Stage</option>
+                <option value="event">📅 Événement / Job Dating / Rencontre</option>
+                <option value="announcement">📢 Annonce générale / Appel à projets</option>
               </select>
             </div>
             <div>
               <label class="field-label">Titre de l'annonce *</label>
-              <input type="text" name="title" class="form-control" placeholder="Ex: Recrutement Alternant Direction Adjointe" required maxlength="120">
+              <input type="text" name="title" class="form-control" placeholder="Ex: Job Dating Cadres & Direction MAS" required maxlength="120">
             </div>
             <div>
               <label class="field-label">Établissement / Organisme *</label>
@@ -783,13 +784,17 @@ function renderTimeline() {
               <input type="text" name="location" class="form-control" placeholder="Ex: Paris 14e (75)" required maxlength="80">
             </div>
           </div>
-          <div style="margin-bottom:12px">
+          <div id="timeline-event-extra-fields" style="display:none;margin-bottom:14px">
+            <label class="field-label">Date & horaires de l'événement (ex: Mardi 15 déc. 2026 à 14h00)</label>
+            <input type="text" name="eventDate" class="form-control" placeholder="Ex: Mardi 15 décembre 2026 de 14h à 18h" maxlength="100">
+          </div>
+          <div style="margin-bottom:14px">
             <label class="field-label">Description détaillée *</label>
-            <textarea name="content" class="form-control" rows="3" placeholder="Présentez les missions, profils recherchés, dates clés et modalités d'inscription..." required maxlength="600"></textarea>
+            <textarea name="content" class="form-control" rows="3" placeholder="Présentez les missions, profils recherchés, dates clés et modalités de participation..." required maxlength="600"></textarea>
           </div>
           <div style="display:flex;justify-content:flex-end;gap:10px">
             <button type="button" class="button subtle" data-action="toggle-post-form">Annuler</button>
-            <button type="submit" class="button primary">${icon("send", 14)} Diffuser l'annonce</button>
+            <button type="submit" class="button primary" id="timeline-post-submit-btn">${icon("send", 14)} Diffuser l'annonce</button>
           </div>
         </form>
       </div>
@@ -1620,22 +1625,23 @@ function renderPeerList() {
     const expList = Array.isArray(peer.experiences) && peer.experiences.length
       ? peer.experiences
       : (peer.experience ? peer.experience.split(",").map(s => s.trim()).filter(Boolean) : []);
+    const initials = (peer.name || "Alumni").trim().split(/\s+/).filter(Boolean).slice(0, 2).map(part => (part[0] || "").toUpperCase()).join("") || "AL";
     return `<article class="peer-card" id="peer-card-${esc(peer.id)}">
-      <div class="peer-avatar" aria-hidden="true">${esc(peer.name.split(/\s+/).slice(0,2).map(part => part[0]).join("").toUpperCase())}</div>
-      <div style="flex:1">
+      <div class="peer-avatar" aria-hidden="true">${esc(initials)}</div>
+      <div class="peer-card-body">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
           <div>
-            <h3 style="margin:0">${esc(peer.name)}</h3>
-            <p style="margin:2px 0">${esc(peer.role)} · ${esc(peer.sector)} · ${esc(peer.region)}</p>
+            <h3 style="margin:0;font-size:15px;color:var(--text)">${esc(peer.name)}</h3>
+            <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">${esc(peer.role)} · ${esc(peer.sector)} · ${esc(peer.region)}</p>
           </div>
           ${peer.linkedin ? `<a class="linkedin-btn" href="${esc(peer.linkedin)}" target="_blank" rel="noopener noreferrer">${icon("linkedin", 13)}<span>LinkedIn</span></a>` : ''}
         </div>
         <div class="meta-row" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">
           ${expList.map(exp => `<span class="tag mint">${esc(exp)}</span>`).join("")}
         </div>
-        <p style="margin-top:8px;line-height:1.5">${esc(peer.summary)}</p>
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px">
-          <a class="inline-link" href="mailto:${esc(peer.email)}">${esc(peer.email)}</a>
+        <p style="margin-top:8px;line-height:1.6;font-size:13px;color:var(--text-soft)">${esc(peer.summary)}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:8px;border-top:1px solid var(--stroke)">
+          <a class="inline-link" href="mailto:${esc(peer.email)}" style="font-size:12px">${esc(peer.email)}</a>
           <div style="display:flex;gap:6px">
             <button class="button tiny subtle" data-action="edit-peer" data-id="${esc(peer.id)}">${icon("edit", 13)} Modifier</button>
             <button class="peer-delete" data-action="delete-peer" data-id="${esc(peer.id)}" aria-label="Supprimer la fiche de ${esc(peer.name)}">${icon("trash",14)}</button>
@@ -1643,7 +1649,7 @@ function renderPeerList() {
         </div>
       </div>
     </article>`;
-  }).join("") + paywallNotice : `<div class="empty-state"><strong>${state.peers.length ? "Aucune fiche dans ce filtre" : "Votre annuaire commence ici"}</strong>${state.peers.length ? "Essayez un autre domaine, région ou mot-clé." : "Ajoutez une fiche volontaire pour retrouver plus tard une expérience ou un secteur."}</div>`;
+  }).join("") + paywallNotice : `<div class="empty-state"><strong>${state.peers.length ? "Aucune fiche dans ce filtre" : "Votre annuaire commence ici"}</strong>${state.peers.length ? "Essayez un autre domaine, région ou mot-clé." : "Ajoutez une première fiche avec le formulaire ci-contre pour enrichir le réseau de promotion."}</div>`;
   hydrateIcons(box);
 }
 
@@ -1923,20 +1929,26 @@ function addPeer(form) {
   const required = ["name","email","region","sector","role","experience","summary"];
   const missing = required.find(name => !String(formData.get(name) || "").trim());
   if (missing || !formData.get("consent")) {
-    error.hidden = false;
-    error.textContent = !formData.get("consent") ? "Le consentement est requis pour enregistrer la fiche." : "Complétez les champs obligatoires (dont au moins un domaine d'expérience) avant de continuer.";
+    const msg = !formData.get("consent") ? "Le consentement est requis pour enregistrer la fiche." : "Complétez les champs obligatoires (dont au moins un domaine d'expérience) avant de continuer.";
+    if (error) { error.hidden = false; error.textContent = msg; error.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+    showToast("⚠️ " + msg);
     form.elements[missing || "consent"]?.focus();
     return;
   }
   const email = String(formData.get("email")).trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    error.hidden = false; error.textContent = "Saisissez une adresse courriel valide."; form.elements.email.focus(); return;
+    const msg = "Saisissez une adresse courriel valide.";
+    if (error) { error.hidden = false; error.textContent = msg; }
+    showToast("⚠️ " + msg);
+    form.elements.email.focus();
+    return;
   }
   const expVal = String(formData.get("experience") || "").trim();
   const expArray = expVal ? expVal.split(",").map(s => s.trim()).filter(Boolean) : [];
   if (!expArray.length) {
-    error.hidden = false;
-    error.textContent = "Sélectionnez au moins un domaine d'expérience à partager.";
+    const msg = "Sélectionnez au moins un domaine d'expérience à partager.";
+    if (error) { error.hidden = false; error.textContent = msg; }
+    showToast("⚠️ " + msg);
     $("#peer-exp-trigger")?.focus();
     return;
   }
@@ -1997,18 +2009,43 @@ function addPeer(form) {
 
   peerMultiSelect.selected.clear();
   peerMultiSelect.render();
-  error.hidden = true;
+  if (error) error.hidden = true;
+
+  // Réinitialiser les filtres pour que la nouvelle fiche soit immédiatement visible
+  state.queries.peers = "";
+  const peerQueryInput = $("#peer-query");
+  if (peerQueryInput) peerQueryInput.value = "";
+  const peerExpFilter = $("#peer-experience-filter");
+  if (peerExpFilter) peerExpFilter.value = "Tout";
+  const peerRegFilter = $("#peer-region-filter");
+  if (peerRegFilter) peerRegFilter.value = "Tout";
+
   renderPeerList();
+
+  // Scroll fluide vers la fiche créée pour confirmation visuelle immédiate
+  setTimeout(() => {
+    const card = document.getElementById(`peer-card-${peer.id}`);
+    if (card) {
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.style.transition = "all 0.4s ease";
+      card.style.borderColor = "var(--mint)";
+      card.style.boxShadow = "0 0 0 3px rgba(98, 222, 184, 0.4)";
+      setTimeout(() => {
+        card.style.borderColor = "";
+        card.style.boxShadow = "";
+      }, 3000);
+    }
+  }, 120);
 
   if (typeof window.saveAlumniToFirestore === "function") {
     window.saveAlumniToFirestore(peer)
-      .then(() => showToast("Fiche enregistrée et synchronisée avec la promo !"))
+      .then(() => showToast("🎉 Fiche enregistrée et synchronisée avec la promo !"))
       .catch(err => {
         console.warn("[Firestore] Synchronisation distante différée :", err.message);
-        showToast("Fiche enregistrée sur cet appareil.");
+        showToast("🎉 Fiche alumni enregistrée et ajoutée à l'annuaire !");
       });
   } else {
-    showToast("Fiche enregistrée sur cet appareil.");
+    showToast("🎉 Fiche alumni enregistrée et ajoutée à l'annuaire !");
   }
 }
 function exportPeers() {
@@ -2484,18 +2521,18 @@ function renderSecu() {
     ${sectionHead("PROTECTION SOCIALE & FINANCEMENT DE LA SANTÉ", "La Sécurité Sociale, <span class=\"text-gradient\">moteur financier et régulateur.</span>", "Comprendre les ordonnances de 1945, l'architecture des 5 branches (dont la Branche Autonomie), l'enveloppe ONDAM, les modèles de tarification (T2A, forfaits soins, CPOM) et la matrice comparative 'Qui paie quoi' pour 9 catégories d'établissements.", `<button class="button subtle" data-nav="etablissements">${icon("building",16)}Établissements</button>`)}
 
     <!-- Principes Fondateurs 1945 -->
-    <div class="glass-panel" style="padding:22px;margin-bottom:24px;border-left:4px solid var(--sky)">
-      <div style="display:flex;align-items:flex-start;gap:14px">
-        <span class="icon-bubble" style="background:rgba(135,199,247,0.15);color:var(--sky);padding:10px">${icon("shield", 22)}</span>
-        <div>
+    <div class="secu-hero-card">
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <span class="icon-bubble" style="background:rgba(135,199,247,0.18);color:var(--sky);flex:0 0 44px;width:44px;height:44px;border-radius:14px">${icon("shield", 22)}</span>
+        <div style="flex:1;min-width:280px">
           <span class="eyebrow" style="color:var(--sky)">FONDATIONS DE 1945 · LAROQUE & CROIZAT</span>
-          <h2 style="font-size:18px;font-weight:750;margin:4px 0 8px;color:var(--text)">${esc(secu.history.founders)}</h2>
-          <blockquote style="font-style:italic;color:var(--text-2);margin:0 0 14px;font-size:13px;line-height:1.5">« ${esc(secu.history.quote)} »</blockquote>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+          <h2 style="font-size:20px;font-weight:750;margin:6px 0 10px;color:var(--text)">${esc(secu.history.founders)}</h2>
+          <blockquote style="font-style:italic;color:var(--text-soft);margin:0 0 16px;font-size:13.5px;line-height:1.6;border-left:3px solid var(--sky);padding-left:14px">« ${esc(secu.history.quote)} »</blockquote>
+          <div class="secu-principles-grid">
             ${secu.history.principles.map(p => `
-              <div style="background:rgba(255,255,255,0.03);border:1px solid var(--stroke);border-radius:10px;padding:10px 12px">
-                <strong style="color:var(--text);font-size:12.5px;display:block;margin-bottom:3px">${esc(p.title)}</strong>
-                <span style="color:var(--text-2);font-size:11.5px">${esc(p.desc)}</span>
+              <div class="secu-principle-item">
+                <strong>${esc(p.title)}</strong>
+                <span>${esc(p.desc)}</span>
               </div>
             `).join("")}
           </div>
@@ -2511,26 +2548,27 @@ function renderSecu() {
           <p>De la Maladie à la 5e Branche Autonomie (Loi 2020), les caisses de tutelle et financeurs de vos établissements.</p>
         </div>
       </div>
-      <div class="result-grid">
+      <div class="secu-branch-grid">
         ${secu.branches.map(b => `
-          <article class="content-card">
-            <div class="card-top">
-              <div class="card-title-line">
-                <span class="icon-bubble" style="background:rgba(135,199,247,0.12);color:var(--${b.color || 'sky'})">${icon(b.icon || "shield", 18)}</span>
-                <div>
-                  <span class="eyebrow">${esc(b.budget)} · ${esc(b.pilot)}</span>
-                  <h3 style="font-size:15px">${esc(b.name)}</h3>
+          <article class="secu-branch-card">
+            <div class="secu-branch-header">
+              <span class="icon-bubble" style="background:rgba(135,199,247,0.14);color:var(--${b.color || 'sky'});flex:0 0 38px;width:38px;height:38px;border-radius:12px">${icon(b.icon || "shield", 18)}</span>
+              <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+                  <span class="eyebrow">${esc(b.budget)}</span>
+                  <span class="tag sky" style="font-size:10px">${esc(b.pilot)}</span>
                 </div>
+                <h3 class="secu-branch-title">${esc(b.name)}</h3>
               </div>
             </div>
-            <p class="card-copy" style="margin-top:8px">${esc(b.scope)}</p>
-            <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.02);border:1px solid var(--stroke);border-radius:10px;font-size:11.5px">
-              <strong style="color:var(--text);display:block;margin-bottom:2px">🏥 Lien Établissements :</strong>
-              <span style="color:var(--text-2)">${esc(b.esmsLink)}</span>
+            <p class="secu-branch-scope">${esc(b.scope)}</p>
+            <div class="secu-callout esms">
+              <strong>🏥 Lien Établissements & Services (ESMS) :</strong>
+              <span>${esc(b.esmsLink)}</span>
             </div>
-            <div style="margin-top:8px;padding:10px;background:rgba(98,222,184,0.04);border:1px solid rgba(98,222,184,0.15);border-radius:10px;font-size:11.5px">
-              <strong style="color:var(--mint);display:block;margin-bottom:2px">💼 Action Directeur :</strong>
-              <span style="color:var(--text-2)">${esc(b.managerAction)}</span>
+            <div class="secu-callout manager">
+              <strong>💼 Action Concrète du Directeur :</strong>
+              <span>${esc(b.managerAction)}</span>
             </div>
           </article>
         `).join("")}
@@ -2545,28 +2583,28 @@ function renderSecu() {
           <p>Le cadre macro-économique annuel qui conditionne les enveloppes budgétaires des hôpitaux et des ESSMS.</p>
         </div>
       </div>
-      <div class="glass-panel" style="padding:24px;border-radius:18px">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--stroke);padding-bottom:14px;margin-bottom:16px">
+      <div class="secu-ondam-box">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;border-bottom:1px solid var(--stroke);padding-bottom:16px;margin-bottom:16px">
           <div>
             <span class="eyebrow">${esc(secu.ondam.name)}</span>
-            <p style="font-size:13px;color:var(--text-2);margin:6px 0 0;line-height:1.5">${esc(secu.ondam.role)}</p>
+            <p style="font-size:13.5px;color:var(--text-soft);margin:6px 0 0;line-height:1.6">${esc(secu.ondam.role)}</p>
           </div>
-          <span class="tag mint" style="font-size:12px">${icon("check", 12)} Plafond voté par le Parlement (LFSS)</span>
+          <span class="tag mint" style="font-size:12px;padding:6px 12px">${icon("check", 13)} Plafond voté chaque année par le Parlement (LFSS)</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px">
+        <div class="secu-subobj-grid">
           ${(secu.ondam.subObjectives || []).map(item => `
-            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--stroke);border-radius:12px;padding:14px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-                <strong style="color:var(--text);font-size:13.5px">${esc(item.name)}</strong>
-                <span class="tag sky" style="font-size:10px">${esc(item.share)}</span>
+            <div class="secu-subobj-card">
+              <div class="secu-subobj-head">
+                <strong>${esc(item.name)}</strong>
+                <span class="tag sky" style="font-size:10.5px">${esc(item.share)}</span>
               </div>
-              <p style="font-size:11.5px;color:var(--text-2);margin:0">${esc(item.desc)}</p>
+              <p style="font-size:12px;color:var(--text-soft);margin:0;line-height:1.55">${esc(item.desc)}</p>
             </div>
           `).join("")}
         </div>
-        <div style="padding:12px 14px;background:rgba(248,211,136,0.06);border:1px solid rgba(248,211,136,0.2);border-radius:12px;font-size:12px">
-          <strong style="color:var(--gold);display:block;margin-bottom:2px">Impact concret pour le Directeur :</strong>
-          <span style="color:var(--text-2)">${esc(secu.ondam.impactManager)}</span>
+        <div style="padding:14px 16px;background:rgba(248,211,136,0.08);border:1px solid rgba(248,211,136,0.25);border-radius:12px;font-size:12.5px;line-height:1.6">
+          <strong style="color:var(--gold);display:block;margin-bottom:3px;font-size:13px">Impact concret pour le Directeur :</strong>
+          <span style="color:var(--text-soft)">${esc(secu.ondam.impactManager)}</span>
         </div>
       </div>
     </div>
@@ -2579,12 +2617,12 @@ function renderSecu() {
           <p>De la T2A à la tarification ternaire des EHPAD, les modèles économiques régissant les recettes de vos structures.</p>
         </div>
       </div>
-      <div class="result-grid">
+      <div class="secu-tarification-grid">
         ${(secu.fundingMechanisms || []).map(m => `
-          <article class="content-card">
-            <span class="eyebrow">${esc(m.target || m.facility || "Régulation financière")}</span>
-            <h3 style="font-size:16px;margin:4px 0">${esc(m.name)}</h3>
-            <p class="card-copy" style="margin-top:6px">${esc(m.desc || m.description || "")}</p>
+          <article class="secu-tarification-card">
+            <span class="tag sky" style="font-size:10px">${esc(m.target || m.facility || "Régulation financière")}</span>
+            <h3>${esc(m.name)}</h3>
+            <p>${esc(m.desc || m.description || "")}</p>
           </article>
         `).join("")}
       </div>
@@ -2599,18 +2637,14 @@ function renderSecu() {
             <p>Facturation FIDES, contrôles d'activité T2A, contentieux avec le médecin-conseil, subventions TMS CARSAT et accès aux droits des usagers.</p>
           </div>
         </div>
-        <div class="result-grid">
+        <div class="secu-interaction-grid">
           ${secu.managerInteractions.map(inter => `
-            <article class="content-card">
-              <div class="card-top">
-                <div class="card-title-line">
-                  <span class="icon-bubble">${esc(inter.num)}</span>
-                  <div>
-                    <h3>${esc(inter.title)}</h3>
-                  </div>
-                </div>
+            <article class="secu-interaction-card">
+              <div class="secu-interaction-header">
+                <span class="secu-interaction-num">${esc(inter.num)}</span>
+                <h3>${esc(inter.title)}</h3>
               </div>
-              <p class="card-copy" style="margin-top:8px">${esc(inter.detail)}</p>
+              <p>${esc(inter.detail)}</p>
             </article>
           `).join("")}
         </div>
@@ -2623,39 +2657,66 @@ function renderSecu() {
             <p>Répartition précise entre Assurance Maladie, Département, Résident et Complémentaires sur 9 types de structures.</p>
           </div>
         </div>
-        <div class="table-wrap glass-panel" style="overflow-x:auto">
-          <table class="data-table" style="width:100%;font-size:12px;border-collapse:collapse">
+        <!-- Vue Ordinateur : Tableau complet lisible -->
+        <div class="secu-table-wrap">
+          <table class="secu-table">
             <thead>
-              <tr style="text-align:left;border-bottom:1px solid var(--stroke-strong)">
-                <th style="padding:10px">Établissement</th>
-                <th style="padding:10px">Section Soins</th>
-                <th style="padding:10px">Section Dépendance</th>
-                <th style="padding:10px">Section Hébergement</th>
-                <th style="padding:10px">Part Usager / Reste à charge</th>
+              <tr>
+                <th>Établissement</th>
+                <th>Section Soins</th>
+                <th>Section Dépendance</th>
+                <th>Section Hébergement</th>
+                <th>Part Usager / Reste à charge</th>
               </tr>
             </thead>
             <tbody>
               ${secu.whoPaysWhat.map(row => `
-                <tr style="border-bottom:1px solid var(--stroke)">
-                  <td style="padding:10px;font-weight:600;color:var(--text)">${esc(row.facility)}</td>
-                  <td style="padding:10px;color:var(--sky)">${esc(row.soins)}</td>
-                  <td style="padding:10px;color:var(--mint)">${esc(row.dependance)}</td>
-                  <td style="padding:10px;color:var(--gold)">${esc(row.hebergement)}</td>
-                  <td style="padding:10px;color:var(--text-2)">${esc(row.userPart)}</td>
+                <tr>
+                  <td style="font-weight:700;color:var(--text)">${esc(row.facility)}</td>
+                  <td style="color:var(--sky)">${esc(row.soins)}</td>
+                  <td style="color:var(--mint)">${esc(row.dependance)}</td>
+                  <td style="color:var(--gold)">${esc(row.hebergement)}</td>
+                  <td style="color:var(--text-soft)">${esc(row.userPart)}</td>
                 </tr>
               `).join("")}
             </tbody>
           </table>
         </div>
+        <!-- Vue Mobile : Fiches synthétiques aérées -->
+        <div class="secu-matrix-cards">
+          ${secu.whoPaysWhat.map(row => `
+            <div class="secu-matrix-card">
+              <h3>${esc(row.facility)}</h3>
+              <div class="secu-matrix-item">
+                <strong>Soins :</strong>
+                <span style="color:var(--sky)">${esc(row.soins)}</span>
+              </div>
+              <div class="secu-matrix-item">
+                <strong>Dépendance :</strong>
+                <span style="color:var(--mint)">${esc(row.dependance)}</span>
+              </div>
+              <div class="secu-matrix-item">
+                <strong>Hébergement :</strong>
+                <span style="color:var(--gold)">${esc(row.hebergement)}</span>
+              </div>
+              <div class="secu-matrix-item">
+                <strong>Reste à charge :</strong>
+                <span>${esc(row.userPart)}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
       </div>
     ` : paywallGate("Matrice Comparative 'Qui Paie Quoi' & 6 Interactions Directeur (45% Campus)", "Accédez à la matrice des flux financiers pour les 9 catégories d'établissements et aux 6 protocoles de négociation avec la CPAM et la CARSAT.", `
       <div class="section-block">
-        <div class="result-grid">
+        <div class="secu-interaction-grid">
           ${secu.managerInteractions.slice(0, 2).map(inter => `
-            <article class="content-card">
-              <span class="icon-bubble">${esc(inter.num)}</span>
-              <h3>${esc(inter.title)}</h3>
-              <p class="card-copy">${esc(inter.detail)}</p>
+            <article class="secu-interaction-card">
+              <div class="secu-interaction-header">
+                <span class="secu-interaction-num">${esc(inter.num)}</span>
+                <h3>${esc(inter.title)}</h3>
+              </div>
+              <p>${esc(inter.detail)}</p>
             </article>
           `).join("")}
         </div>
@@ -2665,7 +2726,6 @@ function renderSecu() {
     ${sourceLinks(["ameli", "cnsa", "cnsaFunding", "hospital"])}
   </section>`;
 }
-
 function renderSubscription() {
   const isUnlocked = isPremiumUnlocked();
   const pricing = PRICING_DATA;
@@ -2935,6 +2995,23 @@ document.addEventListener("click", event => {
     peerMultiSelect.close();
   }
 
+  // RH tabs handler - intercepté avant le check data-action
+  const rhTab = event.target.closest("[data-rh-tab]");
+  if (rhTab) {
+    event.preventDefault();
+    const tabId = rhTab.dataset.rhTab;
+    $$(".rh-tab").forEach(t => {
+      const active = t.dataset.rhTab === tabId;
+      t.classList.toggle("is-active", active);
+      t.setAttribute("aria-selected", String(active));
+    });
+    $$(".rh-tab-panel").forEach(p => p.classList.toggle("is-active", p.dataset.rhPanel === tabId));
+    // Re-init calculators when switching to calculateurs tab
+    if (tabId === "calculateurs") { renumberEtptRows(); calculateEtp(); syncForfaitCalendar(); }
+    if (tabId === "questions") { const input = $("#faq-query"); if (input) { input.value = state.queries.faq; applyFilter("faq"); } }
+    return;
+  }
+
   const actionEl = event.target.closest("[data-action]");
   if (!actionEl) return;
   const action = actionEl.dataset.action;
@@ -2949,18 +3026,6 @@ document.addEventListener("click", event => {
       wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
       setTimeout(() => wrap.querySelector("input, select, textarea")?.focus(), 120);
     }
-    return;
-  }
-
-  // RH tabs handler
-  const rhTab = actionEl.closest("[data-rh-tab]");
-  if (rhTab && rhTab.role === "tab") {
-    const tabId = rhTab.dataset.rhTab;
-    $$(".rh-tab").forEach(t => { t.classList.toggle("is-active", t.dataset.rhTab === tabId); t.setAttribute("aria-selected", String(t.dataset.rhTab === tabId)); });
-    $$(".rh-tab-panel").forEach(p => p.classList.toggle("is-active", p.dataset.rhPanel === tabId));
-    // Re-init calculators when switching to calculateurs tab
-    if (tabId === "calculateurs") { renumberEtptRows(); calculateEtp(); syncForfaitCalendar(); }
-    if (tabId === "questions") { const input = $("#faq-query"); if (input) { input.value = state.queries.faq; applyFilter("faq"); } }
     return;
   }
 
@@ -3188,6 +3253,15 @@ document.addEventListener("change", event => {
     state.docChecks[el.dataset.check]=el.checked; writeJSON(STORE.checks,state.docChecks); updateChecklistProgress();
   }
   if (el.id === "peer-experience-filter" || el.id === "peer-region-filter") renderPeerList();
+  if (el.id === "timeline-post-type-select") {
+    const isEvent = el.value === "event";
+    const extra = $("#timeline-event-extra-fields");
+    if (extra) extra.style.display = isEvent ? "block" : "none";
+    const submitBtn = $("#timeline-post-submit-btn");
+    if (submitBtn) {
+      submitBtn.innerHTML = `${icon("send", 14)} ${isEvent ? "Diffuser l'événement" : el.value === "job_offer" ? "Diffuser l'offre" : "Diffuser l'annonce"}`;
+    }
+  }
 });
 
 document.addEventListener("click", event => {
@@ -3244,7 +3318,12 @@ document.addEventListener("submit", event => {
       showToast("Veuillez renseigner le titre, l'établissement et la description.");
       return;
     }
-    const type = state.timelineComposeType || "job_offer";
+    // CORRECTION CRITIQUE : lire le type choisi par l'utilisateur dans le menu déroulant
+    const type = String(fd.get("type") || "job_offer");
+    const eventDate = String(fd.get("eventDate") || "").trim();
+    const location = String(fd.get("location") || "").trim();
+    const typeLabel = type === "event" ? "Événement" : type === "job_offer" ? "Offre d'emploi" : "Annonce";
+
     const newPost = {
       id: "post-" + Date.now(),
       author: {
@@ -3258,8 +3337,8 @@ document.addEventListener("submit", event => {
       organization: org,
       contract: String(fd.get("contract") || ""),
       contact: String(fd.get("contact") || ""),
-      eventDate: String(fd.get("eventDate") || ""),
-      location: String(fd.get("location") || ""),
+      eventDate: eventDate,
+      location: location,
       content,
       date: "À l'instant",
       likes: 0,
@@ -3273,21 +3352,25 @@ document.addEventListener("submit", event => {
     }
     state.posts = [newPost, ...(state.posts || [])];
     writeJSON(STORE.posts, state.posts);
+
     // Sync to Firestore
     if (typeof window.savePostToFirestore === "function") {
       window.savePostToFirestore(newPost)
-        .then(() => showToast("🎉 Annonce publiée et synchronisée avec le réseau !"))
+        .then(() => showToast(`🎉 ${typeLabel} publié(e) et synchronisé(e) avec le réseau !`))
         .catch(err => {
           console.warn("[Firestore] Synchronisation post différée :", err.message);
         });
     }
     form.reset();
-    showToast("🎉 Annonce publiée sur le fil d'actualités du réseau !");
+    showToast(`🎉 ${typeLabel} publié(e) avec succès sur le fil d'actualités !`);
     const feed = $("#timeline-feed");
     if (feed) {
       feed.innerHTML = renderTimelinePosts();
       hydrateIcons(feed);
+      feed.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
+    const wrap = $("#timeline-post-form-wrap");
+    if (wrap) wrap.style.display = "none";
     return;
   }
   if (event.target.id === "peer-form") { event.preventDefault(); addPeer(event.target); }
