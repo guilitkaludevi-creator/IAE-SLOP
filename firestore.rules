@@ -1,0 +1,161 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Application : Mosaïque Santé (Projet Firebase: iae-slop-3f7be)
+    // Description : Annuaire réseau d'alumni / pairs de promotion Master MES
+    //               et cadres du secteur sanitaire et médico-social.
+    //
+    // Collection : alumni
+    // Document ID : Identifiant automatique Firestore ({alumniId})
+    //
+    // Fields :
+    //   - name       : string    (obligatoire, 2 à 80 caractères) - Nom complet du membre
+    //   - email      : string    (obligatoire, email valide, 5 à 120 caractères) - Adresse email
+    //   - region     : string    (obligatoire, 2 à 50 caractères) - Région administrative française
+    //   - sector     : string    (obligatoire, 2 à 50 caractères) - Secteur (MAS, FAM, EHPAD, IME, SESSAD, HAD, CHU, etc.)
+    //   - role       : string    (obligatoire, 2 à 80 caractères) - Fonction (Directeur, Adjoint, RQGR, Cadre, etc.)
+    //   - experience : string (2 à 600 caractères) OU list (1 à 30 éléments) - Domaines / expériences (multi-sélection)
+    //   - summary    : string    (obligatoire, 0 à 1000 caractères) - Présentation, compétences, parcours
+    //   - consent    : bool      (obligatoire, doit être impérativement true) - Consentement RGPD au partage dans l'annuaire
+    //   - createdAt  : timestamp (obligatoire, horodatage récent serveur) - Date de soumission de la fiche
+    //
+    // Invariants de sécurité :
+    //   - Strict Schema : Aucun champ non répertorié n'est autorisé (hasOnlyAllowedFields).
+    //   - Bounds & Types : Chaque chaîne et liste est strictement bornée pour éviter les attaques DoS / injection 1MB.
+    //   - Protection Update/Delete : Aucun utilisateur anonyme ou non autorisé ne peut écraser ou supprimer un document.
+    //   - Consentement strict : `consent` doit obligatoirement valoir `true`.
+    //   - Immutabilité : La date de création `createdAt` et l'`email` ne peuvent pas être altérés.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Vérifie si la requête provient d'un utilisateur authentifié
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Vérifie si l'utilisateur possède un rôle administrateur via Custom Claims
+    function isAdmin() {
+      return isAuthenticated() &&
+             request.auth.token.get('admin', false) == true;
+    }
+
+    // Vérifie si l'utilisateur est le propriétaire légitime vérifié via son email Firebase Auth
+    function isEmailOwner(email) {
+      return isAuthenticated() &&
+             request.auth.token.email_verified == true &&
+             request.auth.token.email == email;
+    }
+
+    // Vérifie la présence de tous les champs requis
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Empêche la pollution de schéma en interdisant tout champ supplémentaire
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Valide le type chaîne et la longueur minimale / maximale
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+             request.resource.data[field].size() >= minLen &&
+             request.resource.data[field].size() <= maxLen;
+    }
+
+    // Valide le format d'adresse email
+    function isValidEmail(email) {
+      return email is string &&
+             email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // Valide le champ experience : chaîne de 2 à 600 caractères (ex: sélection multiple jointe)
+    // OU liste de 1 à 30 éléments (ex: tableau d'expériences parmi les 24 domaines)
+    function isValidExperience(exp) {
+      return (exp is string && exp.size() >= 2 && exp.size() <= 600) ||
+             (exp is list && exp.size() >= 1 && exp.size() <= 30);
+    }
+
+    // Vérifie qu'un timestamp est valide et correspond au temps serveur (tolérance de 5 min)
+    function isValidCreationTime(time) {
+      return time is timestamp &&
+             time <= request.time &&
+             time > request.time - duration.value(5, 'm');
+    }
+
+    // Vérifie que les champs immuables ne sont pas altérés lors d'une mise à jour
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validator (Pattern obligatoire pour create et update)
+    // ===============================================================
+
+    function isValidAlumni(data) {
+      return hasRequiredFields(['name', 'email', 'region', 'sector', 'role', 'experience', 'summary', 'consent', 'createdAt']) &&
+             hasOnlyAllowedFields(['name', 'email', 'region', 'sector', 'role', 'experience', 'summary', 'consent', 'createdAt']) &&
+             validStringLength('name', 2, 80) &&
+             validStringLength('email', 5, 120) &&
+             isValidEmail(data.email) &&
+             validStringLength('region', 2, 50) &&
+             validStringLength('sector', 2, 50) &&
+             validStringLength('role', 2, 80) &&
+             isValidExperience(data.experience) &&
+             data.summary is string &&
+             data.summary.size() <= 1000 &&
+             data.consent is bool &&
+             data.consent == true;
+    }
+
+    // Condition autorisant la mise à jour d'un document alumni
+    function canUpdateAlumni() {
+      // Doit être admin OU le titulaire authentifié avec email vérifié correspondant à la fiche
+      return (isAdmin() || isEmailOwner(resource.data.email)) &&
+             isValidAlumni(request.resource.data) &&
+             areImmutableFieldsUnchanged(['createdAt', 'email']);
+    }
+
+    // Condition autorisant la suppression d'un document alumni
+    function canDeleteAlumni() {
+      // Réservé aux administrateurs ou au propriétaire du compte avec email vérifié
+      return isAdmin() || isEmailOwner(resource.data.email);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /alumni/{alumniId} {
+      // 1. Lecture publique de l'annuaire pour les membres du réseau
+      allow read: if true;
+
+      // 2. Création d'une nouvelle fiche alumni avec validation stricte de schéma
+      allow create: if isValidAlumni(request.resource.data) &&
+                       isValidCreationTime(request.resource.data.createdAt);
+
+      // 3. Modification contrôlée (bloquée par défaut pour les tiers / anonymes)
+      allow update: if canUpdateAlumni();
+
+      // 4. Suppression contrôlée (bloquée par défaut pour les tiers / anonymes)
+      allow delete: if canDeleteAlumni();
+    }
+
+    // ===============================================================
+    // Default Deny (Toutes les autres collections non autorisées)
+    // ===============================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

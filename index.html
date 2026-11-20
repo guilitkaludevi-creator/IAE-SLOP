@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1420">
+    <meta name="description" content="Mosaïque Santé : repères pratiques pour piloter un établissement sanitaire ou médico-social en France.">
+    <meta name="color-scheme" content="dark light">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mosaïque Santé">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+          "firebase/analytics": "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+        }
+      }
+    </script>
+    <title>Mosaïque Santé — boîte à outils du management</title>
+    <link rel="stylesheet" href="./app.css">
+  </head>
+  <body>
+    <div class="ambient ambient-a" aria-hidden="true"></div>
+    <div class="ambient ambient-b" aria-hidden="true"></div>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="Navigation principale">
+        <a class="brand" href="#accueil" data-nav="accueil" aria-label="Mosaïque Santé, accueil">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40" fill="none"><path d="M20 3.5 36.5 13v14L20 36.5 3.5 27V13L20 3.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m20 10 8.5 5v10L20 30l-8.5-5V15l8.5-5Z" fill="currentColor" opacity=".88"/><path d="M20 10v20m8.5-15L11.5 25m17 0-17-10" stroke="#0b1420" stroke-width="1.2" opacity=".7"/></svg>
+          </span>
+          <span class="brand-copy"><strong>Mosaïque</strong><small>SANTÉ · MANAGER</small></span>
+        </a>
+        <div class="sidebar-scroll">
+          <div id="desktop-nav"></div>
+          <div class="sidebar-note glass-panel">
+            <div class="note-spark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8v3.5m0 11.4v3.5m9.2-9.2h-3.5M6.3 12H2.8m15.7-6.5-2.5 2.5m-8 8-2.5 2.5m13 0L16 16m-8-8L5.5 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="12" r="3.1" stroke="currentColor" stroke-width="1.7"/></svg></div>
+            <p>Un repère avant une décision</p>
+            <span>Chaque fiche distingue ce qui est national de ce qui dépend du statut ou du territoire.</span>
+          </div>
+        </div>
+        <div class="sidebar-footer">
+          <button class="quiet-link" data-action="open-sources"><span class="icon-wrap" data-icon="book"></span> Sources & limites</button>
+          <div class="profile-mini"><div class="profile-orb">MES</div><div><strong>Parcours MES</strong><small>Direction · qualité · RH</small></div><span class="online-dot" aria-label="Prototype local"></span></div>
+        </div>
+      </aside>
+
+      <div class="main-column">
+        <header class="topbar">
+          <div class="mobile-brand">
+            <button class="icon-button menu-toggle" aria-label="Ouvrir le menu" data-action="toggle-menu"><span data-icon="menu"></span></button>
+            <a class="brand compact" href="#accueil" data-nav="accueil"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M20 3.5 36.5 13v14L20 36.5 3.5 27V13L20 3.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m20 10 8.5 5v10L20 30l-8.5-5V15l8.5-5Z" fill="currentColor" opacity=".88"/></svg></span><span class="brand-copy"><strong>Mosaïque</strong><small>SANTÉ</small></span></a>
+          </div>
+          <div class="breadcrumb"><span>ESPACE MANAGER</span><span class="crumb-slash">/</span><strong id="page-label">Accueil</strong></div>
+          <div class="topbar-actions">
+            <button class="search-trigger" data-action="open-search" aria-label="Rechercher dans les repères"><span data-icon="search"></span><span>Rechercher</span><kbd id="search-shortcut">Ctrl K</kbd></button>
+            <button class="icon-button notif-toggle" data-action="toggle-notifications" aria-label="Notifications" title="Notifications réseau" style="position:relative"><span data-icon="bell"></span><span class="notif-badge" id="notif-badge">3</span></button>
+            <button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="Changer le thème"><span data-icon="sun"></span></button>
+            <button class="avatar-button" data-nav="reseau" aria-label="Ouvrir le réseau de promotion">G</button>
+          </div>
+        </header>
+        <div id="notif-popover" class="notif-popover" hidden></div>
+
+        <main id="main-content" tabindex="-1">
+          <div id="page-stage">
+            <section class="page page-boot" aria-labelledby="boot-title">
+              <span class="eyebrow">VOTRE CAMPUS DE MANAGEMENT EN SANTÉ</span>
+              <h1 id="boot-title">Comprendre le système.<br><em>Mieux piloter le quotidien.</em></h1>
+              <p class="lede">Des repères concrets pour les managers du sanitaire, du social et du médico-social, avec un focus sur le Master MES et l’expérience de terrain en MAS.</p>
+              <div class="hero-actions" style="margin-top:22px">
+                <button class="button primary" data-nav="etablissements">Explorer les établissements</button>
+                <button class="button subtle" data-nav="carte">Voir les interactions</button>
+              </div>
+              <p class="small-note" style="margin-top:22px">Chargement du guide interactif…</p>
+            </section>
+          </div>
+        </main>
+        <footer class="main-footer"><span>Repères mis en forme le 20 novembre 2026 · Version prototype</span><button class="quiet-link" data-action="open-sources">Comprendre les limites <span data-icon="arrow-up-right"></span></button></footer>
+      </div>
+    </div>
+
+        <nav class="bottom-nav" aria-label="Navigation mobile">
+      <button data-nav="accueil" class="bottom-link is-active"><span data-icon="home"></span><small>Accueil</small></button>
+      <button data-nav="etablissements" class="bottom-link"><span data-icon="building"></span><small>Établ.</small></button>
+      <button data-nav="qualite" class="bottom-link"><span data-icon="shield"></span><small>Qualité</small></button>
+      <button data-nav="logiciels" class="bottom-link"><span data-icon="layers"></span><small>Logiciels</small></button>
+      <button data-nav="reseau" class="bottom-link"><span data-icon="users"></span><small>Réseau</small></button>
+    </nav>
+
+    <dialog class="app-dialog" id="app-dialog" aria-labelledby="dialog-title">
+      <div class="dialog-shell">
+        <div class="dialog-grabber" id="dialog-grabber" aria-hidden="true"></div>
+        <div class="dialog-head"><span class="eyebrow" id="dialog-kicker">FICHE REPÈRE</span><button class="icon-button" data-action="close-dialog" aria-label="Fermer"><span data-icon="close"></span></button></div>
+        <div id="dialog-content"></div>
+      </div>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <noscript><div class="noscript-card">Cette boîte à outils interactive nécessite JavaScript dans le navigateur.</div></noscript>
+    <script type="module" src="./firebase-init.js"></script>
+    <script defer src="./data.js"></script>
+    <script defer src="./app.js"></script>
+  </body>
+</html>
