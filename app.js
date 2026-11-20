@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
 "use strict";
 
 const { ACTORS, CONVENTIONS, DOCUMENTS, ESTABLISHMENTS, FAQ, JOBS, MAP_EDGES, MAP_NODES, MEETINGS, NAV, RESEARCH_AREAS, SOFTWARES, SOURCES, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS } = window.MOSAQUE_DATA;
@@ -18,7 +18,7 @@ const dialog = $("#app-dialog");
 const dialogContent = $("#dialog-content");
 const dialogKicker = $("#dialog-kicker");
 const toastEl = $("#toast");
-const STORE = { theme:"mosaique-theme", favorites:"mosaique-favorites", checks:"mosaique-doc-checks", peers:"mosaique-peers", auth:"mosaique-auth" };
+const STORE = { theme:"mosaique-theme", favorites:"mosaique-favorites", checks:"mosaique-doc-checks", peers:"mosaique-peers", auth:"mosaique-auth", posts:"mosaique-posts", rsvps:"mosaique-rsvps", notifs:"mosaique-notifs" };
 let pageTransitionToken = 0;
 let pageTransitionDirection = 0;
 let mapRuntime = null;
@@ -1872,8 +1872,11 @@ function toggleNotifications() {
   const unreadCount = (state.notifs || []).filter(n => n.unread).length;
   popover.innerHTML = `
     <div class="notif-header">
-      <h3 style="display:flex;align-items:center;gap:6px">${icon("bell", 16)} Notifications réseau (${state.notifs.length})</h3>
-      ${unreadCount > 0 ? `<button class="button tiny subtle" data-action="mark-all-notifs-read">Tout marquer comme lu</button>` : `<span class="muted" style="font-size:11px">À jour</span>`}
+      <h3 style="display:flex;align-items:center;gap:6px">${icon("bell", 16)} Notifications (${state.notifs.length})</h3>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${unreadCount > 0 ? `<button class="button tiny subtle" data-action="mark-all-notifs-read" style="min-height:30px;padding:4px 10px;font-size:10px">Tout lire</button>` : `<span class="muted" style="font-size:11px">À jour</span>`}
+        <button class="icon-button" data-action="toggle-notifications" aria-label="Fermer les notifications" style="min-width:32px;min-height:32px;border-radius:9px">${icon("close", 15)}</button>
+      </div>
     </div>
     <div class="notif-list" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
       ${state.notifs.length ? state.notifs.map(n => `
@@ -2879,6 +2882,13 @@ document.addEventListener("click", event => {
   const nav = event.target.closest("[data-nav]");
   if (nav) { event.preventDefault(); renderPage(nav.dataset.nav); return; }
 
+  // Fermeture du popover notifications au clic extérieur
+  if (state.notifsOpen && !event.target.closest("#notif-popover") && !event.target.closest("[data-action=\"toggle-notifications\"]")) {
+    state.notifsOpen = false;
+    const popover = $("#notif-popover");
+    if (popover) popover.hidden = true;
+  }
+
   // Multi-select expériences alumni
   const removeChip = event.target.closest("[data-remove-exp]");
   if (removeChip) {
@@ -2915,7 +2925,18 @@ document.addEventListener("click", event => {
   const action = actionEl.dataset.action;
   if (action === "toggle-menu") toggleMenu();
   if (action === "open-search") openSearch();
-  
+  if (action === "toggle-post-form") {
+    const wrap = $("#timeline-post-form-wrap");
+    if (!wrap) return;
+    const isHidden = wrap.style.display === "none" || wrap.style.display === "";
+    wrap.style.display = isHidden ? "block" : "none";
+    if (isHidden) {
+      wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      setTimeout(() => wrap.querySelector("input, select, textarea")?.focus(), 120);
+    }
+    return;
+  }
+
   if (action === "toggle-notifications") {
     toggleNotifications();
     return;

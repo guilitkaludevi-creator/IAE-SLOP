@@ -1,4 +1,4 @@
-@layer tokens, reset, shell, components, pages, responsive, motion;
+﻿@layer tokens, reset, shell, components, pages, responsive, motion;
 
 @layer tokens {
   :root {
@@ -296,7 +296,7 @@
 }
 
 @layer pages {
-  .page { animation: page-enter-fluid 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; will-change: transform, opacity; }
+  .page { animation: page-enter-fluid 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; will-change: transform, opacity; contain: content; }
   @keyframes page-enter-fluid { from { opacity: 0; transform: translateY(10px) scale(0.995); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .page-boot { animation: page-enter .35s var(--ease-out) both; }
   @keyframes page-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -619,11 +619,11 @@
     .topbar-actions { margin-left: auto; }
     main { padding: 27px 22px 45px; }
     .main-footer { padding: 4px 22px 90px; }
-    .bottom-nav { position: fixed; left: 50%; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 18; transform: translateX(-50%); width: min(500px, calc(100% - 16px)); display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; padding: 6px; border: 1px solid var(--stroke-strong); border-radius: 19px; background: rgba(11,20,32,.88); box-shadow: 0 16px 55px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.07); backdrop-filter: blur(18px) saturate(1.25); -webkit-backdrop-filter: blur(18px) saturate(1.25); }
+    .bottom-nav { position: fixed; left: 50%; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 18; transform: translateX(-50%); width: min(500px, calc(100% - 12px)); display: grid; grid-template-columns: repeat(6,1fr) !important; gap: 2px; padding: 5px; border: 1px solid var(--stroke-strong); border-radius: 19px; background: rgba(11,20,32,.88); box-shadow: 0 16px 55px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.07); backdrop-filter: blur(18px) saturate(1.25); -webkit-backdrop-filter: blur(18px) saturate(1.25); }
     html[data-theme="light"] .bottom-nav { background: rgba(255,255,255,.9); }
-    .bottom-link { min-width: 44px; min-height: 52px; display: grid; place-items: center; align-content: center; gap: 3px; border: 0; border-radius: 13px; color: var(--muted); background: transparent; transition: background .2s var(--ease-out), color .2s var(--ease-out), transform .2s var(--ease-out); }
-    .bottom-link svg { width: 18px; height: 18px; }
-    .bottom-link small { font-size: 10px; font-weight: 680; }
+    .bottom-link { min-width: 0; min-height: 50px; display: grid; place-items: center; align-content: center; gap: 2px; padding: 0 2px; border: 0; border-radius: 12px; color: var(--muted); background: transparent; transition: background .2s var(--ease-out), color .2s var(--ease-out), transform .2s var(--ease-out); }
+    .bottom-link svg { width: 17px; height: 17px; }
+    .bottom-link small { font-size: clamp(8px, 2.2vw, 10px); font-weight: 680; white-space: nowrap; }
     .bottom-link.is-active { color: var(--mint); background: rgba(117,224,194,.1); box-shadow: inset 0 0 0 1px rgba(117,224,194,.12); }
     .bottom-link:active { transform: scale(.96); }
     .dashboard-lower, .jobs-layout, .documents-layout, .faq-layout, .map-layout, .network-layout { grid-template-columns: minmax(0,1fr); }
@@ -769,9 +769,10 @@
     .hero-actions { flex-direction: column; width: 100%; }
     .hero-actions .button { width: 100%; justify-content: center; }
     .dashboard-stats { grid-template-columns: 1fr; gap: 8px; }
-    .bottom-nav { width: calc(100% - 10px); padding: 4px; border-radius: 16px; }
-    .bottom-link { min-height: 48px; }
-    .bottom-link small { font-size: 9px; }
+    .bottom-nav { width: calc(100% - 8px); padding: 4px 3px; border-radius: 15px; gap: 1px; }
+    .bottom-link { min-height: 46px; padding: 0 1px; }
+    .bottom-link svg { width: 16px; height: 16px; }
+    .bottom-link small { font-size: 8px; }
     .filter-bar { flex-direction: column; align-items: stretch; }
     .filter-bar .search-box { width: 100%; }
     .page-head h1 { font-size: 24px; }
@@ -1192,12 +1193,11 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   }
   .notif-popover {
-    position: absolute;
-    top: 60px;
-    right: 20px;
-    width: 360px;
-    max-width: calc(100vw - 32px);
-    max-height: 480px;
+    position: fixed;
+    top: 70px;
+    right: 16px;
+    width: min(380px, calc(100vw - 32px));
+    max-height: min(480px, calc(100dvh - 90px));
     overflow-y: auto;
     border-radius: 18px;
     background: var(--surface-strong);
