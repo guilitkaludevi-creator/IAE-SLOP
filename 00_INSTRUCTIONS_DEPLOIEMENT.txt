@@ -1,0 +1,30 @@
+GUIDE DE DÉPLOIEMENT RAPIDE SUR GITHUB (10 SECONDES)
+===================================================
+
+1. Rendez-vous sur votre dépôt GitHub dans votre navigateur :
+   https://github.com/guilitkaludevi-creator/IAE-SLOP/upload/main
+
+2. Sélectionnez TOUS les fichiers présents dans ce dossier (Ctrl + A)
+   et glissez-déposez-les directement sur la page GitHub.
+
+3. En bas de page sur GitHub, cliquez sur le bouton vert "Commit changes".
+
+4. Votre site est déployé en 30 secondes sur :
+   https://guilitkaludevi-creator.github.io/IAE-SLOP/
+
+IMPORTANT POUR VOIR LES MODIFICATIONS SUR VOTRE NAVIGATEUR :
+-----------------------------------------------------------
+Le nouveau Service Worker "Network-First" (v10) et le système anti-cache (v=20261120-1900)
+ont été intégrés.
+Lors de votre première visite :
+- Sur PC : Faites un rechargement forcé avec 'Ctrl + Shift + R' (ou 'Ctrl + F5').
+- Sur Mobile (Android/Chrome/Safari) : Fermez l'onglet et rechargez la page, ou effacez l'historique récent/données de navigation si l'ancien Service Worker persiste.
+
+NOUVELLES FONCTIONNALITÉS IMMÉDIATEMENT VISIBLES :
+--------------------------------------------------
+- Nouveau bouton doré "Campus" dans la barre du haut (accès direct à l'Abonnement/Paywall).
+- Barre de navigation mobile du bas à 6 boutons : Accueil, Établ., Métiers, Sécu, Campus, Réseau.
+- Module "Sécurité Sociale & Liens" (5 branches, ONDAM, CPAM/CARSAT, tarification).
+- Nouveaux métiers institutionnels (HAS, ARS, ANAP, Sécu) et de terrain/support (AS/AES, IDE, Éducateur, Paramédical, RH, Compta).
+- Page Alumni avec modification de profil, multi-expériences, lien LinkedIn, timeline d'annonces et boutons de participation RSVP, et menu de notifications en haut !
+- Palette de couleurs douces et bannière explicative sur la page d'accueil.

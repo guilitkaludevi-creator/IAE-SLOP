@@ -24,7 +24,7 @@
       }
     </script>
     <title>Mosaïque Santé — boîte à outils du management</title>
-    <link rel="stylesheet" href="./app.css">
+    <link rel="stylesheet" href="./app.css?v=20261120-1900">
   </head>
   <body>
     <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -59,6 +59,7 @@
           </div>
           <div class="breadcrumb"><span>ESPACE MANAGER</span><span class="crumb-slash">/</span><strong id="page-label">Accueil</strong></div>
           <div class="topbar-actions">
+            <button class="topbar-chip" data-nav="abonnement" aria-label="Abonnement et Campus" title="Abonnement & Offres Campus" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(248,211,136,0.12);color:var(--gold);border:1px solid rgba(248,211,136,0.3);cursor:pointer;white-space:nowrap"><span data-icon="star"></span><span>Campus</span></button>
             <button class="search-trigger" data-action="open-search" aria-label="Rechercher dans les repères"><span data-icon="search"></span><span>Rechercher</span><kbd id="search-shortcut">Ctrl K</kbd></button>
             <button class="icon-button notif-toggle" data-action="toggle-notifications" aria-label="Notifications" title="Notifications réseau" style="position:relative"><span data-icon="bell"></span><span class="notif-badge" id="notif-badge">3</span></button>
             <button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="Changer le thème"><span data-icon="sun"></span></button>
@@ -85,11 +86,12 @@
       </div>
     </div>
 
-        <nav class="bottom-nav" aria-label="Navigation mobile">
+    <nav class="bottom-nav" aria-label="Navigation mobile" style="grid-template-columns: repeat(6, 1fr);">
       <button data-nav="accueil" class="bottom-link is-active"><span data-icon="home"></span><small>Accueil</small></button>
       <button data-nav="etablissements" class="bottom-link"><span data-icon="building"></span><small>Établ.</small></button>
-      <button data-nav="qualite" class="bottom-link"><span data-icon="shield"></span><small>Qualité</small></button>
-      <button data-nav="logiciels" class="bottom-link"><span data-icon="layers"></span><small>Logiciels</small></button>
+      <button data-nav="metiers" class="bottom-link"><span data-icon="briefcase"></span><small>Métiers</small></button>
+      <button data-nav="secu" class="bottom-link"><span data-icon="shield"></span><small>Sécu</small></button>
+      <button data-nav="abonnement" class="bottom-link"><span data-icon="star"></span><small>Campus</small></button>
       <button data-nav="reseau" class="bottom-link"><span data-icon="users"></span><small>Réseau</small></button>
     </nav>
 
@@ -102,8 +104,28 @@
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <noscript><div class="noscript-card">Cette boîte à outils interactive nécessite JavaScript dans le navigateur.</div></noscript>
-    <script type="module" src="./firebase-init.js"></script>
-    <script defer src="./data.js"></script>
-    <script defer src="./app.js"></script>
+    <script type="module" src="./firebase-init.js?v=20261120-1900"></script>
+    <script defer src="./data.js?v=20261120-1900"></script>
+    <script defer src="./app.js?v=20261120-1900"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then(reg => {
+            reg.update();
+            reg.onupdatefound = () => {
+              const inst = reg.installing;
+              if (inst) {
+                inst.onstatechange = () => {
+                  if (inst.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('Mise à jour prête. Rechargement...');
+                    window.location.reload();
+                  }
+                };
+              }
+            };
+          }).catch(e => console.log('SW registration:', e));
+        });
+      }
+    </script>
   </body>
 </html>
