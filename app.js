@@ -315,7 +315,7 @@ function animateContent(elements, direction = 1) {
   contentAnimations.forEach(animation => animation.cancel());
   contentAnimations.clear();
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const delays = [0, 65, 115, 158, 194, 216];
+  const delays = [0, 80, 145, 200, 245, 275];
   const visible = elements.filter(element => {
     if (element.matches(".timeline-post")) {
       if (typeof element.getAnimations !== "function") return false;
@@ -332,7 +332,7 @@ function animateContent(elements, direction = 1) {
     if (typeof element.animate !== "function") return;
     const animation = element.animate(
       [{ opacity:.65, transform:`translateX(${direction * -14}px)` }, { opacity:1, transform:"none" }],
-      { duration:600, delay:delays[index], easing:"cubic-bezier(.18,.72,.23,1)", fill:"backwards" }
+      { duration:750, delay:delays[index], easing:"cubic-bezier(.18,.72,.23,1)", fill:"backwards" }
     );
     contentAnimations.add(animation);
     animation.onfinish = animation.oncancel = () => contentAnimations.delete(animation);
@@ -591,8 +591,7 @@ function renderDocuments() {
   const checked = Object.values(state.docChecks).filter(Boolean).length;
   return `<section class="page" aria-labelledby="documents-title">${sectionHead("BOÎTE À OUTILS · DOCUMENTS", "Les bons documents, <span class=\"text-gradient\">au bon moment.</span>", "Pour chaque outil : utilité, producteur, personnes à associer, calendrier et points de vigilance. Ouvrez une fiche pour suivre une trame de production.", `<button class="button subtle" data-action="open-sources">${icon("book",16)}Textes de référence</button>`)}
     <div class="notice">${icon("info",18)}<span><strong>Les procédures budgétaires ne sont pas identiques partout.</strong> Le statut, la catégorie FINESS, l’autorisation, le CPOM et les décisions de tarification déterminent si l’EPRD, l’ERRD, un PPI ou un compte administratif s’applique.</span></div>
-    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="document-query" type="search" placeholder="Nom, date, responsable, usage…" aria-label="Rechercher un document"></label><span class="filter-count" id="document-check-count">${checked} repère${checked === 1 ? "" : "s"} coché${checked === 1 ? "" : "s"}</span></div>
-    ${renderPills("documents", cats, state.filters.documents)}
+    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="document-query" type="search" placeholder="Nom, date, responsable, usage…" aria-label="Rechercher un document"></label>${renderFilterSelect("documents", cats, state.filters.documents, "Filtrer les documents par catégorie", "Toutes les catégories")}<span class="filter-count" id="document-check-count">${checked} repère${checked === 1 ? "" : "s"} coché${checked === 1 ? "" : "s"}</span></div>
     <div class="documents-layout section-block"><div class="documents-grid" id="document-results">${documentCards()}</div><aside class="doc-toolbox glass-panel"><span class="eyebrow">MINI-OUTIL DE PILOTAGE</span><h3 style="margin-top:12px">Avant de lancer un document</h3><p>Une fiche utile commence par le besoin, le bon responsable et les personnes qui doivent participer.</p><div class="doc-checklist" id="document-checklist">${["Le texte ou le contrat applicable est identifié","Le décideur et le pilote sont nommés","Les personnes concernées participent","Un calendrier de validation est posé","Les suites auront un responsable et une échéance"].map((item,index) => `<label class="check-row"><input type="checkbox" data-check="check-${index}" ${state.docChecks[`check-${index}`] ? "checked" : ""}><span>${esc(item)}</span></label>`).join("")}</div><p id="checklist-progress" class="small-note">${checked} repère coché sur 5.</p><button class="button subtle" data-action="reset-checklist">${icon("reset",14)}Réinitialiser</button></aside></div>
   </section>`;
 }
@@ -603,8 +602,8 @@ function actorCards(list = ACTORS) {
 function renderActors() {
   const types = ["Tout", ...new Set(ACTORS.map(item => item.type))];
   return `<section class="page" aria-labelledby="actors-title">${sectionHead("BOÎTE À OUTILS · ÉCOSYSTÈME", "Les acteurs autour <span class=\"text-gradient\">de l’établissement.</span>", "Repérez leur rôle, leur place, la bonne manière d’interagir et les ressources qu’ils peuvent apporter. Une autorité, un financeur, un appui et un répertoire n’ont pas le même mandat.", `<button class="button subtle" data-nav="carte">${icon("map",16)}Ouvrir la carte</button>`)}
-    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="actor-query" type="search" placeholder="Acteur, rôle, appui, financement…" aria-label="Rechercher un acteur"></label></div>
-    ${renderPills("actors", types, state.filters.actors)}<div class="section-block actor-grid" id="actor-results">${actorCards()}</div>
+    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="actor-query" type="search" placeholder="Acteur, rôle, appui, financement…" aria-label="Rechercher un acteur"></label>${renderFilterSelect("actors", types, state.filters.actors, "Filtrer les acteurs par type", "Tous les types")}</div>
+    <div class="section-block actor-grid" id="actor-results">${actorCards()}</div>
   </section>`;
 }
 function renderFaqList(list = FAQ) {

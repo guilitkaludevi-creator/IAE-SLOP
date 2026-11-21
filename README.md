@@ -5,7 +5,7 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 ## Contenu
 
 - Panorama de structures et de dispositifs, avec publics, métiers, partenaires et repères de management.
-- Filtres déroulants translucides par famille ou secteur dans les pages Établissements, Métiers de direction et Métiers support, combinables avec la recherche et utilisables au clavier.
+- Filtres déroulants translucides par famille, secteur, catégorie ou type dans les pages Établissements, Métiers de direction, Métiers support, Documents de pilotage et Acteurs institutionnels, combinables avec la recherche et utilisables au clavier.
 - Onglets thématiques sur les pages de repères les plus denses, navigables avec les flèches du clavier. Les grandes listes affichent six résultats par page ; les recherches et filtres portent toujours sur l’ensemble des résultats accessibles.
 - Pistes de métiers adaptées au Master Management des établissements de santé et à une expérience d’adjoint de direction en MAS.
 - **Nouveau : Corps de métier support sous la responsabilité du dirigeant** (gouvernante, ASH/ASR, ASL, maintenance, logistique, SI, qualité, guichet unique) avec rôles, organigramme, défis et matrice d'interactions transversales.
@@ -35,7 +35,7 @@ Avant d’utiliser la connexion ou l’inscription, initialisez Authentication d
 
 Pour tester le mode complet, connectez-vous avec une adresse vérifiée, puis saisissez `TEST-MOSAIQUE-COMPLET` dans « Abonnement & accès » → « Utiliser un code d’accès ». Ce code est public : tout utilisateur connecté avec un email vérifié peut l’utiliser. L’accès est enregistré dans le navigateur, sans paiement ni abonnement Stripe ; retirez ce mode avant une commercialisation. Le contenu Premium reste accessible dans les fichiers publics et n’est pas protégé côté serveur.
 
-Le projet ne nécessite pas de compilation. Le cadenas décoratif reste sur l’écran d’accès, se construit au fil des champs d’inscription et s’ouvre avant l’arrivée dans l’application. Jusqu’à six éléments visibles apparaissent progressivement par glissement latéral lors de la navigation et de la pagination, dans le sens inverse au retour ; les onglets glissent aussi selon leur ordre. Les mouvements respectent le réglage de réduction des animations et la navigation au clavier reste immédiate. Une mise à jour du service worker ne recharge pas automatiquement une page en cours de saisie ; elle prend effet au prochain chargement.
+Le projet ne nécessite pas de compilation. Le cadenas décoratif reste sur l’écran d’accès, se construit au fil des champs d’inscription et s’ouvre avant l’arrivée dans l’application. Jusqu’à six éléments visibles apparaissent progressivement par glissement latéral lors de la navigation et de la pagination, dans le sens inverse au retour ; les onglets glissent aussi selon leur ordre. Les cartes et certains panneaux flottent ensuite légèrement, en pause pendant leur interaction. Les mouvements respectent le réglage de réduction des animations et la navigation au clavier reste immédiate. Une mise à jour du service worker ne recharge pas automatiquement une page en cours de saisie ; elle prend effet au prochain chargement.
 
 Le paiement en ligne et la gestion des abonnements de groupe ne sont pas opérationnels. La création de comptes de groupe nécessite au préalable un statut d’abonnement vérifié côté serveur.
 
