@@ -1852,7 +1852,6 @@
 
   /* --- MODÈLES DE PRIX, ABONNEMENTS & ACCÈS UNIVERSEL --- */
   const PRICING_DATA = {
-    masterCode: "MOSAIQUE-MASTER-2026",
     tiers: {
       schools: [
         { id: "school-decouverte", name: "Découverte École", price: "290 €", period: "/ an HT", students: "Jusqu'à 30 étudiants", perStudent: "~10 € / étudiant", features: ["Accès intégral à 100% des modules", "Comptes étudiants nominatifs", "Mises à jour réglementaires 2×/an", "Support pédagogique par email", "Fiches mémo téléchargeables"] },

@@ -48,7 +48,7 @@ const state = {
   docChecks: readJSON(STORE.checks, {}),
   peers: readJSON(STORE.peers, []),
   mapFilter: "Tout",
-  auth: readJSON(STORE.auth, { isUnlocked: true, plan: "universal", role: "dirigeant" }),
+  auth: readJSON(STORE.auth, { isUnlocked:false, verifiedPaid:false, plan:"freemium", role:"visiteur" }),
   posts: readJSON(STORE.posts, []),
   rsvps: readJSON(STORE.rsvps, {}),
   notifs: readJSON(STORE.notifs, []),
@@ -67,24 +67,13 @@ const state = {
 };
 
 function isPremiumUnlocked() {
-  return Boolean(state.auth && state.auth.isUnlocked);
-}
-
-function unlockApp(plan = "universal", details = {}) {
-  state.auth = {
-    isUnlocked: true,
-    plan,
-    unlockedAt: new Date().toISOString(),
-    ...details
-  };
-  writeJSON(STORE.auth, state.auth);
-  showToast("👑 Accès universel débloqué avec succès !");
-  renderPage(state.page);
+  return Boolean(state.auth?.isUnlocked === true && state.auth?.verifiedPaid === true);
 }
 
 function lockAppFreemium() {
   state.auth = {
     isUnlocked: false,
+    verifiedPaid: false,
     plan: "freemium",
     lockedAt: new Date().toISOString()
   };
@@ -2753,25 +2742,21 @@ function renderSubscription() {
         <div style="display:flex;gap:8px;align-items:center">
           ${isUnlocked 
             ? `<button class="button subtle" data-action="reset-auth-profile">${icon("reset", 14)}Verrouiller (mode test)</button>`
-            : `<button class="button primary" data-action="quick-unlock-universal">${icon("spark", 15)}Débloquer via code maître</button>`}
+            : `<button class="button primary" data-nav="abonnement">${icon("spark", 15)}Souscrire en ligne</button>`}
         </div>
       </div>
     </div>
 
-    <!-- Saisie Code Maître Universel -->
+    <!-- Paiement sécurisé Stripe -->
     <div class="glass-panel" style="padding:22px;margin-bottom:28px;background:rgba(248,211,136,0.04);border:1px dashed rgba(248,211,136,0.3)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
         <span class="icon-bubble" style="background:rgba(248,211,136,0.15);color:var(--gold);padding:8px">${icon("spark", 18)}</span>
         <div>
-          <h3 style="font-size:15px;color:var(--gold);margin:0">Vous avez un code partenaire ou un code maître ?</h3>
-          <span style="font-size:12px;color:var(--text-2)">Entrez votre clé d'accès universelle pour déverrouiller immédiatement 100% de l'application.</span>
+          <h3 style="font-size:15px;color:var(--gold);margin:0">Souscription sécurisée</h3>
+          <span style="font-size:12px;color:var(--text-2)">La souscription est activée uniquement après paiement confirmé par le webhook Stripe.</span>
         </div>
       </div>
-      <form id="master-code-form" style="display:flex;gap:8px;max-width:520px;flex-wrap:wrap">
-        <input type="text" id="master-code-input" placeholder="Ex: MOSAIQUE-MASTER-2026" value="${isUnlocked ? 'MOSAIQUE-MASTER-2026' : ''}" style="flex:1;min-width:200px;padding:10px 14px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.2);color:var(--text);font-family:monospace;font-size:13px;text-transform:uppercase" required />
-        <button type="submit" class="button primary">${icon("check", 14)}Activer mon code</button>
-      </form>
-      <span style="display:block;margin-top:8px;font-size:11.5px;color:var(--muted)">Clé maître universelle fournie par le créateur : <code>MOSAIQUE-MASTER-2026</code></span>
+      <button class="button primary" data-action="request-partnership">${icon("lock",14)}Se connecter puis souscrire</button>
     </div>
 
     <!-- Formules Écoles & Universités -->
@@ -3067,25 +3052,19 @@ document.addEventListener("click", event => {
   }
   if (action === "toggle-freemium-test") {
     if (isPremiumUnlocked()) lockAppFreemium();
-    else unlockApp("universal", { name: "Master Admin" });
     return;
   }
   if (action === "quick-unlock-universal") {
-    unlockApp("universal", { name: "Master Admin" });
+    showToast("Cette ancienne fonction de déverrouillage est désactivée.");
     return;
   }
   if (action === "prompt-universal-key") {
     renderPage("abonnement");
-    setTimeout(() => {
-      const input = $("#master-code-input");
-      if (input) { input.focus(); input.scrollIntoView({ behavior: "smooth", block: "center" }); }
-    }, 200);
     return;
   }
   if (action === "simulate-subscribe") {
     const plan = actionEl.dataset.plan || "Pass Annuel Pro";
-    unlockApp(plan, { name: "Abonné " + plan });
-    showToast(`👑 Formule "${plan}" activée avec succès !`);
+    showToast(`La souscription « ${plan} » sera activée après authentification et paiement Stripe confirmé.`);
     return;
   }
   if (action === "reset-auth-profile") {
@@ -3374,18 +3353,6 @@ document.addEventListener("submit", event => {
     return;
   }
   if (event.target.id === "peer-form") { event.preventDefault(); addPeer(event.target); }
-  if (event.target.id === "master-code-form") {
-    event.preventDefault();
-    const input = $("#master-code-input");
-    const val = (input?.value || "").trim().toUpperCase();
-    if (val === PRICING_DATA.masterCode || val === "MOSAIQUE-MASTER-2026" || val === "MASTER" || val === "ADMIN") {
-      unlockApp("universal", { name: "Super-Admin Universel" });
-      showToast("👑 Code maître validé ! Accès universel (100%) débloqué.");
-    } else {
-      showToast("❌ Code invalide. Utilisez le code maître : MOSAIQUE-MASTER-2026");
-    }
-    return;
-  }
   if (event.target.id === "auth-profile-form") {
     event.preventDefault();
     const fd = new FormData(event.target);
