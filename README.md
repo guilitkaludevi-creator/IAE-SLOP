@@ -19,12 +19,15 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 - Raccourcis cliquables depuis l’accueil vers les métiers, la qualité, les outils, la politique de santé et les partenaires.
 - Navigation précédent/suivant avec conservation de la page, du scroll et des filtres.
 - Annuaire de promotion volontaire enrichi d'exemples réalistes (MAS, EHPAD, IME, HAD, CHU), avec filtres par rôle, région et domaine d’expérience.
+- Connexion et inscription par email via Firebase Authentication dès l’ouverture ; une session existante est restaurée automatiquement. La déconnexion est disponible dans le menu et dans « Abonnement & accès » et ramène à l’écran de connexion.
 - Affichage mobile, thème sombre/clair, panneaux de détails en feuille iOS, fermeture par glissement, animations Motion/Web Animations API, mode hors-ligne de base et ajout à l’écran d’accueil.
 - Document de pitch commercial complet pour les écoles (abonnements Découverte, Partenaire, Campus Santé) et tarification individuelle dans `pitch-mosaique-sante-ecoles.md`.
 
 ## Lancer en local
 
-Ouvrez `index.html` directement dans un navigateur, ou servez ce dossier avec l’extension Live Server de VS Code ou `npx serve .`. Le chargement n’utilise pas de modules ES, ce qui permet aussi l’ouverture en `file://`. Le service worker et l’installation PWA nécessitent HTTPS ou `localhost`.
+Servez ce dossier avec l’extension Live Server de VS Code ou `npx serve .`. Firebase Authentication utilise des modules chargés depuis le CDN Google et nécessite une connexion réseau ainsi qu’un domaine autorisé dans Firebase. Le service worker et l’installation PWA nécessitent HTTPS ou `localhost`.
+
+Avant d’utiliser la connexion ou l’inscription, initialisez Authentication dans la console Firebase du projet et activez le fournisseur « Adresse e-mail/Mot de passe ». Vérifiez aussi que le domaine de l’application figure dans les domaines autorisés.
 
 Le projet ne nécessite pas de compilation. Motion est chargé de façon facultative après le premier affichage depuis jsDelivr ; si le CDN est inaccessible, les animations intégrées au navigateur prennent le relais. Les transitions courtes utilisent principalement `transform` et `opacity` et respectent le réglage de réduction des animations.
 
@@ -34,9 +37,9 @@ Copiez le contenu de ce dossier à la racine d’un dépôt GitHub, activez GitH
 
 ## Données de l’annuaire
 
-Les fiches ajoutées au formulaire sont enregistrées dans `localStorage` sur le navigateur utilisé. Elles ne sont pas partagées entre appareils et ne sont envoyées vers aucun serveur. Le bouton d’export produit un fichier JSON local. Le retrait d’une fiche ou « Tout supprimer » efface ces données de ce navigateur.
+Les fiches ajoutées au formulaire sont enregistrées dans `localStorage` et leur synchronisation avec Firestore est également tentée. Le bouton d’export produit un fichier JSON local. « Tout supprimer » efface les données locales de ce navigateur ; la suppression distante dépend des droits Firestore.
 
-Avant une collecte collective, définir une information de confidentialité, une finalité, les accès, une durée de conservation et une procédure de suppression. La prochaine intégration Firebase devrait utiliser Authentication, des règles Firestore restreintes et une validation côté serveur ; aucune clé ni configuration Firebase n’est présente ici.
+Avant une collecte collective, définir une information de confidentialité, une finalité, les accès, une durée de conservation et une procédure de suppression. Firebase Authentication et Firestore sont configurés ; les accès aux données partagées doivent être encadrés par les règles Firestore et une validation côté serveur. L’écran de connexion ne protège pas à lui seul les fichiers publics de l’application.
 
 ## Sources et limites
 

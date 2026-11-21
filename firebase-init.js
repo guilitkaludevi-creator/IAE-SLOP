@@ -61,20 +61,25 @@ try {
   try {
     auth = getAuth(app);
     window.firebaseAuth = auth;
+    let authChangeVersion = 0;
     onAuthStateChanged(auth, async user => {
+      const version = ++authChangeVersion;
       let premium = false;
       if (user) {
         try {
           const token = await user.getIdTokenResult(true);
           premium = token.claims.premium === true || token.claims.verifiedPaid === true;
-        } catch {}
-      }
-      window.dispatchEvent(new CustomEvent("mosaique-auth-change", {
-        detail: {
-          user: user ? { uid:user.uid, email:user.email, displayName:user.displayName, emailVerified:user.emailVerified } : null,
-          premium
+        } catch (error) {
+          console.warn("[Firebase Auth] Vérification de l’accès Premium impossible :", error);
         }
-      }));
+      }
+      if (version !== authChangeVersion) return;
+      const detail = {
+        user: user ? { uid:user.uid, email:user.email, displayName:user.displayName, emailVerified:user.emailVerified } : null,
+        premium
+      };
+      window.mosaiqueAuthState = detail;
+      window.dispatchEvent(new CustomEvent("mosaique-auth-change", { detail }));
     });
   } catch (authErr) {
     console.warn("[Firebase Auth] Initialisation différée :", authErr.message);
@@ -313,8 +318,21 @@ window.deletePostFromFirestore = deletePostFromFirestore;
 export async function signUpMosaque({ name, email, password }) {
   if (!auth) throw new Error("Authentification non disponible.");
   const result = await createUserWithEmailAndPassword(auth, email, password);
-  if (name) await updateProfile(result.user, { displayName:name });
-  await sendEmailVerification(result.user);
+  try {
+    if (name) await updateProfile(result.user, { displayName:name });
+    await sendEmailVerification(result.user);
+  } catch (error) {
+    console.warn("[Firebase Auth] Compte créé, finalisation impossible :", error);
+    throw new Error("Compte créé, mais la finalisation ou l’envoi de l’email a échoué. Vérifiez votre compte et demandez un nouvel email de validation.");
+  }
+  if (window.mosaiqueAuthState?.user?.uid === result.user.uid) {
+    const detail = {
+      ...window.mosaiqueAuthState,
+      user: { uid:result.user.uid, email:result.user.email, displayName:result.user.displayName, emailVerified:result.user.emailVerified }
+    };
+    window.mosaiqueAuthState = detail;
+    window.dispatchEvent(new CustomEvent("mosaique-auth-change", { detail }));
+  }
   return result.user;
 }
 
@@ -339,7 +357,8 @@ export async function resendMosaqueEmail() {
 }
 
 export async function signOutMosaque() {
-  if (auth) await signOut(auth);
+  if (!auth) throw new Error("Authentification non disponible.");
+  await signOut(auth);
 }
 
 export async function redeemPremiumCode(code) {

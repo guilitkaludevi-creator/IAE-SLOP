@@ -153,6 +153,7 @@ function icon(name, size = 18) {
     sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>',
     moon:'<path d="M20.6 15.3A8.5 8.5 0 0 1 8.7 3.4 8.5 8.5 0 1 0 20.6 15.3Z"/>',
     close:'<path d="m18 6-12 12M6 6l12 12"/>',
+    logout:'<path d="M10 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2m4 10 5-5-5-5m5 5H8"/>',
     menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
     arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
     'arrow-up-right':'<path d="M7 17 17 7M8 7h9v9"/>',
@@ -3081,6 +3082,19 @@ function updateChecklistProgress() {
   if (countEl) countEl.textContent = `${count} repère${count === 1 ? "" : "s"} coché${count === 1 ? "" : "s"}`;
 }
 document.addEventListener("click", event => {
+  const authMode = event.target.closest("[data-auth-mode]");
+  if (authMode) {
+    const signup = authMode.dataset.authMode === "signup";
+    $("#auth-signin-panel").hidden = signup;
+    $("#auth-signup-panel").hidden = !signup;
+    $$("[data-auth-mode]").forEach(button => {
+      const selected = button === authMode;
+      button.classList.toggle("primary", selected);
+      button.classList.toggle("subtle", !selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+    return;
+  }
   const nav = event.target.closest("[data-nav]");
   if (nav) { event.preventDefault(); renderPage(nav.dataset.nav); return; }
 
@@ -3232,17 +3246,26 @@ document.addEventListener("click", event => {
   if (action === "reset-password") {
     const email = window.prompt("Adresse email utilisée pour votre compte ?");
     if (!email) return;
-    window.sendMosaqueReset?.(email.trim())
+    if (typeof window.sendMosaqueReset !== "function") {
+      showToast("Authentification indisponible. Vérifiez votre connexion et rechargez la page.");
+      return;
+    }
+    window.sendMosaqueReset(email.trim())
       .then(() => showToast("Email de réinitialisation envoyé."))
       .catch(err => showToast(err.message || "Impossible d’envoyer l’email."));
     return;
   }
   if (action === "sign-out") {
-    window.signOutMosaque?.()
+    if (typeof window.signOutMosaque !== "function") {
+      showToast("Authentification indisponible. Réessayez après avoir rechargé la page.");
+      return;
+    }
+    window.signOutMosaque()
       .then(() => {
         writeStoredValue(STORE.premiumCode,"0");
         showToast("Déconnexion effectuée.");
-      });
+      })
+      .catch(err => showToast(err.message || "Impossible de se déconnecter."));
     return;
   }
   if (action === "download-flashcards") {
@@ -3535,7 +3558,7 @@ document.addEventListener("submit", event => {
     return;
   }
   if (event.target.id === "peer-form") { event.preventDefault(); addPeer(event.target); }
-  if (event.target.id === "auth-signup-form") {
+  if (["auth-signup-form", "welcome-signup-form"].includes(event.target.id)) {
     event.preventDefault();
     const fd = new FormData(event.target);
     const name = String(fd.get("name") || "").trim();
@@ -3544,17 +3567,31 @@ document.addEventListener("submit", event => {
     const passwordConfirm = String(fd.get("passwordConfirm") || "");
     if (password !== passwordConfirm) { showToast("Les deux mots de passe doivent être identiques."); return; }
     if (password.length < 8) { showToast("Le mot de passe doit contenir au moins 8 caractères."); return; }
-    window.signUpMosaque?.({ name,email,password })
-      .then(() => { showToast("Compte créé. Un email de validation a été envoyé."); renderPage("abonnement", { immediate:true }); })
-      .catch(err => showToast(err.message || "Impossible de créer le compte."));
+    if (typeof window.signUpMosaque !== "function") {
+      showToast("Authentification indisponible. Vérifiez votre connexion et rechargez la page.");
+      return;
+    }
+    const button = $("button[type='submit']", event.target);
+    button.disabled = true;
+    window.signUpMosaque({ name,email,password })
+      .then(() => showToast("Compte créé. Un email de validation a été envoyé."))
+      .catch(err => showToast(authErrorMessage(err, "Impossible de créer le compte.")))
+      .finally(() => { button.disabled = false; });
     return;
   }
-  if (event.target.id === "auth-signin-form") {
+  if (["auth-signin-form", "welcome-signin-form"].includes(event.target.id)) {
     event.preventDefault();
     const fd = new FormData(event.target);
-    window.signInMosaque?.(String(fd.get("email") || "").trim(), String(fd.get("password") || ""))
+    if (typeof window.signInMosaque !== "function") {
+      showToast("Authentification indisponible. Vérifiez votre connexion et rechargez la page.");
+      return;
+    }
+    const button = $("button[type='submit']", event.target);
+    button.disabled = true;
+    window.signInMosaque(String(fd.get("email") || "").trim(), String(fd.get("password") || ""))
       .then(() => showToast("Connexion réussie."))
-      .catch(err => showToast(err.message || "Identifiants invalides."));
+      .catch(err => showToast(authErrorMessage(err, "Impossible de se connecter.")))
+      .finally(() => { button.disabled = false; });
     return;
   }
   if (event.target.id === "password-update-form") {
@@ -3610,6 +3647,21 @@ function pageFromHash() {
   let page = "";
   try { page = decodeURIComponent(window.location.hash.slice(1)); } catch { page = ""; }
   return NAV.some(item => item.id === page) ? page : "accueil";
+}
+function authErrorMessage(error, fallback) {
+  const messages = {
+    "auth/invalid-credential": "Email ou mot de passe incorrect.",
+    "auth/user-not-found": "Email ou mot de passe incorrect.",
+    "auth/wrong-password": "Email ou mot de passe incorrect.",
+    "auth/email-already-in-use": "Cette adresse email est déjà utilisée.",
+    "auth/invalid-email": "L’adresse email est invalide.",
+    "auth/weak-password": "Le mot de passe est trop faible.",
+    "auth/network-request-failed": "Connexion réseau impossible. Vérifiez votre accès à Internet.",
+    "auth/too-many-requests": "Trop de tentatives. Réessayez plus tard.",
+    "auth/configuration-not-found": "L’authentification Firebase n’est pas encore configurée pour cette application.",
+    "auth/operation-not-allowed": "La connexion par email n’est pas activée pour cette application."
+  };
+  return messages[error?.code] || (error?.code ? fallback : error?.message || fallback);
 }
 function syncPageFromLocation() {
   const historyState = window.history?.state;
@@ -3709,9 +3761,19 @@ initNavigation();
 initServiceWorker();
 initFirestoreSync();
 syncMicroAdVisibility();
-window.addEventListener("mosaique-auth-change", event => {
-  const { user, premium } = event.detail || {};
-  const codeActive = readStoredValue(STORE.premiumCode) === "1";
+const authStatusTimer = setTimeout(() => {
+  $("#auth-status").textContent = "Authentification indisponible ou trop lente. Vérifiez votre connexion et rechargez la page.";
+}, 12000);
+function applyAuthState({ user, premium }) {
+  clearTimeout(authStatusTimer);
+  $("#auth-status").textContent = "";
+  const wasAuthenticated = document.body.classList.contains("is-authenticated");
+  document.body.classList.toggle("is-authenticated", Boolean(user));
+  if (user && !wasAuthenticated) {
+    $("#welcome-signin-form").reset();
+    $("#welcome-signup-form").reset();
+  }
+  const codeActive = Boolean(user) && readStoredValue(STORE.premiumCode) === "1";
   const premiumActive = premium === true || codeActive;
   state.auth = {
     isUnlocked: premiumActive,
@@ -3726,8 +3788,30 @@ window.addEventListener("mosaique-auth-change", event => {
   writeJSON(STORE.auth, state.auth);
   document.documentElement.classList.toggle("is-premium-user", premium === true);
   syncMicroAdVisibility();
-  if (["abonnement","metiers","rh","secu","carte","reseau","timeline","audit"].includes(state.page)) {
+  if (!user && wasAuthenticated) {
+    try {
+      window.history.replaceState({ page:"accueil", scrollY:0 }, "", "#accueil");
+      routedHash = window.location.hash;
+    } catch (error) {
+      console.warn("Impossible de mettre à jour l’adresse après la déconnexion :", error);
+    }
+    renderPage("accueil", { immediate:true, fromHistory:true, restoreScrollY:0 });
+  } else if (["abonnement","metiers","rh","secu","carte","reseau","timeline","audit"].includes(state.page)) {
     renderPage(state.page, { immediate:true });
   }
-});
+  if (!user && wasAuthenticated) {
+    $("#auth-signin-panel").hidden = false;
+    $("#auth-signup-panel").hidden = true;
+    $$("[data-auth-mode]").forEach(button => {
+      const selected = button.dataset.authMode === "signin";
+      button.classList.toggle("primary", selected);
+      button.classList.toggle("subtle", !selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+    $("#auth-title").focus();
+    window.scrollTo({ top:0, behavior:"auto" });
+  }
+}
+window.addEventListener("mosaique-auth-change", event => applyAuthState(event.detail || {}));
+if (window.mosaiqueAuthState) applyAuthState(window.mosaiqueAuthState);
 })();

@@ -28,11 +28,49 @@
       window.MOSAQUE_STRIPE_CHECKOUT_URL = "";
     </script>
     <title>Mosaïque Santé — boîte à outils du management</title>
-    <link rel="stylesheet" href="./app.css?v=20261121-1625">
+    <link rel="stylesheet" href="./app.css?v=20261121-logout">
   </head>
   <body>
     <div class="ambient ambient-a" aria-hidden="true"></div>
     <div class="ambient ambient-b" aria-hidden="true"></div>
+    <main class="auth-screen" id="auth-screen" aria-labelledby="auth-title">
+      <div class="auth-intro">
+        <div class="brand auth-brand">
+          <span class="brand-mark" aria-hidden="true"><img src="./icon.svg" alt=""></span>
+          <span class="brand-copy"><strong>Mosaïque</strong><small>SANTÉ · MANAGER</small></span>
+        </div>
+        <span class="eyebrow">VOTRE ESPACE DE MANAGEMENT EN SANTÉ</span>
+        <h1 id="auth-title" tabindex="-1">Bienvenue sur<br><em>Mosaïque Santé.</em></h1>
+        <p>Connectez-vous ou créez votre compte pour retrouver vos repères et vos outils de management.</p>
+      </div>
+      <section class="glass-panel auth-panel" aria-label="Accès à votre compte">
+        <div class="auth-switch" aria-label="Choisir un accès">
+          <button type="button" class="button primary" data-auth-mode="signin" aria-pressed="true">Connexion</button>
+          <button type="button" class="button subtle" data-auth-mode="signup" aria-pressed="false">Inscription</button>
+        </div>
+        <p class="auth-status" id="auth-status" role="status" aria-live="polite">Vérification de votre session…</p>
+        <div id="auth-signin-panel">
+          <h2>Se connecter</h2>
+          <form id="welcome-signin-form" class="account-form">
+            <label><span class="field-label">Adresse email</span><input class="form-control" name="email" type="email" autocomplete="email" required></label>
+            <label><span class="field-label">Mot de passe</span><input class="form-control" name="password" type="password" autocomplete="current-password" required></label>
+            <button class="button primary" type="submit">Se connecter</button>
+          </form>
+          <button class="quiet-link auth-reset" type="button" data-action="reset-password">Mot de passe oublié</button>
+        </div>
+        <div id="auth-signup-panel" hidden>
+          <h2>Créer un compte</h2>
+          <form id="welcome-signup-form" class="account-form">
+            <label><span class="field-label">Nom complet</span><input class="form-control" name="name" minlength="2" maxlength="80" autocomplete="name" required></label>
+            <label><span class="field-label">Adresse email</span><input class="form-control" name="email" type="email" autocomplete="email" required></label>
+            <label><span class="field-label">Mot de passe</span><input class="form-control" name="password" type="password" minlength="8" autocomplete="new-password" required></label>
+            <label><span class="field-label">Confirmer le mot de passe</span><input class="form-control" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required></label>
+            <button class="button primary" type="submit">Créer mon compte</button>
+          </form>
+          <p class="auth-hint">Un email de validation vous sera envoyé après l’inscription.</p>
+        </div>
+      </section>
+    </main>
     <div class="app-shell">
       <aside class="sidebar" id="sidebar" aria-label="Navigation principale">
         <a class="brand" href="#accueil" data-nav="accueil" aria-label="Mosaïque Santé, accueil">
@@ -51,6 +89,7 @@
         </div>
         <div class="sidebar-footer">
           <button class="quiet-link" data-action="open-sources"><span class="icon-wrap" data-icon="book"></span> Sources & limites</button>
+          <button class="quiet-link" type="button" data-action="sign-out"><span class="icon-wrap" data-icon="logout"></span> Se déconnecter</button>
           <div class="profile-mini"><div class="profile-orb">MES</div><div><strong>Parcours MES</strong><small>Direction · qualité · RH</small></div><span class="online-dot" aria-label="Prototype local"></span></div>
         </div>
       </aside>
@@ -112,9 +151,9 @@
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <noscript><div class="noscript-card">Cette boîte à outils interactive nécessite JavaScript dans le navigateur.</div></noscript>
-    <script type="module" src="./firebase-init.js?v=20261121-1625"></script>
+    <script type="module" src="./firebase-init.js?v=20261121-auth"></script>
     <script defer src="./data.js?v=20261121-1625"></script>
-    <script defer src="./app.js?v=20261121-1625"></script>
+    <script defer src="./app.js?v=20261121-auth-config"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
