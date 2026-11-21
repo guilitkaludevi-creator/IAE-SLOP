@@ -1892,7 +1892,8 @@
     { id: "politique", label: "Politique de santé & Lois", icon: "clipboard", group: "Stratégie & Réseau" },
     { id: "acteurs", label: "Acteurs institutionnels", icon: "network", group: "Stratégie & Réseau" },
     { id: "carte", label: "Carte des interactions", icon: "map", group: "Stratégie & Réseau" },
-    { id: "reseau", label: "Annuaire Alumni", icon: "userplus", group: "Stratégie & Réseau" },
+    { id: "reseau", label: "Annuaire Alumni", icon: "users", group: "Stratégie & Réseau" },
+    { id: "inscription-annuaire", label: "Inscription à l'annuaire", icon: "userplus", group: "Stratégie & Réseau" },
     { id: "timeline", label: "Fil d'actualités", icon: "message", group: "Stratégie & Réseau" }
   ];
 

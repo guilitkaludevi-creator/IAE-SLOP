@@ -18,7 +18,8 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 - Carte 3D animée en temps réel : bulles mobiles dans l’espace, liens directionnels et libellés projetés à chaque mouvement ; rotation libre, translation, profondeur, zoom et perspective.
 - Raccourcis cliquables depuis l’accueil vers les métiers, la qualité, les outils, la politique de santé et les partenaires.
 - Navigation précédent/suivant avec conservation de la page, du scroll et des filtres.
-- Annuaire de promotion volontaire enrichi d'exemples réalistes (MAS, EHPAD, IME, HAD, CHU), avec filtres par rôle, région et domaine d’expérience.
+- Annuaire de promotion volontaire en deux onglets distincts : « Annuaire » (recherche, filtres par rôle, région et domaine d’expérience) et « Inscription à l’annuaire » (création / modification de sa fiche, liste déroulante multi-domaines qui se referme à la validation).
+- Fil d’actualités : publication d’offres, événements et annonces ; commentaires via une boîte de dialogue permettant d’indiquer sa venue ou l’envoi d’un salarié, d’un alternant, de résidents / patients ou d’une autre délégation ; suppression de ses propres publications après confirmation (règles Firestore : auteur ou administrateur).
 - Connexion et inscription par email ou connexion avec Google via Firebase Authentication dès l’ouverture ; une session existante est restaurée automatiquement. La déconnexion est disponible dans le menu et dans « Abonnement & accès » et ramène à l’écran de connexion.
 - Affichage mobile, thème sombre/clair, panneaux de détails en feuille iOS, fermeture par glissement, animations Motion/Web Animations API, mode hors-ligne de base et ajout à l’écran d’accueil.
 - Document de pitch commercial complet pour les écoles (abonnements Découverte, Partenaire, Campus Santé) et tarification individuelle dans `pitch-mosaique-sante-ecoles.md`.

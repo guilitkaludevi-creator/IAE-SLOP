@@ -5,6 +5,10 @@ import {
   getFirestore,
   collection,
   addDoc,
+  setDoc,
+  updateDoc,
+  arrayUnion,
+  increment,
   onSnapshot,
   query,
   orderBy,
@@ -205,7 +209,11 @@ export async function savePostToFirestore(postData) {
   if (!db) {
     throw new Error("Firestore n'est pas encore initialisé ou inaccessible.");
   }
+  const uid = auth?.currentUser?.uid;
+  if (!uid) throw new Error("Connexion requise pour publier.");
+  const id = String(postData.id || "").trim();
   const cleanData = {
+    id,
     type: String(postData.type || "job_offer").trim(),
     title: String(postData.title || "").trim().slice(0, 120),
     organization: String(postData.organization || "").trim().slice(0, 100),
@@ -218,14 +226,45 @@ export async function savePostToFirestore(postData) {
     authorRole: String(postData.author?.role || "").trim().slice(0, 100),
     authorAvatar: String(postData.author?.avatar || "MA").trim().slice(0, 4),
     authorLinkedin: String(postData.author?.linkedin || "").trim().slice(0, 200),
-    likes: Number(postData.likes) || 0,
-    commentsCount: Number(postData.commentsCount) || 0,
-    rsvp: postData.rsvp || null,
+    authorUid: uid,
+    likes: 0,
+    commentsCount: 0,
+    comments: [],
     createdAt: serverTimestamp()
   };
-  const docRef = await addDoc(collection(db, "posts"), cleanData);
-  console.log("[Firestore] Nouveau post créé :", docRef.id);
-  return docRef.id;
+  await setDoc(doc(db, "posts", id), cleanData);
+  console.log("[Firestore] Nouveau post créé :", id);
+  return id;
+}
+
+/**
+ * Ajoute un commentaire (avec participation / délégation) à un post
+ * @param {string} postId ID du post
+ * @param {Object} comment Commentaire { id, authorName, authorUid, participation, count, detail, text, createdAt }
+ */
+export async function addCommentToFirestore(postId, comment) {
+  if (!db || !postId) throw new Error("Firestore indisponible.");
+  const clean = {
+    id: String(comment.id || "").slice(0, 40),
+    authorName: String(comment.authorName || "Membre").slice(0, 80),
+    authorUid: auth?.currentUser?.uid || "",
+    participation: String(comment.participation || "none").slice(0, 20),
+    count: Math.min(99, Math.max(0, Number(comment.count) || 0)),
+    detail: String(comment.detail || "").slice(0, 80),
+    text: String(comment.text || "").slice(0, 500),
+    createdAt: String(comment.createdAt || new Date().toISOString()).slice(0, 40)
+  };
+  await updateDoc(doc(db, "posts", postId), { comments: arrayUnion(clean), commentsCount: increment(1) });
+}
+
+/**
+ * Ajuste le compteur de "j'aime" d'un post
+ * @param {string} postId ID du post
+ * @param {number} delta +1 ou -1
+ */
+export async function adjustPostLikes(postId, delta) {
+  if (!db || !postId) throw new Error("Firestore indisponible.");
+  await updateDoc(doc(db, "posts", postId), { likes: increment(delta > 0 ? 1 : -1) });
 }
 
 /**
@@ -274,11 +313,12 @@ export function subscribeToPostsFirestore(onUpdate, onError) {
             name: d.authorName || "Membre Alumni",
             role: d.authorRole || "",
             avatar: d.authorAvatar || "MA",
-            linkedin: d.authorLinkedin || ""
+            linkedin: d.authorLinkedin || "",
+            uid: d.authorUid || ""
           },
           likes: d.likes || 0,
-          commentsCount: d.commentsCount || 0,
-          isLiked: false,
+          commentsCount: Array.isArray(d.comments) ? d.comments.length : (d.commentsCount || 0),
+          comments: Array.isArray(d.comments) ? d.comments : [],
           rsvp: d.rsvp || undefined,
           date: dateLabel,
           createdAt: createdAtIso,
@@ -316,6 +356,8 @@ export async function deletePostFromFirestore(id) {
 window.savePostToFirestore = savePostToFirestore;
 window.subscribeToPostsFirestore = subscribeToPostsFirestore;
 window.deletePostFromFirestore = deletePostFromFirestore;
+window.addCommentToFirestore = addCommentToFirestore;
+window.adjustPostLikes = adjustPostLikes;
 
 export async function signUpMosaque({ name, email, password }) {
   if (!auth) throw new Error("Authentification non disponible.");

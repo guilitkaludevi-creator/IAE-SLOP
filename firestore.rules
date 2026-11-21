@@ -32,22 +32,19 @@ service cloud.firestore {
     //   - Immutabilité : La date de création `createdAt` et l'`email` ne peuvent pas être altérés.
     //
     // Collection : posts
-    // Document ID : Identifiant automatique Firestore ({postId})
+    // Document ID : identifiant du post (= champ id, généré côté client)
     //
     // Fields :
-    //   - id        : string    (obligatoire, 10 à 100 caractères) - UUID auto-généré
-    //   - type      : string    (obligatoire, enum: "job_offer" | "event" | "announcement") - Type de publication
-    //   - author    : string    (obligatoire, 1 à 80 caractères) - Nom de l'auteur
-    //   - title     : string    (obligatoire, 1 à 200 caractères) - Titre du post
-    //   - content   : string    (obligatoire, 1 à 2000 caractères) - Contenu du post
-    //   - date      : string    (optionnel, 0 à 100 caractères) - Date ISO pour événements
-    //   - location  : string    (optionnel, 0 à 100 caractères) - Lieu de l'événement
-    //   - createdAt : timestamp (obligatoire, horodatage récent serveur) - Date de publication
+    //   - id, type ("job_offer" | "event" | "announcement"), title, content, createdAt
+    //   - authorName, authorUid (= uid de l'auteur connecté), authorRole, authorAvatar, authorLinkedin
+    //   - organization, location, contract, contact, eventDate (optionnels)
+    //   - likes (int), commentsCount (int), comments (liste de commentaires avec participation / délégation)
     //
     // Invariants de sécurité (posts) :
-    //   - Création ouverte avec validation stricte du schéma et des types.
-    //   - Mise à jour et suppression réservées aux administrateurs (Custom Claim admin).
-    //   - Immutabilité : `id` et `createdAt` ne peuvent pas être modifiés.
+    //   - Création réservée aux membres connectés, schéma strict, compteurs initialisés à 0.
+    //   - Commentaires et "j'aime" : tout membre connecté, uniquement sur comments / commentsCount / likes.
+    //   - Suppression : auteur du post (authorUid) ou administrateur (Custom Claim admin).
+    //   - Immutabilité : `id`, `createdAt` et `authorUid` ne peuvent pas être modifiés.
     //
     // ===============================================================
 
@@ -153,29 +150,43 @@ service cloud.firestore {
     // Domain Validator : posts (timeline / fil d'actualités)
     // ---------------------------------------------------------------
 
-    // Valide la structure et les contraintes d'un document post
-    function isValidPost(data) {
-      let requiredFields = ['id', 'type', 'author', 'title', 'content', 'createdAt'];
-      let allowedFields  = ['id', 'type', 'author', 'title', 'content', 'date', 'location', 'createdAt'];
+    // Valide la structure et les contraintes d'un nouveau document post
+    function isValidPost(data, postId) {
+      let requiredFields = ['id', 'type', 'title', 'content', 'authorName', 'authorUid', 'likes', 'commentsCount', 'comments', 'createdAt'];
+      let optionalFields = ['organization', 'location', 'contract', 'contact', 'eventDate', 'authorRole', 'authorAvatar', 'authorLinkedin'];
       let validTypes     = ['job_offer', 'event', 'announcement'];
 
       return hasRequiredFields(requiredFields) &&
-             hasOnlyAllowedFields(allowedFields) &&
-             // Champ id : identifiant UUID auto-généré (10 à 100 caractères)
-             validStringLength('id', 10, 100) &&
-             // Champ type : catégorie du post (offre emploi, événement, annonce)
+             hasOnlyAllowedFields(requiredFields.concat(optionalFields)) &&
+             data.id == postId &&
              validStringLength('type', 1, 30) &&
              data.type in validTypes &&
-             // Champ author : nom de l'auteur (1 à 80 caractères)
-             validStringLength('author', 1, 80) &&
-             // Champ title : titre du post (1 à 200 caractères)
              validStringLength('title', 1, 200) &&
-             // Champ content : contenu du post (1 à 2000 caractères)
              validStringLength('content', 1, 2000) &&
-             // Champ date : optionnel, date ISO pour les événements (0 à 100 caractères)
-             (!('date' in data) || (data.date is string && data.date.size() <= 100)) &&
-             // Champ location : optionnel, lieu de l'événement (0 à 100 caractères)
-             (!('location' in data) || (data.location is string && data.location.size() <= 100));
+             validStringLength('authorName', 1, 80) &&
+             data.authorUid == request.auth.uid &&
+             data.likes == 0 &&
+             data.commentsCount == 0 &&
+             data.comments is list && data.comments.size() == 0 &&
+             (!('organization' in data) || (data.organization is string && data.organization.size() <= 100)) &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 100)) &&
+             (!('contract' in data) || (data.contract is string && data.contract.size() <= 100)) &&
+             (!('contact' in data) || (data.contact is string && data.contact.size() <= 120)) &&
+             (!('eventDate' in data) || (data.eventDate is string && data.eventDate.size() <= 100)) &&
+             (!('authorRole' in data) || (data.authorRole is string && data.authorRole.size() <= 100)) &&
+             (!('authorAvatar' in data) || (data.authorAvatar is string && data.authorAvatar.size() <= 4)) &&
+             (!('authorLinkedin' in data) || (data.authorLinkedin is string && data.authorLinkedin.size() <= 200));
+    }
+
+    // Un membre connecté peut uniquement commenter / aimer : seuls ces champs changent
+    function isCommentOrLikeUpdate() {
+      return isAuthenticated() &&
+             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments', 'commentsCount', 'likes']) &&
+             request.resource.data.comments is list &&
+             request.resource.data.comments.size() <= 300 &&
+             request.resource.data.commentsCount is int &&
+             request.resource.data.likes is int &&
+             request.resource.data.likes >= 0;
     }
 
     // ===============================================================
@@ -205,17 +216,18 @@ service cloud.firestore {
       // 1. Lecture publique du fil d'actualités
       allow read: if true;
 
-      // 2. Création d'un post avec validation stricte de schéma
-      allow create: if isValidPost(request.resource.data) &&
+      // 2. Création par un membre connecté, avec validation stricte du schéma
+      allow create: if isAuthenticated() &&
+                       isValidPost(request.resource.data, postId) &&
                        isValidCreationTime(request.resource.data.createdAt);
 
-      // 3. Modification réservée aux administrateurs
-      allow update: if isAdmin() &&
-                       isValidPost(request.resource.data) &&
-                       areImmutableFieldsUnchanged(['id', 'createdAt']);
+      // 3. Commentaires et "j'aime" : tout membre connecté ; le reste est réservé aux administrateurs
+      allow update: if isCommentOrLikeUpdate() ||
+                       (isAdmin() && areImmutableFieldsUnchanged(['id', 'createdAt', 'authorUid']));
 
-      // 4. Suppression réservée aux administrateurs
-      allow delete: if isAdmin();
+      // 4. Suppression par l'auteur de la publication ou un administrateur
+      allow delete: if isAdmin() ||
+                       (isAuthenticated() && resource.data.authorUid == request.auth.uid);
     }
 
     match /access_codes/{codeId} {

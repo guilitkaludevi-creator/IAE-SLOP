@@ -53,7 +53,8 @@ const state = {
   rsvps: readJSON(STORE.rsvps, {}),
   notifs: readJSON(STORE.notifs, []),
   editingPeerId: null,
-  notifsOpen: false,
+  highlightPeerId: null,
+  openComments: new Set(),  notifsOpen: false,
   timelineComposeType: "job_offer",
   selectedMapNode: "direction",
   mapPositions: createInitialMapPositions(),
@@ -189,7 +190,7 @@ function icon(name, size = 18) {
     message:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
     send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'
   };
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths[name] || paths.info}</svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths[name] || paths.info}</svg>`;
 }
 function hydrateIcons(root = document) {
   $$('[data-icon]', root).forEach(el => { el.innerHTML = icon(el.dataset.icon); });
@@ -267,7 +268,7 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
       logiciels:renderSoftware,
       carte:renderMap,
       reseau:renderNetwork,
-      timeline:renderTimeline,
+      "inscription-annuaire":renderPeerRegistration,      timeline:renderTimeline,
       qualite:renderQuality,
       rex:renderRex,
       politique:renderHealthPolicy,
@@ -286,7 +287,13 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
     }
     if (page === "reseau") {
       renderPeerList();
+      highlightPeerCard();
+    }
+    if (page === "inscription-annuaire") {
       peerMultiSelect.init();
+      const editingPeer = state.peers.find(p => p.id === state.editingPeerId);
+      if (editingPeer) fillPeerForm(editingPeer);
+      else state.editingPeerId = null;
     }
     if (page === "timeline") {
       const feed = $("#timeline-feed");
@@ -745,20 +752,47 @@ function renderMap() {
       <aside class="map-details glass-panel" id="map-details" aria-live="polite" aria-atomic="true"></aside>
     </div>
   </section>`;
-}function renderNetwork() {
+}
+const PEER_REGIONS = ["Île-de-France","Auvergne-Rhône-Alpes","Bourgogne-Franche-Comté","Bretagne","Centre-Val de Loire","Corse","Grand Est","Hauts-de-France","Normandie","Nouvelle-Aquitaine","Occitanie","Pays de la Loire","Provence-Alpes-Côte d’Azur","Outre-mer"];
+const PEER_PLACES = ["Sanitaire", "Médico-social · handicap", "Médico-social · grand âge", "Social · protection de l’enfance", "Social · précarité", "Domicile / parcours", "Autre"];
+const PEER_ROLES = ["Adjoint·e de direction","Directeur·rice","Chef·fe de service / cadre","Responsable qualité / risques","Responsable RH / organisation","Responsable finances / contrôle de gestion","Chef·fe de projet / chargé·e de mission","Cadre de santé","Étudiant·e / alternant·e","Autre"];
+function communityTabs(active) {
+  const tabs = [["reseau", "Annuaire", "users"], ["inscription-annuaire", "Inscription à l’annuaire", "userplus"]];
+  return `<nav class="community-tabs" aria-label="Espace annuaire alumni">${tabs.map(([id, label, name]) => `<button type="button" class="community-tab${id === active ? " is-active" : ""}" data-nav="${id}"${id === active ? ' aria-current="page"' : ""}>${icon(name, 15)}<span>${label}</span></button>`).join("")}<button type="button" class="community-tab community-tab-link" data-nav="timeline">${icon("message", 15)}<span>Fil d’actualités</span></button></nav>`;
+}
+function renderNetwork() {
   if (!isPremiumUnlocked()) {
     return `<section class="page" aria-labelledby="network-title">
       ${sectionHead("COMMUNAUTÉ ALUMNI · RÉSEAU", "L’annuaire de promotion, <span class=\"text-gradient\">réservé aux membres</span>", "Retrouvez des expériences, ajoutez votre fiche, filtrez les profils et accédez au fil d’actualité après activation du Premium.", ``)}
       ${paywallGate("Annuaire Alumni Premium", "Accès réservé aux abonnés Premium : fiches, filtres, coordonnées autorisées, export et connexion au fil d’actualité.", `<div class="empty-state"><strong>Annuaire masqué</strong>Aucune fiche réseau n’est chargée en mode Freemium.</div>`)}
     </section>`;
   }
-  const regionOptions = ["Île-de-France","Auvergne-Rhône-Alpes","Bourgogne-Franche-Comté","Bretagne","Centre-Val de Loire","Corse","Grand Est","Hauts-de-France","Normandie","Nouvelle-Aquitaine","Occitanie","Pays de la Loire","Provence-Alpes-Côte d’Azur","Outre-mer"];
-  const placeOptions = ["Sanitaire", "Médico-social · handicap", "Médico-social · grand âge", "Social · protection de l’enfance", "Social · précarité", "Domicile / parcours", "Autre"];
-  const roles = ["Adjoint·e de direction","Directeur·rice","Chef·fe de service / cadre","Responsable qualité / risques","Responsable RH / organisation","Responsable finances / contrôle de gestion","Chef·fe de projet / chargé·e de mission","Cadre de santé","Étudiant·e / alternant·e","Autre"];
-  return `<section class="page" aria-labelledby="network-title">${sectionHead("COMMUNAUTÉ · PARTAGE D’EXPÉRIENCE", "Le réseau de promotion, <span class=\"text-gradient\">à portée de main.</span>", "Créez un annuaire volontaire pour retrouver une expérience, un secteur ou un interlocuteur de votre promotion. Cette version ne se connecte pas à Firebase : les fiches restent dans ce navigateur.", `<button class="button subtle" data-action="export-peers">${icon("download",15)}Exporter mes fiches</button>`)}
-    <div class="network-layout"><section class="network-form-card glass-panel"><span class="eyebrow" id="peer-form-eyebrow">${state.editingPeerId ? "MODIFICATION" : "AJOUTER UNE FICHE"}</span><h2 id="peer-form-title" style="margin-top:12px;font-size:22px">${state.editingPeerId ? "Modifier ma fiche alumni" : "Partager son expérience"}</h2><p class="muted" style="font-size:10px;line-height:1.6;margin-bottom:0">Les champs marqués d’un astérisque sont requis. Mettez à jour vos coordonnées, lieu d'exercice et expériences.</p>
+  const regionOptions = PEER_REGIONS;
+  return `<section class="page" aria-labelledby="network-title">${sectionHead("COMMUNAUTÉ · ANNUAIRE DE PROMOTION", "L’annuaire alumni, <span class=\"text-gradient\">à portée de main.</span>", "Retrouvez une expérience, un secteur ou un interlocuteur de votre promotion. Pour apparaître dans l’annuaire, utilisez l’onglet « Inscription à l’annuaire ».", `<button class="button subtle" data-action="export-peers">${icon("download",15)}Exporter mes fiches</button>`)}
+    ${communityTabs("reseau")}
+    <section class="network-results glass-panel"><div class="section-title-row"><div><span class="eyebrow">ANNUAIRE VOLONTAIRE</span><h2 style="margin-top:10px">Trouver une expérience</h2><p id="peer-count">Chargement des fiches…</p></div><div class="section-title-actions"><button class="button primary" data-nav="inscription-annuaire">${icon("userplus",14)}Ajouter ma fiche</button><button class="button subtle" data-action="clear-peers">${icon("trash",14)}Tout supprimer</button></div></div>
+      <div class="network-tools"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="peer-query" type="search" placeholder="Nom, rôle, mot-clé…" aria-label="Rechercher une personne"></label><select class="form-control" id="peer-experience-filter" aria-label="Filtrer par expérience"><option value="Tout">Toutes les expériences</option>${RESEARCH_AREAS.map(item => `<option>${esc(item)}</option>`).join("")}</select><select class="form-control" id="peer-region-filter" aria-label="Filtrer par région"><option value="Tout">Toutes les régions</option>${regionOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div>
+      <div class="peer-list" id="peer-list"></div><p class="field-hint" style="margin-top:12px">Les fiches sont synchronisées avec la promotion quand la connexion le permet, et conservées sur cet appareil.</p>
+    </section>
+  </section>`;
+}
+
+function renderPeerRegistration() {
+  if (!isPremiumUnlocked()) {
+    return `<section class="page" aria-labelledby="network-title">
+      ${sectionHead("COMMUNAUTÉ ALUMNI · INSCRIPTION", "L’inscription à l’annuaire, <span class=\"text-gradient\">réservée aux membres</span>", "Ajoutez votre fiche, vos expériences et vos coordonnées après activation du Premium.", ``)}
+      ${communityTabs("inscription-annuaire")}
+      ${paywallGate("Inscription à l’annuaire Premium", "Accès réservé aux abonnés Premium : création et modification de votre fiche alumni.", `<div class="empty-state"><strong>Formulaire masqué</strong>Aucune donnée n’est collectée en mode Freemium.</div>`)}
+    </section>`;
+  }
+  const regionOptions = PEER_REGIONS;
+  const placeOptions = PEER_PLACES;
+  const roles = PEER_ROLES;
+  return `<section class="page" aria-labelledby="network-title">${sectionHead("COMMUNAUTÉ · PARTAGE D’EXPÉRIENCE", "Rejoindre l’annuaire, <span class=\"text-gradient\">en une minute.</span>", "Créez ou mettez à jour votre fiche volontaire pour que votre promotion retrouve votre expérience, votre secteur et vos coordonnées de contact.", `<button class="button subtle" data-nav="reseau">${icon("users",15)}Voir l’annuaire</button>`)}
+    ${communityTabs("inscription-annuaire")}
+    <div class="network-layout is-single"><section class="network-form-card glass-panel"><span class="eyebrow" id="peer-form-eyebrow">${state.editingPeerId ? "MODIFICATION" : "AJOUTER UNE FICHE"}</span><h2 id="peer-form-title" style="margin-top:12px;font-size:22px">${state.editingPeerId ? "Modifier ma fiche alumni" : "Partager son expérience"}</h2><p class="muted" style="font-size:10px;line-height:1.6;margin-bottom:0">Les champs marqués d’un astérisque sont requis. Mettez à jour vos coordonnées, lieu d'exercice et expériences.</p>
       <form class="network-form" id="peer-form" novalidate>
-        <input type="hidden" id="peer-edit-id" name="id" value="${state.editingPeerId || ''}">
+        <input type="hidden" id="peer-edit-id" name="editId" value="${state.editingPeerId || ''}">
         <div class="form-grid"><div><label class="field-label" for="peer-name">Nom affiché *</label><input class="form-control" id="peer-name" name="name" maxlength="70" required placeholder="Prénom Nom"></div><div><label class="field-label" for="peer-email">Courriel de contact *</label><input class="form-control" id="peer-email" name="email" type="email" maxlength="120" required placeholder="prenom@exemple.fr"></div></div>
         <div class="form-grid"><div><label class="field-label" for="peer-region">Région *</label><select class="form-control" id="peer-region" name="region" required><option value="">Choisir une région</option>${regionOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div><div><label class="field-label" for="peer-place">Lieu d’exercice / secteur *</label><select class="form-control" id="peer-place" name="sector" required><option value="">Choisir un secteur</option>${placeOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div></div>
         <div class="form-grid">
@@ -797,19 +831,15 @@ function renderMap() {
           </div>
         </div>
         <div><label class="field-label" for="peer-summary">Résumé de l’expérience *</label><textarea class="form-control" id="peer-summary" name="summary" maxlength="420" required placeholder="Ex. pilotage de l’évaluation HAS, organisation du service, résultats ou apprentissages…"></textarea><p class="field-hint">420 caractères maximum · pas de données personnelles ou de santé.</p></div>
-        <label class="consent-row"><input type="checkbox" name="consent" required><span>J’autorise l’affichage de ces coordonnées aux personnes qui utiliseront cet annuaire. Je peux supprimer ma fiche depuis ce navigateur. *</span></label>
-        <div class="privacy-box"><strong>Prototype local.</strong> Les fiches sont stockées dans le localStorage de cet appareil et ne sont pas envoyées sur un serveur. Avant une diffusion de promotion, il faudra définir les accès, la durée de conservation, la suppression et l’hébergement Firebase.</div>
+        <label class="consent-row"><input type="checkbox" name="consent" required><span>J’autorise l’affichage de ces coordonnées aux personnes qui utiliseront cet annuaire. Je peux modifier ou supprimer ma fiche à tout moment. *</span></label>
+        <div class="privacy-box"><strong>Vos données.</strong> Votre fiche est conservée sur cet appareil et partagée avec l’annuaire de la promotion lorsque la connexion le permet. Seules les informations saisies ici sont diffusées : pas de données de santé ni de données personnelles de tiers.</div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <button class="button primary" id="peer-submit-btn" type="submit">${icon(state.editingPeerId ? "check" : "userplus",15)} ${state.editingPeerId ? "Mettre à jour ma fiche alumni" : "Enregistrer la fiche"}</button>
       <button class="button subtle" id="peer-cancel-edit-btn" type="button" data-action="cancel-edit-peer" ${state.editingPeerId ? '' : 'hidden'}>${icon("close",14)} Annuler la modification</button>
       <p class="field-error" id="peer-form-error" role="alert" hidden></p>
     </div>
       </form>
-    </section><section class="network-results glass-panel"><div class="section-title-row"><div><span class="eyebrow">ANNUAIRE VOLONTAIRE</span><h2 style="margin-top:10px">Trouver une expérience</h2><p id="peer-count">Chargement des fiches locales…</p></div><button class="button subtle" data-action="clear-peers">${icon("trash",14)}Tout supprimer</button></div>
-      <div class="network-tools"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="peer-query" type="search" placeholder="Nom, rôle, mot-clé…" aria-label="Rechercher une personne"></label><select class="form-control" id="peer-experience-filter" aria-label="Filtrer par expérience"><option value="Tout">Toutes les expériences</option>${RESEARCH_AREAS.map(item => `<option>${esc(item)}</option>`).join("")}</select><select class="form-control" id="peer-region-filter" aria-label="Filtrer par région"><option value="Tout">Toutes les régions</option>${regionOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div>
-      <div class="peer-list" id="peer-list"></div><p class="field-hint" style="margin-top:12px">L’annuaire local n’est visible que dans le même navigateur. Pour un usage collectif, la prochaine étape sera l’authentification et les règles d’accès Firebase.</p>
     </section></div>
-
   </section>`;
 }
 
@@ -1726,11 +1756,83 @@ function renderTimelinePosts() {
   if (!posts.length) {
     return `<div class="empty-state">Aucune publication sur le fil pour l'instant. Soyez le premier à poster une offre ou un événement !</div>`;
   }
-  return posts.map(post => {
+  return posts.map(renderTimelinePost).join("");
+}
+
+const PARTICIPATION_CHOICES = {
+  personal: { label: "Je viens", short: "en personne", emoji: "🙋", unit: "participant" },
+  staff: { label: "J'envoie un salarié", short: "salarié(s) délégué(s)", emoji: "👥", unit: "salarié" },
+  apprentice: { label: "J'envoie un alternant", short: "alternant(s) délégué(s)", emoji: "🎓", unit: "alternant" },
+  residents: { label: "J'envoie des résidents / patients", short: "résident(s) / patient(s)", emoji: "🏠", unit: "personne accompagnée" },
+  other: { label: "Autre délégation", short: "autre(s) délégation(s)", emoji: "🤝", unit: "personne" },
+  none: { label: "Simple commentaire", short: "", emoji: "💬", unit: "" }
+};
+
+function participationStats(post) {
+  const stats = { personal: 0, staff: 0, apprentice: 0, residents: 0, other: 0 };
+  const legacy = post.rsvp || {};
+  stats.personal += Number(legacy.personal) || 0;
+  stats.staff += Number(legacy.delegate_staff) || 0;
+  stats.apprentice += Number(legacy.delegate_intern) || 0;
+  (post.comments || []).forEach(comment => {
+    if (stats[comment.participation] !== undefined) stats[comment.participation] += Math.max(1, Number(comment.count) || 1);
+  });
+  return stats;
+}
+
+function currentUserUid() {
+  return window.mosaiqueAuthState?.user?.uid || "";
+}
+
+function canDeletePost(post) {
+  const uid = currentUserUid();
+  if (post.author?.uid) return Boolean(uid) && post.author.uid === uid;
+  return !post.isRemote;
+}
+
+function renderTimelineComments(post) {
+  const comments = post.comments || [];
+  if (!comments.length) return "";
+  const expanded = state.openComments.has(post.id);
+  const visible = expanded ? comments : comments.slice(-2);
+  const hidden = comments.length - visible.length;
+  return `<div class="timeline-comments">
+    ${hidden > 0 ? `<button type="button" class="timeline-comments-toggle" data-action="toggle-comments" data-post-id="${esc(post.id)}">Voir les ${comments.length} commentaires</button>` : (expanded && comments.length > 2 ? `<button type="button" class="timeline-comments-toggle" data-action="toggle-comments" data-post-id="${esc(post.id)}">Réduire</button>` : "")}
+    ${visible.map(comment => {
+      const choice = PARTICIPATION_CHOICES[comment.participation];
+      const detail = comment.participation && comment.participation !== "none"
+        ? `${Math.max(1, Number(comment.count) || 1)} · ${choice.label.replace(/^J'envoie /, "Envoi : ").replace(/^Je viens$/, "Présence")}${comment.detail ? ` (${esc(comment.detail)})` : ""}`
+        : "";
+      return `<div class="timeline-comment">
+        <div class="timeline-comment-avatar" aria-hidden="true">${esc((comment.authorName || "MA").slice(0, 2).toUpperCase())}</div>
+        <div class="timeline-comment-body">
+          <div class="timeline-comment-head"><strong>${esc(comment.authorName || "Membre")}</strong><span>${esc(formatRelativeDate(comment.createdAt))}</span></div>
+          ${detail && choice ? `<span class="tag mint timeline-comment-tag">${choice.emoji} ${detail}</span>` : ""}
+          ${comment.text ? `<p>${esc(comment.text)}</p>` : ""}
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+function formatRelativeDate(iso) {
+  const time = Date.parse(iso || "");
+  if (!time) return "À l'instant";
+  const minutes = Math.floor((Date.now() - time) / 60000);
+  if (minutes < 2) return "À l'instant";
+  if (minutes < 60) return `Il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Il y a ${hours} h`;
+  const days = Math.floor(hours / 24);
+  return `Il y a ${days} jour${days > 1 ? "s" : ""}`;
+}
+
+function renderTimelinePost(post) {
     const isJob = post.type === "job_offer";
     const isEvent = post.type === "event";
-    const userRsvp = state.rsvps?.[post.id] || null;
-    const rsvpCounts = post.rsvp || { personal: 0, delegate_intern: 0, delegate_staff: 0 };
+    const stats = participationStats(post);
+    const statChips = ["personal", "staff", "apprentice", "residents", "other"].filter(key => stats[key] > 0)
+      .map(key => `<span class="timeline-rsvp-stat"><strong>${stats[key]}</strong> ${PARTICIPATION_CHOICES[key].short}</span>`).join("");
 
     return `
       <article class="timeline-post glass-panel" id="post-${esc(post.id)}">
@@ -1766,35 +1868,6 @@ function renderTimelinePosts() {
             </div>
             ${post.contact ? `<div class="timeline-event-row">${icon("message", 16)} <strong>Contact :</strong> <a class="inline-link" href="mailto:${esc(post.contact)}">${esc(post.contact)}</a></div>` : ''}
           </div>
-
-          <!-- MODULE DE PARTICIPATION & DÉLÉGATION D'ÉTABLISSEMENT -->
-          <div class="timeline-rsvp-panel">
-            <div class="timeline-rsvp-title">Indiquer votre présence ou déléguer un représentant :</div>
-            <div class="timeline-rsvp-options">
-              <button type="button" class="timeline-rsvp-btn ${userRsvp === 'personal' ? 'is-active' : ''}" data-action="rsvp" data-post-id="${esc(post.id)}" data-choice="personal">
-                ${icon("check", 14)} 🙋 Je viens en personne
-              </button>
-              <button type="button" class="timeline-rsvp-btn ${userRsvp === 'delegate_intern' ? 'is-active' : ''}" data-action="rsvp" data-post-id="${esc(post.id)}" data-choice="delegate_intern">
-                ${icon("users", 14)} 🎓 J'envoie un alternant
-              </button>
-              <button type="button" class="timeline-rsvp-btn ${userRsvp === 'delegate_staff' ? 'is-active' : ''}" data-action="rsvp" data-post-id="${esc(post.id)}" data-choice="delegate_staff">
-                ${icon("building", 14)} 👥 J'envoie des salariés
-              </button>
-              ${userRsvp ? `
-                <button type="button" class="timeline-rsvp-btn" data-action="rsvp" data-post-id="${esc(post.id)}" data-choice="cancel" style="color:var(--coral);border-color:rgba(248,139,125,0.3)">
-                  ${icon("close", 13)} Annuler mon choix
-                </button>
-              ` : ''}
-            </div>
-
-            <div class="timeline-rsvp-stats">
-              <span class="timeline-rsvp-stat"><strong>${rsvpCounts.personal || 0}</strong> en personne</span>
-              <span>·</span>
-              <span class="timeline-rsvp-stat"><strong>${rsvpCounts.delegate_intern || 0}</strong> alternant(s) délégué(s)</span>
-              <span>·</span>
-              <span class="timeline-rsvp-stat"><strong>${rsvpCounts.delegate_staff || 0}</strong> salarié(s) représentant(s)</span>
-            </div>
-          </div>
         ` : ''}
 
         ${isJob ? `
@@ -1805,88 +1878,168 @@ function renderTimelinePosts() {
           </div>
         ` : ''}
 
+        ${statChips ? `<div class="timeline-rsvp-stats" aria-label="Participations annoncées">${statChips}</div>` : ""}
+        ${renderTimelineComments(post)}
+
         <div class="timeline-post-footer">
-          <div style="display:flex;align-items:center;gap:16px">
-            <button type="button" class="button tiny subtle" data-action="like-post" data-post-id="${esc(post.id)}" style="display:inline-flex;align-items:center;gap:5px;${post.isLiked ? 'color:var(--mint);font-weight:700' : ''}">
+          <div class="timeline-post-actions">
+            <button type="button" class="button tiny subtle timeline-like${post.isLiked ? " is-liked" : ""}" data-action="like-post" data-post-id="${esc(post.id)}" aria-pressed="${post.isLiked ? "true" : "false"}">
               ${icon("heart", 14)} <span>${post.likes || 0}</span>
             </button>
-            <span class="muted" style="font-size:11.5px">${icon("message", 13)} ${post.commentsCount || 0} commentaire(s)</span>
+            <button type="button" class="button tiny primary timeline-comment-btn" data-action="open-comment-dialog" data-post-id="${esc(post.id)}">
+              ${icon("message", 14)} <span>${isEvent ? "Répondre / Commenter" : "Commenter"}</span>${post.comments?.length ? ` <small>(${post.comments.length})</small>` : ""}
+            </button>
           </div>
-          <span class="muted" style="font-size:11px">Visible par toute la promotion</span>
+          ${canDeletePost(post) ? `<button type="button" class="button tiny danger timeline-delete" data-action="delete-post" data-post-id="${esc(post.id)}" aria-label="Supprimer cette publication">${icon("trash", 13)} <span>Supprimer</span></button>` : `<span class="muted" style="font-size:11px">Visible par toute la promotion</span>`}
         </div>
       </article>
     `;
-  }).join("");
 }
 
-function handleRsvp(postId, choice) {
-  const post = (state.posts || []).find(p => p.id === postId);
+function findPost(postId) {
+  return (state.posts || []).find(p => p.id === postId);
+}
+
+function refreshPost(postId) {
+  const post = findPost(postId);
+  const current = document.getElementById(`post-${postId}`);
+  if (!current) return;
+  if (!post) { current.remove(); return; }
+  const template = document.createElement("template");
+  template.innerHTML = renderTimelinePost(post).trim();
+  const next = template.content.firstElementChild;
+  current.replaceWith(next);
+  hydrateIcons(next);
+}
+
+function refreshFeed() {
+  const feed = $("#timeline-feed");
+  if (!feed) return;
+  feed.innerHTML = renderTimelinePosts();
+  hydrateIcons(feed);
+}
+
+function openCommentDialog(postId) {
+  const post = findPost(postId);
   if (!post) return;
-  if (!post.rsvp) post.rsvp = { personal: 0, delegate_intern: 0, delegate_staff: 0 };
-  
-  const currentChoice = state.rsvps[postId] || null;
+  const isEvent = post.type === "event";
+  const choices = ["none", "personal", "staff", "apprentice", "residents", "other"];
+  const content = `<h2 class="dialog-title" id="dialog-title">Commenter &amp; indiquer votre participation</h2>
+    <p class="dialog-lede">${esc(post.title)} · ${esc(post.organization)}</p>
+    <form id="comment-form" class="comment-form" data-post-id="${esc(post.id)}" novalidate>
+      <fieldset class="comment-choices">
+        <legend class="field-label">${isEvent ? "Votre venue" : "Votre réponse"} *</legend>
+        <div class="comment-choice-grid">
+          ${choices.map((key, index) => `<label class="comment-choice"><input type="radio" name="participation" value="${key}"${index === 0 ? " checked" : ""}><span><b>${PARTICIPATION_CHOICES[key].emoji}</b>${key === "none" ? "Commentaire seul" : PARTICIPATION_CHOICES[key].label}</span></label>`).join("")}
+        </div>
+      </fieldset>
+      <div class="comment-extra form-grid">
+        <div><label class="field-label" for="comment-count">Nombre de personnes</label><input class="form-control" id="comment-count" name="count" type="number" min="1" max="99" value="1" inputmode="numeric"></div>
+        <div class="comment-other-field"><label class="field-label" for="comment-detail">Précisez la délégation *</label><input class="form-control" id="comment-detail" name="detail" maxlength="80" placeholder="Ex. équipe éducative, bénévoles, famille…"></div>
+      </div>
+      <div><label class="field-label" for="comment-text">Votre message</label><textarea class="form-control" id="comment-text" name="text" rows="4" maxlength="500" placeholder="Ex. Nous serons représentés par notre cadre de santé et deux résidents…"></textarea><p class="field-hint">500 caractères maximum · pas de données de santé ni de données personnelles de tiers.</p></div>
+      <p class="field-error" id="comment-error" role="alert" hidden></p>
+      <div class="comment-actions">
+        <button type="button" class="button subtle" data-action="close-dialog">Annuler</button>
+        <button type="submit" class="button primary">${icon("send", 14)} Envoyer</button>
+      </div>
+    </form>`;
+  openDialog("COMMENTAIRE & PARTICIPATION", content);
+  setTimeout(() => $("#comment-text")?.focus(), 240);
+}
 
-  if (choice === "cancel") {
-    if (currentChoice && post.rsvp[currentChoice] > 0) post.rsvp[currentChoice]--;
-    delete state.rsvps[postId];
-    showToast("Votre choix de participation a été annulé.");
-  } else if (currentChoice === choice) {
-    post.rsvp[choice] = Math.max(0, post.rsvp[choice] - 1);
-    delete state.rsvps[postId];
-    showToast("Participation retirée.");
-  } else {
-    if (currentChoice && post.rsvp[currentChoice] > 0) post.rsvp[currentChoice]--;
-    post.rsvp[choice] = (post.rsvp[choice] || 0) + 1;
-    state.rsvps[postId] = choice;
+function submitComment(form) {
+  const post = findPost(form.dataset.postId);
+  if (!post) { closeDialog(); return; }
+  const fd = new FormData(form);
+  const participation = String(fd.get("participation") || "none");
+  const text = String(fd.get("text") || "").trim();
+  const detail = String(fd.get("detail") || "").trim();
+  const count = Math.min(99, Math.max(1, Math.round(Number(fd.get("count")) || 1)));
+  const error = $("#comment-error");
+  const fail = message => { if (error) { error.hidden = false; error.textContent = message; } };
+  if (!PARTICIPATION_CHOICES[participation]) return fail("Choix de participation invalide.");
+  if (participation === "none" && !text) return fail("Écrivez un message ou choisissez une participation.");
+  if (participation === "other" && !detail) return fail("Précisez le type de délégation (ex. équipe éducative, bénévoles).");
 
-    const labelMap = {
-      personal: "Participation en personne",
-      delegate_intern: "Délégation d'un alternant",
-      delegate_staff: "Délégation de salariés pour représenter l'établissement"
-    };
+  const profile = state.auth?.profile || {};
+  const comment = {
+    id: "c-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    authorName: (profile.name || profile.email || "Membre Alumni").slice(0, 80),
+    authorUid: currentUserUid(),
+    participation,
+    count: participation === "none" ? 0 : count,
+    detail: participation === "other" ? detail.slice(0, 80) : "",
+    text: text.slice(0, 500),
+    createdAt: new Date().toISOString()
+  };
+  post.comments = [...(post.comments || []), comment];
+  post.commentsCount = post.comments.length;
+  state.openComments.add(post.id);
+  writeJSON(STORE.posts, state.posts);
+  closeDialog();
+  refreshPost(post.id);
 
-    // Add a live notification
-    const newNotif = {
-      id: "notif-" + Date.now(),
-      title: "Confirmation enregistrée",
-      text: `Votre statut a été mis à jour : "${labelMap[choice]}" pour l'événement "${post.title}".`,
-      date: "À l'instant",
-      icon: "check",
-      unread: true
-    };
-    state.notifs = [newNotif, ...state.notifs];
-    writeJSON(STORE.notifs, state.notifs);
-    updateNotifBadge();
-    showToast(`✅ Statut enregistré : ${labelMap[choice]} !`);
+  const summary = participation === "none" ? "Votre commentaire est publié." : `${PARTICIPATION_CHOICES[participation].label} : enregistré.`;
+  state.notifs = [{ id: "notif-" + Date.now(), title: "Réponse enregistrée", text: `${summary} (${post.title})`, date: "À l'instant", icon: "check", unread: true }, ...state.notifs];
+  writeJSON(STORE.notifs, state.notifs);
+  updateNotifBadge();
+  showToast(`✅ ${summary}`);
+
+  if (post.isRemote && typeof window.addCommentToFirestore === "function") {
+    window.addCommentToFirestore(post.id, comment).catch(err => console.warn("[Firestore] Commentaire non synchronisé :", err.message));
   }
+}
 
+function confirmDeletePost(postId) {
+  const post = findPost(postId);
+  if (!post) return;
+  openDialog("SUPPRESSION", `<h2 class="dialog-title" id="dialog-title">Supprimer cette publication ?</h2>
+    <p class="dialog-lede">« ${esc(post.title)} » et ses ${(post.comments || []).length} commentaire(s) seront définitivement supprimés pour toute la promotion. Cette action est irréversible.</p>
+    <div class="comment-actions">
+      <button type="button" class="button subtle" data-action="close-dialog">Annuler</button>
+      <button type="button" class="button danger-solid" data-action="confirm-delete-post" data-post-id="${esc(post.id)}">${icon("trash", 14)} Supprimer définitivement</button>
+    </div>`);
+}
+
+function deletePost(postId) {
+  const post = findPost(postId);
+  closeDialog();
+  if (!post || !canDeletePost(post)) return;
+  state.posts = state.posts.filter(p => p.id !== postId);
+  delete state.rsvps[postId];
   writeJSON(STORE.posts, state.posts);
   writeJSON(STORE.rsvps, state.rsvps);
-
-  const feed = $("#timeline-feed");
-  if (feed) {
-    feed.innerHTML = renderTimelinePosts();
-    hydrateIcons(feed);
+  const el = document.getElementById(`post-${postId}`);
+  const finish = () => { refreshFeed(); showToast("Publication supprimée."); };
+  if (el && typeof el.animate === "function" && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.97) translateY(-6px)" }], { duration: 180, easing: "ease-out", fill: "forwards" }).onfinish = finish;
+  } else finish();
+  if (post.isRemote && typeof window.deletePostFromFirestore === "function") {
+    window.deletePostFromFirestore(postId).catch(() => showToast("Suppression locale effectuée ; la suppression distante a été refusée."));
   }
 }
 
 function handleLikePost(postId) {
-  const post = (state.posts || []).find(p => p.id === postId);
+  const post = findPost(postId);
   if (!post) return;
   post.isLiked = !post.isLiked;
-  post.likes = Math.max(0, (post.likes || 0) + (post.isLiked ? 1 : -1));
+  const delta = post.isLiked ? 1 : -1;
+  post.likes = Math.max(0, (post.likes || 0) + delta);
   writeJSON(STORE.posts, state.posts);
-  const feed = $("#timeline-feed");
-  if (feed) {
-    feed.innerHTML = renderTimelinePosts();
-    hydrateIcons(feed);
+  refreshPost(postId);
+  if (post.isRemote && typeof window.adjustPostLikes === "function") {
+    window.adjustPostLikes(postId, delta).catch(err => console.warn("[Firestore] J'aime non synchronisé :", err.message));
   }
 }
 
 function editPeer(id) {
-  const peer = state.peers.find(p => p.id === id);
-  if (!peer) return;
+  if (!state.peers.some(p => p.id === id)) return;
   state.editingPeerId = id;
+  renderPage("inscription-annuaire");
+}
+
+function fillPeerForm(peer) {
   const form = $("#peer-form");
   if (!form) return;
   
@@ -1915,29 +2068,25 @@ function editPeer(id) {
   if (formTitle) formTitle.textContent = `Modifier ma fiche (${peer.name})`;
   const eyebrow = $("#peer-form-eyebrow");
   if (eyebrow) eyebrow.textContent = "MODIFICATION EN COURS";
+}
 
-  form.scrollIntoView({ behavior: "smooth", block: "start" });
-  $("#peer-name")?.focus();
+function highlightPeerCard() {
+  const id = state.highlightPeerId;
+  if (!id) return;
+  state.highlightPeerId = null;
+  requestAnimationFrame(() => {
+    const card = document.getElementById(`peer-card-${id}`);
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.add("is-highlighted");
+    setTimeout(() => card.classList.remove("is-highlighted"), 3200);
+  });
 }
 
 function cancelEditPeer() {
   state.editingPeerId = null;
-  const form = $("#peer-form");
-  if (!form) return;
-  form.reset();
-  const editIdInput = $("#peer-edit-id");
-  if (editIdInput) editIdInput.value = "";
-  peerMultiSelect.selected.clear();
-  peerMultiSelect.render();
-  const submitBtn = $("#peer-submit-btn");
-  if (submitBtn) submitBtn.innerHTML = `${icon("userplus", 15)} Enregistrer la fiche`;
-  const cancelBtn = $("#peer-cancel-edit-btn");
-  if (cancelBtn) cancelBtn.hidden = true;
-  const formTitle = $("#peer-form-title");
-  if (formTitle) formTitle.textContent = "Partager son expérience";
-  const eyebrow = $("#peer-form-eyebrow");
-  if (eyebrow) eyebrow.textContent = "AJOUTER UNE FICHE";
   showToast("Mode modification annulé.");
+  renderPage("reseau");
 }
 
 function updateNotifBadge() {
@@ -2011,8 +2160,7 @@ function addPeer(form) {
     form.elements.email.focus();
     return;
   }
-  const expVal = String(formData.get("experience") || "").trim();
-  const expArray = expVal ? expVal.split(",").map(s => s.trim()).filter(Boolean) : [];
+  const expArray = Array.from(peerMultiSelect.selected);
   if (!expArray.length) {
     const msg = "Sélectionnez au moins un domaine d'expérience à partager.";
     if (error) { error.hidden = false; error.textContent = msg; }
@@ -2062,49 +2210,11 @@ function addPeer(form) {
   }
 
   writeJSON(STORE.peers, state.peers);
-  form.reset();
   state.editingPeerId = null;
-  const editIdInput = $("#peer-edit-id");
-  if (editIdInput) editIdInput.value = "";
-  const submitBtn = $("#peer-submit-btn");
-  if (submitBtn) submitBtn.innerHTML = `${icon("userplus", 15)} Enregistrer la fiche`;
-  const cancelBtn = $("#peer-cancel-edit-btn");
-  if (cancelBtn) cancelBtn.hidden = true;
-  const formTitle = $("#peer-form-title");
-  if (formTitle) formTitle.textContent = "Partager son expérience";
-  const eyebrow = $("#peer-form-eyebrow");
-  if (eyebrow) eyebrow.textContent = "AJOUTER UNE FICHE";
-
-  peerMultiSelect.selected.clear();
-  peerMultiSelect.render();
-  if (error) error.hidden = true;
-
-  // Réinitialiser les filtres pour que la nouvelle fiche soit immédiatement visible
   state.queries.peers = "";
-  const peerQueryInput = $("#peer-query");
-  if (peerQueryInput) peerQueryInput.value = "";
-  const peerExpFilter = $("#peer-experience-filter");
-  if (peerExpFilter) peerExpFilter.value = "Tout";
-  const peerRegFilter = $("#peer-region-filter");
-  if (peerRegFilter) peerRegFilter.value = "Tout";
-
-  renderPeerList();
-
-  // Scroll fluide vers la fiche créée pour confirmation visuelle immédiate
-  setTimeout(() => {
-    const card = document.getElementById(`peer-card-${peer.id}`);
-    if (card) {
-      card.scrollIntoView({ behavior: "smooth", block: "center" });
-      card.style.transition = "all 0.4s ease";
-      card.style.borderColor = "var(--mint)";
-      card.style.boxShadow = "0 0 0 3px rgba(98, 222, 184, 0.4)";
-      setTimeout(() => {
-        card.style.borderColor = "";
-        card.style.boxShadow = "";
-      }, 3000);
-    }
-  }, 120);
-
+  state.highlightPeerId = peer?.id;
+  peerMultiSelect.selected.clear();
+  renderPage("reseau");
   if (typeof window.saveAlumniToFirestore === "function") {
     window.saveAlumniToFirestore(peer)
       .then(() => showToast("🎉 Fiche enregistrée et synchronisée avec la promo !"))
@@ -3185,8 +3295,22 @@ document.addEventListener("click", event => {
     cancelEditPeer();
     return;
   }
-  if (action === "rsvp") {
-    handleRsvp(actionEl.dataset.postId, actionEl.dataset.choice);
+  if (action === "open-comment-dialog") {
+    openCommentDialog(actionEl.dataset.postId);
+    return;
+  }
+  if (action === "toggle-comments") {
+    const id = actionEl.dataset.postId;
+    if (state.openComments.has(id)) state.openComments.delete(id); else state.openComments.add(id);
+    refreshPost(id);
+    return;
+  }
+  if (action === "delete-post") {
+    confirmDeletePost(actionEl.dataset.postId);
+    return;
+  }
+  if (action === "confirm-delete-post") {
+    deletePost(actionEl.dataset.postId);
     return;
   }
   if (action === "like-post") {
@@ -3501,6 +3625,11 @@ document.addEventListener("keydown", event => {
 dialog.addEventListener("click", event => { if (event.target === dialog) closeDialog(); });
 dialog.addEventListener("cancel", event => { event.preventDefault(); closeDialog(); });
 document.addEventListener("submit", event => {
+  if (event.target.id === "comment-form") {
+    event.preventDefault();
+    submitComment(event.target);
+    return;
+  }
   
   if (event.target.id === "timeline-post-form") {
     event.preventDefault();
@@ -3525,7 +3654,8 @@ document.addEventListener("submit", event => {
         name: state.auth?.profile?.name || "Membre Alumni MES",
         role: state.auth?.profile?.role || "Direction / Cadre de santé",
         avatar: (state.auth?.profile?.name || "MA").slice(0, 2).toUpperCase(),
-        linkedin: ""
+        linkedin: "",
+        uid: currentUserUid()
       },
       type,
       title,
@@ -3536,22 +3666,19 @@ document.addEventListener("submit", event => {
       location: location,
       content,
       date: "À l'instant",
+      createdAt: new Date().toISOString(),
       likes: 0,
       commentsCount: 0,
-      isLiked: false,
-      rsvp: type === "event" ? { personal: 1, delegate_intern: 0, delegate_staff: 0 } : undefined
+      comments: [],
+      isLiked: false
     };
-    if (type === "event") {
-      state.rsvps[newPost.id] = "personal";
-      writeJSON(STORE.rsvps, state.rsvps);
-    }
     state.posts = [newPost, ...(state.posts || [])];
     writeJSON(STORE.posts, state.posts);
 
     // Sync to Firestore
     if (typeof window.savePostToFirestore === "function") {
       window.savePostToFirestore(newPost)
-        .then(() => showToast(`🎉 ${typeLabel} publié(e) et synchronisé(e) avec le réseau !`))
+        .then(() => { newPost.isRemote = true; writeJSON(STORE.posts, state.posts); })
         .catch(err => {
           console.warn("[Firestore] Synchronisation post différée :", err.message);
         });
@@ -3731,16 +3858,14 @@ function initFirestoreSync() {
       // Subscribe to posts (real-time)
       if (typeof window.subscribeToPostsFirestore === "function") {
         window.subscribeToPostsFirestore((remotePosts) => {
-          if (remotePosts && remotePosts.length) {
-            const map = new Map(state.posts.map(p => [p.id, p]));
-            remotePosts.forEach(r => map.set(r.id, { ...map.get(r.id), ...r }));
-            state.posts = Array.from(map.values()).sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-            writeJSON(STORE.posts, state.posts);
-            if (state.page === "timeline") {
-              const feed = $("#timeline-feed");
-              if (feed) { feed.innerHTML = renderTimelinePosts(); hydrateIcons(feed); }
-            }
-          }
+          const localById = new Map((state.posts || []).map(p => [p.id, p]));
+          const remoteIds = new Set(remotePosts.map(p => p.id));
+          const merged = remotePosts.map(r => ({ ...localById.get(r.id), ...r, isLiked: localById.get(r.id)?.isLiked === true }));
+          // Le serveur fait foi : une publication distante absente du flux a été supprimée.
+          const localOnly = (state.posts || []).filter(p => !remoteIds.has(p.id) && !p.isRemote);
+          state.posts = [...merged, ...localOnly].sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+          writeJSON(STORE.posts, state.posts);
+          if (state.page === "timeline") refreshFeed();
         }, () => {
           // Mode silencieux : règles de sécurité posts en attente
         });
@@ -3812,7 +3937,7 @@ function applyAuthState({ user, premium }) {
       console.warn("Impossible de mettre à jour l’adresse après la déconnexion :", error);
     }
     renderPage("accueil", { immediate:true, fromHistory:true, restoreScrollY:0 });
-  } else if (["abonnement","metiers","rh","secu","carte","reseau","timeline","audit"].includes(state.page)) {
+  } else if (["abonnement","metiers","rh","secu","carte","reseau","inscription-annuaire","timeline","audit"].includes(state.page)) {
     renderPage(state.page, { immediate:true });
   }
   if (!user && wasAuthenticated) {

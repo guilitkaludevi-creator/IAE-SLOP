@@ -10,6 +10,7 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      "context doc.md",
       "**/.*",
       ".git/**",
       "**/.git/**",
