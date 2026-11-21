@@ -1,11 +1,11 @@
-const CACHE = "mosaique-sante-v2026-11-21-v39-directional-motion";
+const CACHE = "mosaique-sante-v2026-11-21-v40-lock-motion";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261121-directional-motion",
-  "./app.js?v=20261121-directional-motion",
-  "./data.js?v=20261121-soft-background",
-  "./firebase-init.js?v=20261121-glass-filters",
+  "./app.css?v=20261121-lock-motion",
+  "./app.js?v=20261121-lock-motion",
+  "./data.js?v=20261121-lock-motion",
+  "./firebase-init.js?v=20261121-lock-motion",
   "./manifest.webmanifest",
   "./icon.svg"
 ];

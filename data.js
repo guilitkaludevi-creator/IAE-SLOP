@@ -1889,13 +1889,13 @@
     { id: "rh", label: "Questions RH & Droit", icon: "users", group: "Pilotage & Gestion" },
     { id: "droit-sante", label: "Droit de la santé", icon: "shield", group: "Pilotage & Gestion" },
 
-    { id: "secu", label: "Sécurité Sociale & Liens", icon: "shield", group: "Stratégie & Réseau" },
-    { id: "politique", label: "Politique de santé & Lois", icon: "clipboard", group: "Stratégie & Réseau" },
-    { id: "acteurs", label: "Acteurs institutionnels", icon: "network", group: "Stratégie & Réseau" },
-    { id: "carte", label: "Carte des interactions", icon: "map", group: "Stratégie & Réseau" },
-    { id: "reseau", label: "Réseau", icon: "users", group: "Stratégie & Réseau" },
-    { id: "inscription-annuaire", label: "Inscription au réseau", icon: "userplus", group: "Stratégie & Réseau" },
-    { id: "timeline", label: "Fil d'actualités", icon: "message", group: "Stratégie & Réseau" }
+    { id: "secu", label: "Sécurité Sociale & Liens", icon: "shield", group: "Stratégie" },
+    { id: "politique", label: "Politique de santé & Lois", icon: "clipboard", group: "Stratégie" },
+    { id: "acteurs", label: "Acteurs institutionnels", icon: "network", group: "Stratégie" },
+    { id: "carte", label: "Carte des interactions", icon: "map", group: "Stratégie" },
+    { id: "reseau", label: "Réseau", icon: "users", group: "Réseau" },
+    { id: "inscription-annuaire", label: "Inscription au réseau", icon: "userplus", group: "Réseau" },
+    { id: "timeline", label: "Fil d'actualités", icon: "message", group: "Réseau" }
   ];
 
   // Expose the catalogue to app.js without ES modules so the app also opens from file://.

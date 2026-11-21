@@ -80,7 +80,7 @@ try {
           console.warn("[Firebase Auth] Vérification de l’accès Premium impossible :", error);
         }
       }
-      if (version !== authChangeVersion) return;
+      if (version !== authChangeVersion || auth.currentUser?.uid !== user?.uid) return;
       const detail = {
         user: user ? { uid:user.uid, email:user.email, displayName:user.displayName, emailVerified:user.emailVerified } : null,
         premium
