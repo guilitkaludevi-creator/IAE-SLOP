@@ -431,7 +431,9 @@ function renderEstablishments() {
 function jobCards(list = JOBS) {
   if (!list.length) return `<div class="empty-state"><strong>Aucune piste correspondante</strong>Essayez un autre domaine ou un mot-clé.</div>`;
   const isUnlocked = isPremiumUnlocked();
-  return list.map((item,index) => `<article class="content-card job-card"><button class="card-hit" data-action="open-job" data-id="${esc(item.id)}">
+  const visibleList = isUnlocked ? list : list.filter(item => item.isPremium !== true);
+  if (!visibleList.length) return `<div class="empty-state"><strong>Contenu Premium masqué</strong>Les fiches institutionnelles apparaîtront après validation d’un abonnement actif.</div>`;
+  return visibleList.map((item,index) => `<article class="content-card job-card"><button class="card-hit" data-action="open-job" data-id="${esc(item.id)}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <span class="tag ${tagColor(item.sector)} level-tag">${esc(item.level)}</span>
       ${item.isPremium && !isUnlocked ? `<span class="tag gold" style="display:inline-flex;align-items:center;gap:4px;font-size:10px">${icon("lock",11)} Premium</span>` : ''}
@@ -1352,11 +1354,8 @@ function detailModal(kind, item) {
     title = item.name; kicker = item.level.toUpperCase(); lede = item.path; sourceIds = item.sources;
     const isUnlocked = isPremiumUnlocked();
     if (item.isPremium && !isUnlocked) {
-      cells = [
-        ["Place dans l’organigramme", item.placement],
-        ["Personnes encadrées", item.reports],
-        ["Champ de décision & Délégations", paywallGate("Fiche de poste institutionnelle réservée", "Les grilles indiciaires, marges de décision auprès des autorités de tutelle (ARS, HAS, Sécu) et interactions CODIR sont réservées aux membres Campus."), true]
-      ];
+      openDialog("ACCÈS PREMIUM MÉTIERS", paywallGate("Fiche métier réservée", `« ${item.name} » fait partie des fiches institutionnelles Premium. Abonnez-vous pour accéder aux délégations, responsabilités, indiciaires et interactions CODIR.`));
+      return;
     } else {
       cells = [["Place dans l’organigramme",item.placement],["Personnes encadrées",item.reports],["Champ de décision",item.decisions,true],["Déclinaisons selon le lieu",item.variants,true],["Point de vigilance",item.boundary,true]];
     }
@@ -1507,9 +1506,10 @@ function globalSearchResults(query) {
   const resultBox = $("#global-results");
   if (!resultBox) return;
   if (!needle) { resultBox.innerHTML = `<div class="empty-state"><strong>Votre recherche apparaîtra ici</strong>Les fiches s’ouvrent directement depuis les résultats.</div>`; return; }
+  const searchableJobs = isPremiumUnlocked() ? JOBS : JOBS.filter(item => item.isPremium !== true);
   const collections = [
     ...ESTABLISHMENTS.map(item => ({kind:"establishment",item,label:item.name,detail:item.family})),
-    ...JOBS.map(item => ({kind:"job",item,label:item.name,detail:item.level})),
+    ...searchableJobs.map(item => ({kind:"job",item,label:item.name,detail:item.level})),
     ...MEETINGS.map(item => ({kind:"meeting",item,label:`${item.name} · ${item.full}`,detail:item.kind})),
     ...DOCUMENTS.map(item => ({kind:"document",item,label:item.name,detail:item.category})),
     ...ACTORS.map(item => ({kind:"actor",item,label:item.name,detail:item.type})),
@@ -1545,7 +1545,8 @@ function applyFilter(group) {
     $("#establishment-count").textContent = `${list.length} fiche${list.length === 1 ? "" : "s"}`;
   } else if (group === "jobs") {
     const query = state.queries.jobs.toLocaleLowerCase("fr");
-    const list = JOBS.filter(item => (state.filters.jobs === "Tout" || item.sector === state.filters.jobs) && JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
+    const source = isPremiumUnlocked() ? JOBS : JOBS.filter(item => item.isPremium !== true);
+    const list = source.filter(item => (state.filters.jobs === "Tout" || item.sector === state.filters.jobs) && JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
     $("#job-results").innerHTML = jobCards(list);
   } else if (group === "meetings") {
     const query = state.queries.meetings.toLocaleLowerCase("fr");
