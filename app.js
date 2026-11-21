@@ -354,14 +354,14 @@ function renderHome() {
           <span class="onboarding-num">1</span>
           <div>
             <h3>Comprendre les structures & leurs flux</h3>
-            <p>Explorez les 12 types d'établissements (MAS, EHPAD, CH, IME), le fonctionnement de la Sécurité Sociale (les 5 branches, l'ONDAM) et les mécanismes de tarification (T2A, forfaits soins, CPOM).</p>
+            <p>Explorez les établissements (MAS, EHPAD, CH, IME), le fonctionnement de la Sécurité sociale et les mécanismes de tarification (T2A, forfaits soins, CPOM).</p>
           </div>
         </div>
         <div class="onboarding-card">
           <span class="onboarding-num">2</span>
           <div>
             <h3>Maîtriser les métiers & leurs coopérations</h3>
-            <p>Consultez les 40+ fiches de postes détaillées (Direction, Qualité, Soignants AS/IDE, Éducatif, Paramédical, RH, Compta) avec leurs interactions croisées au quotidien et marges de décision.</p>
+            <p>Consultez les fiches métiers et découvrez les coopérations, les responsabilités et les marges de décision au quotidien.</p>
           </div>
         </div>
         <div class="onboarding-card">
@@ -397,7 +397,7 @@ function renderHome() {
       </div></div>
       <aside class="profile-card glass-panel"><span class="tag violet">PARCOURS MES</span><h3>Un profil hybride, ancré dans le terrain</h3><p>Les fiches métiers privilégient les passerelles entre direction, qualité, pilotage RH, budget et transformation numérique, avec une expérience de référence en MAS.</p><div class="profile-chip-row"><span class="tag mint">Qualité HAS</span><span class="tag sky">Pilotage RH</span><span class="tag gold">EPRD · CNR</span></div><button class="button subtle" data-nav="metiers">Voir les pistes adaptées ${icon("arrow",15)}</button></aside>
     </div>
-    <div class="section-block"><div class="section-title-row"><div><h2>Les cinq repères d’un manager</h2><p>Une décision solide croise le vécu des personnes, les équipes, les obligations, les moyens et les partenaires.</p></div></div><div class="focus-row"><article class="focus-card glass-panel"><span class="eyebrow">01 · PERSONNES</span><h3>Partir de la personne accompagnée</h3><p>Relier le projet personnalisé, les droits, l’expression et la continuité du parcours.</p></article><article class="focus-card glass-panel"><span class="eyebrow">02 · ÉQUIPES</span><h3>Rendre l’organisation tenable</h3><p>Prévenir les risques, soutenir les collectifs et clarifier les rôles de décision.</p></article><article class="focus-card glass-panel"><span class="eyebrow">03 · PILOTAGE</span><h3>Relier les moyens aux résultats</h3><p>Lire budget, effectifs, qualité et activité ensemble ; demander un arbitrage au bon niveau.</p></article></div></div>
+    <div class="section-block"><div class="section-title-row"><div><h2>Trois repères pour décider</h2><p>Une décision solide croise le vécu des personnes, les équipes, les obligations, les moyens et les partenaires.</p></div></div><div class="focus-row"><article class="focus-card glass-panel"><span class="eyebrow">01 · PERSONNES</span><h3>Partir de la personne accompagnée</h3><p>Relier le projet personnalisé, les droits, l’expression et la continuité du parcours.</p></article><article class="focus-card glass-panel"><span class="eyebrow">02 · ÉQUIPES</span><h3>Rendre l’organisation tenable</h3><p>Prévenir les risques, soutenir les collectifs et clarifier les rôles de décision.</p></article><article class="focus-card glass-panel"><span class="eyebrow">03 · PILOTAGE</span><h3>Relier les moyens aux résultats</h3><p>Lire budget, effectifs, qualité et activité ensemble ; demander un arbitrage au bon niveau.</p></article></div></div>
     <div class="section-block notice">${icon("info",18)}<span><strong>Repère de lecture.</strong> Les textes, autorisations, conventions, statuts et compétences territoriales changent le cadre applicable. Chaque fiche indique les vérifications à faire avant une décision de gestion.</span></div>
   </section>`;
 }

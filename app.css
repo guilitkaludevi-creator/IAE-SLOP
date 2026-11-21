@@ -2230,17 +2230,18 @@ html[data-theme="light"] {
   --field-bg: rgba(255, 255, 255, .8);
 }
 
+body { isolation: isolate; }
 body::before {
   background:
-    radial-gradient(ellipse 52% 55% at 82% 7%, rgba(225, 141, 103, .23), transparent 70%),
-    radial-gradient(ellipse 48% 65% at 8% 78%, rgba(94, 164, 151, .2), transparent 70%),
-    linear-gradient(135deg, #121c28, #1d2c35 53%, #292b2c);
+    radial-gradient(ellipse 72% 62% at 87% 5%, rgba(164, 112, 88, .22), transparent 70%),
+    radial-gradient(ellipse 70% 68% at 15% 92%, rgba(77, 146, 132, .19), transparent 70%),
+    linear-gradient(145deg, #17242c, #1b2c32 58%, #2d302f);
 }
 html[data-theme="light"] body::before {
   background:
-    radial-gradient(ellipse 55% 60% at 88% 4%, rgba(222, 154, 119, .34), transparent 70%),
-    radial-gradient(ellipse 48% 60% at 5% 82%, rgba(124, 184, 164, .26), transparent 70%),
-    linear-gradient(135deg, #f8f3ec, #e6e9e2);
+    radial-gradient(ellipse 70% 60% at 86% 4%, rgba(222, 172, 143, .25), transparent 70%),
+    radial-gradient(ellipse 65% 70% at 10% 92%, rgba(138, 190, 170, .24), transparent 70%),
+    linear-gradient(145deg, #f7f3ed, #e8eee8);
 }
 .ambient { animation: none; will-change: auto; opacity: .07; }
 .ambient-a { background: #e59b79; }
@@ -2294,6 +2295,20 @@ h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3.5rem); line-height: 1.08; }
 .orbit-node { background: linear-gradient(145deg, rgba(40, 95, 90, .96), rgba(89, 84, 76, .96)); }
 .orbit-node, .orbit-ring, .premium-bubble-orb { animation: none; }
 
+.dashboard-lower { align-items: start; }
+.onboarding-card { padding: 8px 0; background: transparent; border: 0; }
+.quick-grid { gap: 0 16px; }
+.quick-tile {
+  min-height: 0;
+  padding: 15px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--stroke);
+  border-radius: 0;
+  background: transparent;
+}
+.quick-tile:hover { background: var(--surface-soft); box-shadow: none; }
+.profile-card::after { display: none; }
+
 .auth-screen { min-height: 100vh; min-height: 100dvh; }
 .auth-panel { border-radius: 24px; }
 .auth-status, .auth-hint { font-size: .875rem; }
@@ -2313,7 +2328,11 @@ h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3.5rem); line-height: 1.08; }
   .hero h1, .page-head h1 { font-size: clamp(1.875rem, 1.35rem + 2.2vw, 2.5rem); }
   .hero .lede, .page-head .lede { font-size: .9375rem; }
   .quick-tile strong, .quick-tile small { font-size: .8125rem; }
-  .quick-tile { min-height: 0; }
+  .quick-tile { display: flex; padding: 13px 8px; }
+  .quick-tile .icon-bubble { margin-bottom: 0; }
+}
+@media (max-width: 480px) {
+  .quick-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 360px) {
   .topbar .topbar-chip { display: none !important; }

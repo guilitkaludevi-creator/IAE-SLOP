@@ -1875,7 +1875,7 @@
     { id: "abonnement", label: "Abonnement & Accès", icon: "star", group: "Espace de travail" },
     { id: "compte", label: "Mon compte", icon: "users", group: "Espace de travail" },
 
-    { id: "etablissements", label: "Établissements (28)", icon: "building", group: "Panorama & Métiers" },
+    { id: "etablissements", label: "Établissements", icon: "building", group: "Panorama & Métiers" },
     { id: "metiers", label: "Métiers de direction", icon: "briefcase", group: "Panorama & Métiers" },
     { id: "metiers-support", label: "Métiers support", icon: "people", group: "Panorama & Métiers" },
 
