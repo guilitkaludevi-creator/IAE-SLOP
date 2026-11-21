@@ -110,6 +110,63 @@ exports.stripeWebhook = onRequest({ secrets: [stripeSecret, stripeWebhookSecret]
         plan: active ? "premium" : "freemium"
       });
 
+      exports.redeemPremiumCode = onRequest({ cors: true }, async (req, res) => {
+        res.set({
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Authorization,Content-Type",
+          "Access-Control-Allow-Methods": "POST,OPTIONS"
+        });
+        if (req.method === "OPTIONS") return res.status(204).send("");
+        if (req.method !== "POST") return res.status(405).json({ error:"Méthode non autorisée" });
+
+        const authHeader = req.headers.authorization || "";
+        if (!authHeader.startsWith("Bearer ")) return res.status(401).json({ error:"Connexion requise" });
+        let decoded;
+        try {
+          decoded = await admin.auth().verifyIdToken(authHeader.slice(7));
+        } catch {
+          return res.status(401).json({ error:"Session invalide" });
+        }
+        if (!decoded.email_verified) return res.status(403).json({ error:"Veuillez valider votre adresse email." });
+
+        const code = String(req.body?.code || "").trim().toUpperCase();
+        if (!/^[A-Z0-9_-]{6,40}$/.test(code)) return res.status(400).json({ error:"Format de code invalide." });
+        const codeHash = crypto.createHash("sha256").update(code).digest("hex");
+        const db = admin.firestore();
+        const codeRef = db.collection("access_codes").doc(codeHash);
+        const codeSnap = await codeRef.get();
+        if (!codeSnap.exists) return res.status(404).json({ error:"Code Premium inconnu." });
+
+        const codeData = codeSnap.data();
+        if (codeData.active !== true) return res.status(403).json({ error:"Ce code est désactivé." });
+        if (codeData.expiresAt && codeData.expiresAt.toMillis() < Date.now()) return res.status(410).json({ error:"Ce code est expiré." });
+        if (typeof codeData.maxUses === "number" && codeData.usedCount >= codeData.maxUses) return res.status(409).json({ error:"Ce code a atteint sa limite d’utilisation." });
+
+        await db.runTransaction(async transaction => {
+          const snap = await transaction.get(codeRef);
+          const data = snap.data();
+          const used = Number(data.usedCount || 0);
+          if (typeof data.maxUses === "number" && used >= data.maxUses) throw new Error("LIMIT_REACHED");
+          transaction.set(codeRef, { usedCount:used + 1, usedBy: { [decoded.uid]: true }, updatedAt:admin.firestore.FieldValue.serverTimestamp() }, { merge:true });
+        }).catch(error => {
+          if (error.message === "LIMIT_REACHED") throw error;
+        });
+
+        await admin.auth().setCustomUserClaims(decoded.uid, {
+          premium:true,
+          verifiedPaid:false,
+          premiumSource:"access-code",
+          premiumUntil: codeData.expiresAt ? codeData.expiresAt.toMillis() : null,
+          plan:"premium"
+        });
+        await db.collection("premium_activations").doc(decoded.uid).set({
+          source:"access-code",
+          codeHash,
+          activatedAt:admin.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+        return res.status(200).json({ success:true, expiresAt:codeData.expiresAt ? codeData.expiresAt.toMillis() : null });
+      });
+
       await admin.firestore().collection("subscriptions").doc(firebaseUid).set({
         status: subscription.status,
         customerId: typeof object.customer === "string" ? object.customer : null,

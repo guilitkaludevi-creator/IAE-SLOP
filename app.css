@@ -35,7 +35,8 @@
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     font-variant-numeric: tabular-nums;
-  } 
+  }
+  html.is-premium-user .micro-ad { display:none; }
   html[data-theme="light"] {
     color-scheme: light;
     --bg: #f6f9fa;
@@ -141,6 +142,37 @@
   .main-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px clamp(24px, 4.1vw, 64px) 22px; color: var(--faint); font-size: 10px; }
   .main-footer .quiet-link { min-height: 34px; font-size: 10px; }
   .bottom-nav { display: none; }
+  .micro-ad {
+    position: fixed;
+    z-index: 11;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    width: min(560px, calc(100% - 28px));
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border: 1px solid var(--stroke);
+    border-radius: 999px;
+    background: rgba(15,27,43,.72);
+    box-shadow: 0 8px 24px rgba(0,0,0,.14);
+    backdrop-filter: blur(12px) saturate(1.12);
+    -webkit-backdrop-filter: blur(12px) saturate(1.12);
+    color: var(--faint);
+    font-size: 9px;
+    opacity: .72;
+  }
+  .micro-ad button {
+    border:0;
+    border-bottom:1px solid currentColor;
+    padding:0;
+    background:none;
+    color:var(--muted);
+    font-size:9px;
+  }
   body.menu-open { overflow: hidden; overscroll-behavior: none; }
   .noscript-card { max-width: 500px; margin: 32px auto; padding: 18px; border: 1px solid var(--stroke); border-radius: var(--radius-md); background: var(--surface); }
 }
@@ -608,7 +640,17 @@
     .etp-source-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
     .hero { grid-template-columns: 1.1fr .9fr; }
   }
+  .audit-card { min-width:0; }
+  .audit-card .card-title-line { align-items:flex-start; }
+  .audit-card .detail-cell,
+  .audit-card .card-copy,
+  .audit-card .card-foot { min-width:0; overflow-wrap:anywhere; }
+  .account-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+  .account-card { min-width:0; padding:20px; }
+  .account-form { display:grid; gap:10px; margin-top:12px; }
+  .premium-code-card { border-color:rgba(248,211,136,.32); background:rgba(248,211,136,.06); }
   @media (max-width: 900px) {
+    .account-grid { grid-template-columns:1fr; }
     :root { --sidebar: 0px; }
     .app-shell { grid-template-columns: minmax(0,1fr); }
     .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: min(290px, 86vw); height: 100dvh; min-height: 0; padding-top: calc(26px + env(safe-area-inset-top)); padding-bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-105%); transition: transform .28s var(--ease-out); box-shadow: var(--shadow); }
@@ -780,6 +822,11 @@
     .page-head h1 { font-size: 24px; }
   }
   @media (max-width: 768px) {
+    .audit-card { width:100%; padding:0; }
+    .audit-card .card-title-line { display:flex; align-items:flex-start; }
+    .audit-card .card-title-line > div { min-width:0; }
+    .audit-card h3 { overflow-wrap:anywhere; }
+    .audit-card .detail-cell p { white-space:normal; overflow-wrap:anywhere; }
     .multiselect-wrap.is-open .multiselect-dropdown {
       position: fixed;
       top: auto;
@@ -1860,4 +1907,6 @@
     .law-card-head h2 { font-size:16px; }
     .result-grid { grid-template-columns:1fr; }
     .documents-layout { grid-template-columns:1fr; }
+    .micro-ad { bottom:78px; min-height:24px; width:min(420px, calc(100% - 24px)); }
+    .is-premium-user .micro-ad { display:none; }
   }

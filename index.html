@@ -23,6 +23,10 @@
         }
       }
     </script>
+    <script>
+      window.MOSAQUE_PREMIUM_CODE_URL = "https://us-central1-iae-slop-3f7be.cloudfunctions.net/redeemPremiumCode";
+      window.MOSAQUE_STRIPE_CHECKOUT_URL = "";
+    </script>
     <title>Mosaïque Santé — boîte à outils du management</title>
     <link rel="stylesheet" href="./app.css?v=20261121-1615">
   </head>
@@ -63,7 +67,7 @@
             <button class="search-trigger" data-action="open-search" aria-label="Rechercher dans les repères"><span data-icon="search"></span><span>Rechercher</span><kbd id="search-shortcut">Ctrl K</kbd></button>
             <button class="icon-button notif-toggle" data-action="toggle-notifications" aria-label="Notifications" title="Notifications réseau" style="position:relative"><span data-icon="bell"></span><span class="notif-badge" id="notif-badge" hidden>0</span></button>
             <button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="Changer le thème"><span data-icon="sun"></span></button>
-            <button class="avatar-button" data-nav="reseau" aria-label="Ouvrir le réseau de promotion">G</button>
+            <button class="avatar-button" data-nav="abonnement" aria-label="Ouvrir mon compte">G</button>
           </div>
         </header>
         <div id="notif-popover" class="notif-popover" hidden></div>
@@ -86,6 +90,10 @@
       </div>
     </div>
 
+    <aside class="micro-ad" id="micro-ad" aria-label="Espace partenaire">
+      <span>Espace partenaire</span>
+      <button type="button" data-nav="abonnement">Retirer les publicités avec Premium</button>
+    </aside>
     <nav class="bottom-nav" aria-label="Navigation mobile">
       <button data-nav="accueil" class="bottom-link is-active"><span data-icon="home"></span><small>Accueil</small></button>
       <button data-nav="etablissements" class="bottom-link"><span data-icon="building"></span><small>Établ.</small></button>

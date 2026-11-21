@@ -2127,6 +2127,50 @@ function exportPeers() {
   const link = document.createElement("a"); link.href = url; link.download = "annuaire-mosaique-sante.json"; link.click(); URL.revokeObjectURL(url);
   showToast("Export JSON téléchargé.");
 }
+async function downloadFlashcardsPdf() {
+  if (!isPremiumUnlocked()) {
+    showToast("Les flashcards PDF sont réservées aux abonnés Premium.");
+    return;
+  }
+  let jsPDF;
+  try {
+    ({ jsPDF } = await import("https://cdn.jsdelivr.net/npm/jspdf@2.5.2/+esm"));
+  } catch {
+    showToast("Téléchargement PDF indisponible hors connexion. Réessayez avec une connexion.");
+    return;
+  }
+  const pdf = new jsPDF({ unit:"mm", format:"a4" });
+  const cards = [
+    ...ESTABLISHMENTS.slice(0,12).map(item => ({ category:"ÉTABLISSEMENTS", front:item.name, back:`${item.audience}\n${item.manager}` })),
+    ...JOBS.filter(item => item.isPremium).slice(0,12).map(item => ({ category:"MÉTIERS PREMIUM", front:item.name, back:`${item.path}\n${item.boundary}` })),
+    ...FAQ.slice(0,20).map(item => ({ category:"QUESTIONS RH", front:item.q, back:item.a })),
+    ...DOCUMENTS.slice(0,12).map(item => ({ category:"DOCUMENTS", front:item.name, back:`${item.purpose}\n${item.when}` }))
+  ];
+  cards.forEach((card,index) => {
+    if (index > 0) pdf.addPage();
+    pdf.setFillColor(11,20,32); pdf.rect(0,0,210,297,"F");
+    pdf.setFillColor(21,35,52); pdf.roundedRect(14,18,182,238,8,8,"F");
+    pdf.setDrawColor(98,222,184); pdf.setLineWidth(.6); pdf.roundedRect(14,18,182,238,8,8,"S");
+    pdf.setTextColor(98,222,184); pdf.setFont("helvetica","bold"); pdf.setFontSize(10);
+    pdf.text(card.category,22,32);
+    pdf.setTextColor(244,248,251); pdf.setFontSize(20);
+    const front = pdf.splitTextToSize(card.front,160);
+    pdf.text(front,22,58);
+    pdf.setDrawColor(135,199,247); pdf.line(22,78,188,78);
+    pdf.setTextColor(203,221,233); pdf.setFont("helvetica","normal"); pdf.setFontSize(12);
+    const back = pdf.splitTextToSize(card.back,160);
+    pdf.text(back,22,94);
+    pdf.setTextColor(114,135,149); pdf.setFontSize(9);
+    pdf.text(`MOSAÏQUE SANTÉ  •  Flashcard ${index+1}/${cards.length}`,22,270);
+  });
+  pdf.save("mosaique-sante-flashcards.pdf");
+  showToast("Flashcards PDF téléchargées.");
+}
+function syncMicroAdVisibility() {
+  const ad = $("#micro-ad");
+  if (!ad) return;
+  ad.hidden = isPremiumUnlocked();
+}
 function showToast(message) {
   toastEl.textContent = message;
   toastEl.classList.add("is-visible");
@@ -2454,7 +2498,7 @@ function toggleAccordion(trigger) {
 /* --- MODULE AUDITS QUALITÉ & MÉTHODOLOGIE --- */
 function auditTypologyCards() {
   const guide = AUDIT_GUIDE;
-  return guide.typology.map((item, idx) => `<article class="content-card">
+  return guide.typology.map((item, idx) => `<article class="content-card audit-card">
     <div class="card-top">
       <div class="card-title-line">
         <span class="icon-bubble">${icon("target", 17)}</span>
@@ -2807,7 +2851,7 @@ function renderSubscription() {
 
   return `<section class="page" aria-labelledby="sub-title">
     ${renderAccessStatusBar()}
-    ${sectionHead("ABONNEMENT & TARIFICATION CAMPUS", "Formules d'accès, tarifs écoles et gestion des profils", "Accès complet aux 16 métiers institutionnels (HAS, ARS, ANAP, Sécurité Sociale), aux modules REX & Audit approfondis, au calculateur ETPT et à l'annuaire réseau illimité.", `<button class="button subtle" data-action="toggle-freemium-test">${icon("rotate", 15)}Basculer mode ${isUnlocked ? "Freemium (55%)" : "Débloqué (100%)"}</button>`)}
+    ${sectionHead("ABONNEMENT & ACCÈS PREMIUM", "Formules disponibles dans l’application", "Chaque abonnement donne accès aux contenus Premium présents dans Mosaïque Santé : métiers institutionnels, RH, droit, Sécurité Sociale, annuaire, timeline, carte 3D et flashcards PDF.", ``)}
 
     <!-- Bannière Statut Actuel -->
     <div class="glass-panel" style="padding:22px;margin-bottom:24px;border-left:4px solid ${isUnlocked ? 'var(--mint)' : 'var(--gold)'}">
@@ -2819,8 +2863,8 @@ function renderSubscription() {
           </h2>
           <p style="font-size:13px;color:var(--text-2);margin:0;max-width:650px">
             ${isUnlocked 
-              ? `Formule active : <strong>${esc(currentPlan)}</strong>. Tous les 41 métiers, la matrice de la Sécu, les fiches d'audit et l'annuaire complet sont ouverts.`
-              : `55% des modules sont accessibles gratuitement (fiches métiers clés, panorama des 28 structures, principes de la Sécu, FAQ RH). Débloquez les 45% réservés aux abonnés via votre école ou un pass individuel.`}
+              ? `Accès actif : <strong>${esc(currentPlan)}</strong>. Les contenus Premium déjà intégrés à l’application sont ouverts : métiers, RH, droit, Sécurité Sociale, audit, REX, annuaire, timeline, carte 3D et flashcards PDF.`
+              : `Les ressources gratuites restent disponibles. L’abonnement ouvre uniquement les contenus Premium réellement intégrés à Mosaïque Santé.`}
           </p>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
@@ -2847,8 +2891,8 @@ function renderSubscription() {
     <div class="section-block">
       <div class="section-title-row">
         <div>
-          <h2>Formules Établissements d'Enseignement (Écoles, Universités, IAE, EHESP)</h2>
-          <p>Abonnements de cohorte avec gestion centralisée des étudiants, accès enseignants et mises à jour réglementaires.</p>
+          <h2>Formules pour les écoles et promotions</h2>
+          <p>Accès Premium pour plusieurs comptes à l’ensemble des modules actuellement disponibles dans l’application.</p>
         </div>
       </div>
       <div class="pricing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px">
@@ -2880,7 +2924,7 @@ function renderSubscription() {
       <div class="section-title-row">
         <div>
           <h2>Formules Individuelles & Pass Étudiant</h2>
-          <p>Pour les étudiants autonomes préparant un concours (D3S, CAFDES, DH) ou les professionnels hors convention école.</p>
+          <p>Accès Premium pour un étudiant ou un professionnel utilisant les modules de Mosaïque Santé.</p>
         </div>
       </div>
       <div class="pricing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
@@ -2910,8 +2954,8 @@ function renderSubscription() {
     <div class="section-block">
       <div class="section-title-row">
         <div>
-          <h2>Formule Établissement de Santé / ESSMS (Pack CODIR)</h2>
-          <p>Équipez votre direction, votre responsable qualité et vos cadres de santé.</p>
+          <h2>Formule pour une équipe de direction</h2>
+          <p>Accès Premium pour cinq comptes aux modules disponibles dans Mosaïque Santé.</p>
         </div>
       </div>
       <div class="glass-panel" style="padding:24px;border-radius:18px">
@@ -2933,45 +2977,59 @@ function renderSubscription() {
       </div>
     </div>
 
-    <!-- Fiche d'identification apprenant -->
+    <!-- Compte utilisateur sécurisé -->
     <div class="section-block">
       <div class="section-title-row">
         <div>
-          <h2>Identification & Rattachement Promotion</h2>
-          <p>Personnalisez votre expérience en renseignant votre école ou organisme gestionnaire.</p>
+          <h2>Compte & accès Premium</h2>
+          <p>Créez votre compte, validez votre email et utilisez un code d’accès ou votre abonnement.</p>
         </div>
       </div>
-      <div class="glass-panel" style="padding:22px;border-radius:18px">
-        <form id="auth-profile-form">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px">
-            <div>
-              <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px">Nom et Prénom</label>
-              <input type="text" name="name" value="${esc(profile.name || '')}" placeholder="Ex: Alexandre Dupont" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.15);color:var(--text);font-size:13px" />
-            </div>
-            <div>
-              <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px">Adresse Email</label>
-              <input type="email" name="email" value="${esc(profile.email || '')}" placeholder="alexandre@etablissement.fr" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.15);color:var(--text);font-size:13px" />
-            </div>
-            <div>
-              <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px">Profil / Statut</label>
-              <select name="role" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.15);color:var(--text);font-size:13px">
-                <option value="Étudiant Master MES" ${profile.role === "Étudiant Master MES" ? "selected" : ""}>Étudiant Master MES (IAE)</option>
-                <option value="Élève Directeur (EHESP)" ${profile.role === "Élève Directeur (EHESP)" ? "selected" : ""}>Élève Directeur D3S/DH/CAFDES (EHESP)</option>
-                <option value="Directeur d'Établissement" ${profile.role === "Directeur d'Établissement" ? "selected" : ""}>Directeur / Adjoint d'Établissement</option>
-                <option value="Cadre de Santé / Soignant" ${profile.role === "Cadre de Santé / Soignant" ? "selected" : ""}>Cadre de Santé / IDEC / Soignant</option>
-                <option value="Responsable Qualité" ${profile.role === "Responsable Qualité" ? "selected" : ""}>Responsable Qualité / Gestion des Risques</option>
-                <option value="Autre" ${profile.role === "Autre" ? "selected" : ""}>Autre profil du secteur</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px">Établissement / École de rattachement</label>
-              <input type="text" name="school" value="${esc(profile.school || '')}" placeholder="Ex: IAE Paris-Est, EHESP, GHU Paris" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:rgba(0,0,0,0.15);color:var(--text);font-size:13px" />
-            </div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;margin-top:8px">
-            <button type="submit" class="button primary">${icon("check", 15)}Enregistrer mon profil apprenant</button>
-          </div>
-        </form>
+      <div class="account-grid">
+        <section class="glass-panel account-card">
+          <span class="eyebrow">${profile.email ? "SESSION ACTIVE" : "CONNEXION"}</span>
+          ${profile.email ? `
+            <h3>${esc(profile.name || "Utilisateur")}</h3>
+            <p class="muted">${esc(profile.email)}</p>
+            <span class="tag ${profile.emailVerified ? "mint" : "gold"}">${profile.emailVerified ? "Email vérifié" : "Email à vérifier"}</span>
+            ${profile.emailVerified ? "" : `<button class="button subtle" type="button" data-action="resend-verification">${icon("send",14)}Renvoyer la validation</button>`}
+            <form id="password-update-form" class="account-form">
+              <label><span class="field-label">Nouveau mot de passe</span><input class="form-control" name="password" type="password" minlength="8" autocomplete="new-password" required></label>
+              <label><span class="field-label">Confirmer le mot de passe</span><input class="form-control" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required></label>
+              <button class="button primary" type="submit">${icon("lock",14)}Modifier le mot de passe</button>
+            </form>
+            <button class="button subtle danger" type="button" data-action="sign-out">${icon("close",14)}Se déconnecter</button>
+          ` : `
+            <h3>Se connecter</h3>
+            <form id="auth-signin-form" class="account-form">
+              <label><span class="field-label">Adresse email</span><input class="form-control" name="email" type="email" autocomplete="email" required></label>
+              <label><span class="field-label">Mot de passe</span><input class="form-control" name="password" type="password" autocomplete="current-password" required></label>
+              <button class="button primary" type="submit">${icon("arrow",14)}Se connecter</button>
+            </form>
+            <button class="quiet-link" type="button" data-action="reset-password">${icon("reset",14)}Mot de passe oublié</button>
+          `}
+        </section>
+        <section class="glass-panel account-card">
+          <span class="eyebrow">NOUVEAU COMPTE</span>
+          <h3>Créer un compte</h3>
+          <form id="auth-signup-form" class="account-form">
+            <label><span class="field-label">Nom complet</span><input class="form-control" name="name" minlength="2" maxlength="80" autocomplete="name" required></label>
+            <label><span class="field-label">Adresse email</span><input class="form-control" name="email" type="email" autocomplete="email" required></label>
+            <label><span class="field-label">Mot de passe</span><input class="form-control" name="password" type="password" minlength="8" autocomplete="new-password" required></label>
+            <label><span class="field-label">Confirmer le mot de passe</span><input class="form-control" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required></label>
+            <button class="button primary" type="submit">${icon("userplus",14)}Créer mon compte</button>
+          </form>
+        </section>
+        <section class="glass-panel account-card premium-code-card">
+          <span class="eyebrow">ACCÈS PREMIUM</span>
+          <h3>Utiliser un code d’accès</h3>
+          <p class="muted">Vous devez être connecté et votre email doit être vérifié.</p>
+          <form id="premium-code-form" class="account-form">
+            <label><span class="field-label">Code d’accès</span><input class="form-control" name="code" minlength="6" maxlength="40" placeholder="Ex. CAMPUS-XXXX-XXXX" autocomplete="off" required></label>
+            <button class="button primary" type="submit">${icon("spark",14)}Activer mon accès</button>
+          </form>
+          ${isUnlocked ? `<button class="button subtle" type="button" data-action="download-flashcards">${icon("download",14)}Télécharger mes flashcards PDF</button>` : ""}
+        </section>
       </div>
     </div>
 
@@ -3163,6 +3221,29 @@ document.addEventListener("click", event => {
       else showToast("Le point de paiement Stripe n’est pas encore configuré.");
     };
     startCheckout().catch(err => showToast(err.message || "Paiement Stripe indisponible."));
+    return;
+  }
+  if (action === "resend-verification") {
+    window.resendMosaqueEmail?.()
+      .then(() => showToast("Email de validation renvoyé."))
+      .catch(err => showToast(err.message || "Impossible d’envoyer l’email."));
+    return;
+  }
+  if (action === "reset-password") {
+    const email = window.prompt("Adresse email utilisée pour votre compte ?");
+    if (!email) return;
+    window.sendMosaqueReset?.(email.trim())
+      .then(() => showToast("Email de réinitialisation envoyé."))
+      .catch(err => showToast(err.message || "Impossible d’envoyer l’email."));
+    return;
+  }
+  if (action === "sign-out") {
+    window.signOutMosaque?.()
+      .then(() => showToast("Déconnexion effectuée."));
+    return;
+  }
+  if (action === "download-flashcards") {
+    downloadFlashcardsPdf();
     return;
   }
   if (action === "reset-auth-profile") {
@@ -3451,21 +3532,49 @@ document.addEventListener("submit", event => {
     return;
   }
   if (event.target.id === "peer-form") { event.preventDefault(); addPeer(event.target); }
-  if (event.target.id === "auth-profile-form") {
+  if (event.target.id === "auth-signup-form") {
     event.preventDefault();
     const fd = new FormData(event.target);
-    const name = String(fd.get("name") || "").trim() || "Utilisateur";
+    const name = String(fd.get("name") || "").trim();
     const email = String(fd.get("email") || "").trim();
-    const role = String(fd.get("role") || "").trim();
-    const school = String(fd.get("school") || "").trim();
-    state.auth = {
-      ...state.auth,
-      profile: { name, email, role, school },
-      identifiedAt: new Date().toISOString()
-    };
-    writeJSON(STORE.auth, state.auth);
-    showToast(`Profil enregistré pour ${name} (${role}).`);
-    renderPage("abonnement");
+    const password = String(fd.get("password") || "");
+    const passwordConfirm = String(fd.get("passwordConfirm") || "");
+    if (password !== passwordConfirm) { showToast("Les deux mots de passe doivent être identiques."); return; }
+    if (password.length < 8) { showToast("Le mot de passe doit contenir au moins 8 caractères."); return; }
+    window.signUpMosaque?.({ name,email,password })
+      .then(() => { showToast("Compte créé. Un email de validation a été envoyé."); renderPage("abonnement", { immediate:true }); })
+      .catch(err => showToast(err.message || "Impossible de créer le compte."));
+    return;
+  }
+  if (event.target.id === "auth-signin-form") {
+    event.preventDefault();
+    const fd = new FormData(event.target);
+    window.signInMosaque?.(String(fd.get("email") || "").trim(), String(fd.get("password") || ""))
+      .then(() => showToast("Connexion réussie."))
+      .catch(err => showToast(err.message || "Identifiants invalides."));
+    return;
+  }
+  if (event.target.id === "password-update-form") {
+    event.preventDefault();
+    const fd = new FormData(event.target);
+    const password = String(fd.get("password") || "");
+    const confirm = String(fd.get("passwordConfirm") || "");
+    if (password !== confirm) { showToast("Les deux mots de passe doivent être identiques."); return; }
+    if (password.length < 8) { showToast("Le mot de passe doit contenir au moins 8 caractères."); return; }
+    window.updateMosaquePassword?.(password)
+      .then(() => showToast("Mot de passe modifié avec succès."))
+      .catch(err => showToast(err.message || "Impossible de modifier le mot de passe."));
+    return;
+  }
+  if (event.target.id === "premium-code-form") {
+    event.preventDefault();
+    const fd = new FormData(event.target);
+    window.redeemPremiumCode?.(String(fd.get("code") || "").trim())
+      .then(() => {
+        showToast("Code Premium validé.");
+        renderPage("abonnement", { immediate:true });
+      })
+      .catch(err => showToast(err.message || "Code Premium invalide."));
     return;
   }
 
@@ -3596,4 +3705,24 @@ bindDialogGestures();
 initNavigation();
 initServiceWorker();
 initFirestoreSync();
+syncMicroAdVisibility();
+window.addEventListener("mosaique-auth-change", event => {
+  const { user, premium } = event.detail || {};
+  state.auth = {
+    isUnlocked: premium === true,
+    verifiedPaid: premium === true,
+    plan: premium === true ? "premium-active" : "freemium",
+    profile: user ? {
+      name:user.displayName || "",
+      email:user.email || "",
+      emailVerified:user.emailVerified === true
+    } : {}
+  };
+  writeJSON(STORE.auth, state.auth);
+  document.documentElement.classList.toggle("is-premium-user", premium === true);
+  syncMicroAdVisibility();
+  if (["abonnement","metiers","rh","secu","carte","reseau","timeline","audit"].includes(state.page)) {
+    renderPage(state.page, { immediate:true });
+  }
+});
 })();

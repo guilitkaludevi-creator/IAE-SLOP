@@ -12,6 +12,17 @@ import {
   deleteDoc,
   doc
 } from "firebase/firestore";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile,
+  updatePassword,
+  signOut,
+  onAuthStateChanged
+} from "firebase/auth";
 
 // Your web app's Firebase configuration
 export const firebaseConfig = {
@@ -28,6 +39,7 @@ export const firebaseConfig = {
 export let app = null;
 export let analytics = null;
 export let db = null;
+export let auth = null;
 
 try {
   app = initializeApp(firebaseConfig);
@@ -42,6 +54,28 @@ try {
     console.log("[Firebase Firestore] Connecté avec succès à la base");
   } catch (fsErr) {
     console.warn("[Firebase Firestore] Initialisation différée :", fsErr.message);
+  }
+
+  try {
+    auth = getAuth(app);
+    window.firebaseAuth = auth;
+    onAuthStateChanged(auth, async user => {
+      let premium = false;
+      if (user) {
+        try {
+          const token = await user.getIdTokenResult(true);
+          premium = token.claims.premium === true || token.claims.verifiedPaid === true;
+        } catch {}
+      }
+      window.dispatchEvent(new CustomEvent("mosaique-auth-change", {
+        detail: {
+          user: user ? { uid:user.uid, email:user.email, displayName:user.displayName, emailVerified:user.emailVerified } : null,
+          premium
+        }
+      }));
+    });
+  } catch (authErr) {
+    console.warn("[Firebase Auth] Initialisation différée :", authErr.message);
   }
 
   // 2. Initialisation d'Analytics (si supporté par le navigateur)
@@ -273,3 +307,59 @@ export async function deletePostFromFirestore(id) {
 window.savePostToFirestore = savePostToFirestore;
 window.subscribeToPostsFirestore = subscribeToPostsFirestore;
 window.deletePostFromFirestore = deletePostFromFirestore;
+
+export async function signUpMosaque({ name, email, password }) {
+  if (!auth) throw new Error("Authentification non disponible.");
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  if (name) await updateProfile(result.user, { displayName:name });
+  await sendEmailVerification(result.user);
+  return result.user;
+}
+
+export async function signInMosaque(email, password) {
+  if (!auth) throw new Error("Authentification non disponible.");
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+export async function sendMosaqueReset(email) {
+  if (!auth) throw new Error("Authentification non disponible.");
+  await sendPasswordResetEmail(auth, email);
+}
+
+export async function updateMosaquePassword(newPassword) {
+  if (!auth?.currentUser) throw new Error("Connexion requise.");
+  await updatePassword(auth.currentUser, newPassword);
+}
+
+export async function resendMosaqueEmail() {
+  if (!auth?.currentUser) throw new Error("Connexion requise.");
+  await sendEmailVerification(auth.currentUser);
+}
+
+export async function signOutMosaque() {
+  if (auth) await signOut(auth);
+}
+
+export async function redeemPremiumCode(code) {
+  const endpoint = window.MOSAQUE_PREMIUM_CODE_URL;
+  if (!endpoint) throw new Error("La validation des codes Premium n’est pas encore configurée.");
+  if (!auth?.currentUser) throw new Error("Connexion requise.");
+  const token = await auth.currentUser.getIdToken();
+  const response = await fetch(endpoint, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${token}` },
+    body:JSON.stringify({ code:String(code || "").trim().toUpperCase() })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "Code Premium invalide.");
+  await auth.currentUser.getIdToken(true);
+  return payload;
+}
+
+window.signUpMosaque = signUpMosaque;
+window.signInMosaque = signInMosaque;
+window.sendMosaqueReset = sendMosaqueReset;
+window.updateMosaquePassword = updateMosaquePassword;
+window.resendMosaqueEmail = resendMosaqueEmail;
+window.signOutMosaque = signOutMosaque;
+window.redeemPremiumCode = redeemPremiumCode;
