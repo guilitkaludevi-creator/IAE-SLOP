@@ -405,6 +405,9 @@ function renderHome() {
 function renderPills(group, values, selected) {
   return `<div class="pills" role="group" aria-label="Filtrer les résultats">${values.map(value => `<button class="pill${selected === value ? " is-selected" : ""}" data-filter-group="${group}" data-filter-value="${esc(value)}" aria-pressed="${selected === value}">${esc(value)}</button>`).join("")}</div>`;
 }
+function renderFilterSelect(group, values, selected, label, allLabel) {
+  return `<select class="form-control filter-select" data-select-filter="${group}" aria-label="${esc(label)}">${values.map(value => `<option value="${esc(value)}"${value === selected ? " selected" : ""}>${esc(value === "Tout" ? allLabel : value)}</option>`).join("")}</select>`;
+}
 function renderFavorite(id) {
   const saved = state.favorites.includes(id);
   return `<button class="favorite-button${saved ? " is-saved" : ""}" data-action="favorite" data-id="${esc(id)}" aria-label="${saved ? "Retirer des" : "Ajouter aux"} favoris" aria-pressed="${saved}">${icon("star",17)}</button>`;
@@ -417,8 +420,7 @@ function renderEstablishments() {
   const families = ["Tout", ...new Set(ESTABLISHMENTS.map(item => item.family))];
   return `<section class="page" aria-labelledby="establishments-title">${sectionHead("PANORAMA DU SYSTÈME", "Les établissements, <span class=\"text-gradient\">en clair.</span>", "Repérez les publics, les missions, les dispositifs, les métiers et les partenaires. Le panorama couvre les grandes familles et les types courants ; FINESS donne la nomenclature détaillée et les fiches locales.", `<button class="button subtle" data-action="open-sources">${icon("book",16)}FINESS & sources</button>`)}
     <div class="notice">${icon("info",18)}<span><strong>Lire les catégories avec prudence.</strong> Un même nom usuel peut recouvrir plusieurs autorisations ; certains dispositifs (CMP, PASA, unité de vie) sont des unités ou modalités, pas des établissements autonomes. Vérifiez la fiche FINESS et l’autorisation.</span></div>
-    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="establishment-query" type="search" placeholder="Nom, public, mission, métier…" autocomplete="off" aria-label="Rechercher un établissement"></label><span class="filter-count" id="establishment-count" aria-live="polite"></span></div>
-    ${renderPills("establishments", families, state.filters.establishments)}
+    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="establishment-query" type="search" placeholder="Nom, public, mission, métier…" autocomplete="off" aria-label="Rechercher un établissement"></label>${renderFilterSelect("establishments", families, state.filters.establishments, "Filtrer les établissements par famille", "Toutes les familles")}<span class="filter-count" id="establishment-count" aria-live="polite"></span></div>
     <div class="section-block"><div class="result-grid" id="establishment-results">${establishmentCards()}</div></div>
   </section>`;
 }
@@ -446,8 +448,7 @@ function renderJobs() {
     ${sectionHead("VOTRE PARCOURS · MASTER MES", "Des responsabilités <span class=\"text-gradient\">à votre portée.</span>", "Une cartographie de postes cohérente avec le Master Management des établissements de santé, une expérience d’adjoint de direction en MAS et un profil qualité / RH / gestion / transformation.", `<button class="button subtle" data-action="open-profile-note">${icon("spark",16)}Lire le cadrage</button>`)}
     <div class="notice">${icon("info",18)}<span><strong>Le diplôme ouvre des pistes, il ne confère pas une délégation.</strong> Les postes, qualifications requises, voies d’accès publiques et personnes encadrées dépendent du statut, du texte applicable, de l’employeur et de la fiche de poste.</span></div>
     ${!isUnlocked ? `<div class="premium-hidden-count">${icon("lock",17)}<div><strong>${premiumCount} métiers institutionnels sont masqués</strong><span>Abonnez-vous pour découvrir les postes HAS, ARS, ANAP, Sécurité Sociale et leurs responsabilités détaillées.</span></div><button class="button primary" data-nav="abonnement">${icon("star",14)}Voir le Premium</button></div>` : ""}
-    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="job-query" type="search" placeholder="Poste, décision, équipe…" aria-label="Rechercher un métier"></label></div>
-    ${renderPills("jobs", sectors, state.filters.jobs)}
+    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="job-query" type="search" placeholder="Poste, décision, équipe…" aria-label="Rechercher un métier"></label>${renderFilterSelect("jobs", sectors, state.filters.jobs, "Filtrer les métiers de direction par secteur", "Tous les secteurs")}</div>
     <div class="jobs-layout section-block"><div class="job-grid" id="job-results">${jobCards()}</div><aside class="job-side glass-panel"><span class="eyebrow">LIRE L’ORGANIGRAMME</span><h3 style="margin-top:12px">Le pouvoir suit la délégation</h3><div class="org-chain"><div class="org-node">Personne morale · conseil / gestionnaire</div><i class="org-connector"></i><div class="org-node focus">Direction d’établissement</div><i class="org-connector"></i><div class="org-node">Adjoint·e / directions fonctionnelles</div><i class="org-connector"></i><div class="org-node">Chefs de service · cadres de proximité</div><i class="org-connector"></i><div class="org-node">Professionnels et équipes</div></div><p class="small-note">Les liens fonctionnels (qualité, finances, RH, projets) traversent cette ligne hiérarchique sans créer automatiquement de responsabilité directe.</p><div class="source-links">${sourceLinks(["iae","d3s","dh","cafdes"])}</div></aside></div>
     <div class="section-block"><div class="section-title-row"><div><h2>Points à vérifier avant une candidature</h2><p>La réalité du poste tient dans ses délégations, son équipe et son régime d’emploi.</p></div></div><div class="focus-row"><article class="focus-card glass-panel"><span class="eyebrow">STATUT</span><h3>Public, associatif, privé</h3><p>Concours/statut, convention collective, employeur et autorité de rattachement changent les marges de manœuvre.</p></article><article class="focus-card glass-panel"><span class="eyebrow">PÉRIMÈTRE</span><h3>Hiérarchique ou transversal</h3><p>Demandez qui vous reporte, qui vous évalue et qui tranche un désaccord de ressources ou de soins.</p></article><article class="focus-card glass-panel"><span class="eyebrow">DÉLÉGATION</span><h3>Décisions réellement confiées</h3><p>Vérifiez budget délégué, actes RH, astreintes, signatures et responsabilités en cas d’incident.</p></article></div></div>
   </section>`;
@@ -1148,6 +1149,7 @@ function renderRex() {
 
 /* --- MODULE CORPS DE MÉTIER SUPPORT & ORGANIGRAMME --- */
 function supportJobCards(list = SUPPORT_JOBS) {
+  if (!list.length) return `<div class="empty-state"><strong>Aucun métier support trouvé</strong>Essayez une autre recherche ou un autre filtre.</div>`;
   return list.map((job, idx) => `<article class="content-card job-card">
     <button class="card-hit" data-action="open-support-job" data-id="${esc(job.id)}">
       <span class="tag ${tagColor(job.family)} level-tag">${esc(job.orgaLevel)}</span>
@@ -1186,10 +1188,9 @@ function renderSupportJobs() {
         <span data-icon="search"></span>
         <input class="form-control" id="support-job-query" type="search" placeholder="Métier support, mission, rôle, outil..." aria-label="Rechercher un métier support">
       </label>
-      <span class="filter-count" id="support-job-count">${list.length} métier${list.length === 1 ? "" : "s"}</span>
+      ${renderFilterSelect("supportJobs", families, state.filters.supportJobs, "Filtrer les métiers support par famille", "Toutes les familles")}
+      <span class="filter-count" id="support-job-count" aria-live="polite">${list.length} métier${list.length === 1 ? "" : "s"}</span>
     </div>
-
-    ${renderPills("supportJobs", families, state.filters.supportJobs)}
 
     <div class="jobs-layout section-block">
       <div class="job-grid" id="support-job-results">${supportJobCards(list)}</div>
@@ -1547,8 +1548,7 @@ function globalSearchResults(query) {
 function applyFilter(group) {
   if (group === "supportJobs") {
     const value = state.filters.supportJobs;
-    const input = $("#support-job-query");
-    const query = (input?.value || "").trim().toLocaleLowerCase("fr");
+    const query = state.queries.supportJobs.trim().toLocaleLowerCase("fr");
     const filtered = SUPPORT_JOBS.filter(job => {
       const matchGroup = value === "Tout" || job.family === value;
       const matchQuery = !query || JSON.stringify(job).toLocaleLowerCase("fr").includes(query);
@@ -1558,7 +1558,6 @@ function applyFilter(group) {
     if (results) results.innerHTML = supportJobCards(filtered);
     const countEl = $("#support-job-count");
     if (countEl) countEl.textContent = `${filtered.length} métier${filtered.length === 1 ? "" : "s"}`;
-    $$('[data-filter-group="supportJobs"]').forEach(p => p.classList.toggle("is-selected", p.dataset.filterValue === value));
     return;
   }
 
@@ -3307,6 +3306,10 @@ function attachPageHandlers() {
     const input = $("#job-query"); if (input) input.value = state.queries.jobs;
     applyFilter("jobs");
   }
+  if (state.page === "metiers-support") {
+    const input = $("#support-job-query"); if (input) input.value = state.queries.supportJobs;
+    applyFilter("supportJobs");
+  }
   if (state.page === "reunions") {
     const input = $("#meeting-query"); if (input) input.value = state.queries.meetings;
     applyFilter("meetings");
@@ -3693,18 +3696,7 @@ document.addEventListener("input", event => {
   if (el.id === "faq-query") { state.queries.faq=el.value; applyFilter("faq"); }
   if (el.id === "software-query") { state.queries.software=el.value; applyFilter("software"); }
 
-  if (el.id === "support-job-query") {
-    const query = el.value.trim().toLocaleLowerCase("fr");
-    const filtered = SUPPORT_JOBS.filter(job => {
-      const matchGroup = state.filters.supportJobs === "Tout" || job.family === state.filters.supportJobs;
-      const matchQuery = !query || JSON.stringify(job).toLocaleLowerCase("fr").includes(query);
-      return matchGroup && matchQuery;
-    });
-    const results = $("#support-job-results");
-    if (results) results.innerHTML = supportJobCards(filtered);
-    const countEl = $("#support-job-count");
-    if (countEl) countEl.textContent = `${filtered.length} métier${filtered.length === 1 ? "" : "s"}`;
-  }
+  if (el.id === "support-job-query") { state.queries.supportJobs=el.value; applyFilter("supportJobs"); }
 
   if (el.id === "etp-active-hours" || el.id === "etp-week-reference" || el.id === "etp-annual-reference" || el.matches("[data-etpt-hours], [data-etpt-months]")) calculateEtp();
   if (el.id === "forfait-year") syncForfaitCalendar();
@@ -3750,6 +3742,11 @@ document.addEventListener("input", event => {
 
 document.addEventListener("change", event => {
   const el = event.target;
+  if (el.matches("[data-select-filter]")) {
+    const group = el.dataset.selectFilter;
+    state.filters[group] = el.value;
+    applyFilter(group);
+  }
   if (el.matches("[data-check]")) {
     state.docChecks[el.dataset.check]=el.checked; writeJSON(STORE.checks,state.docChecks); updateChecklistProgress();
   }

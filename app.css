@@ -438,6 +438,7 @@
 
   .filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 20px 0 17px; }
   .filter-bar .search-box { flex: 1 1 250px; }
+  .filter-bar .filter-select { width: min(100%, 260px); flex: 0 1 260px; cursor: pointer; }
   .filter-count { margin-left: auto; color: var(--muted); font-size: 11px; }
   .result-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 13px; }
   .est-card { position: relative; min-height: 230px; }
@@ -859,6 +860,7 @@
     .bottom-link small { font-size: 8px; }
     .filter-bar { flex-direction: column; align-items: stretch; }
     .filter-bar .search-box { width: 100%; }
+    .filter-bar .filter-select { width: 100%; flex: auto; }
     .page-head h1 { font-size: 24px; }
   }
   @media (max-width: 768px) {
