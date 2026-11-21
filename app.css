@@ -2196,3 +2196,132 @@
     .map-node .node-label { font-size: 10.5px; }
     .map-legend { display: none; }
   }
+
+/* Verre depoli et lumiere douce, sans image ni effet permanent sur le contenu. */
+:root {
+  --bg: #111b26;
+  --bg-elevated: #1d2b37;
+  --surface: rgba(32, 46, 57, .78);
+  --surface-strong: #263743;
+  --stroke: rgba(220, 232, 226, .16);
+  --stroke-strong: rgba(220, 232, 226, .3);
+  --glass-bg: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.025) 65%, rgba(245,204,173,.06));
+  --glass-border: rgba(235, 239, 230, .2);
+  --dialog-bg: rgba(27, 40, 50, .94);
+  --field-bg: rgba(255, 255, 255, .075);
+  --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html[data-theme="light"] {
+  --bg: #eee9e2;
+  --bg-elevated: #f7f3ed;
+  --surface: rgba(255, 253, 248, .83);
+  --surface-strong: #fffdf9;
+  --stroke: rgba(77, 67, 57, .16);
+  --stroke-strong: rgba(77, 67, 57, .27);
+  --text: #202f32;
+  --text-soft: #3a5052;
+  --text-2: #3a5052;
+  --muted: #526a69;
+  --faint: #607575;
+  --glass-bg: linear-gradient(145deg, rgba(255,255,255,.85), rgba(255,251,244,.58));
+  --glass-border: rgba(255,255,255,.8);
+  --dialog-bg: rgba(255, 253, 248, .96);
+  --field-bg: rgba(255, 255, 255, .8);
+}
+
+body::before {
+  background:
+    radial-gradient(ellipse 52% 55% at 82% 7%, rgba(225, 141, 103, .23), transparent 70%),
+    radial-gradient(ellipse 48% 65% at 8% 78%, rgba(94, 164, 151, .2), transparent 70%),
+    linear-gradient(135deg, #121c28, #1d2c35 53%, #292b2c);
+}
+html[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 55% 60% at 88% 4%, rgba(222, 154, 119, .34), transparent 70%),
+    radial-gradient(ellipse 48% 60% at 5% 82%, rgba(124, 184, 164, .26), transparent 70%),
+    linear-gradient(135deg, #f8f3ec, #e6e9e2);
+}
+.ambient { animation: none; will-change: auto; opacity: .07; }
+.ambient-a { background: #e59b79; }
+.ambient-b { background: #78b9a2; }
+
+.sidebar {
+  background: rgba(22, 32, 38, .88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+html[data-theme="light"] .sidebar { background: rgba(247, 243, 235, .92); }
+.topbar { background: rgba(23, 34, 40, .78); }
+html[data-theme="light"] .topbar { background: rgba(249, 246, 239, .9); }
+
+.glass-panel, .content-card, .timeline-post, .peer-card,
+.tool-card, .guide-card, .pricing-card, .law-card {
+  border-color: var(--glass-border);
+  box-shadow: var(--shadow-soft), var(--glass-highlight);
+}
+.glass-panel, .content-card, .timeline-post, .peer-card {
+  background: var(--glass-bg), var(--surface);
+  backdrop-filter: blur(12px) saturate(1.12);
+  -webkit-backdrop-filter: blur(12px) saturate(1.12);
+}
+.form-control {
+  font-size: 1rem;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.field-label { font-size: .875rem; line-height: 1.4; }
+.nav-link, .button, .community-tab { font-size: .875rem; }
+.lede, .page-head .lede { font-size: 1rem; line-height: 1.65; }
+.quick-tile strong, .quick-tile small, .profile-card p,
+.law-list p, .timeline-comment-body p, .map-details p {
+  font-size: .875rem;
+  line-height: 1.55;
+}
+h1, h2, h3 { text-wrap: balance; }
+h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3.5rem); line-height: 1.08; }
+.auth-intro h1 { font-size: clamp(2.1rem, 1.5rem + 2.8vw, 3.75rem); }
+.hero h1 { font-size: clamp(2rem, 1.4rem + 2.5vw, 3.5rem); }
+
+.hero {
+  background: linear-gradient(120deg, #234b4a 0%, #365753 52%, #855a4e 100%);
+  border-color: rgba(255, 240, 218, .24);
+}
+.hero::before { background: radial-gradient(circle, rgba(255, 196, 146, .3), transparent 68%); }
+.hero::after { background: radial-gradient(ellipse, rgba(255, 180, 145, .2), transparent 67%); }
+.hero-art { transform: none; }
+.orbit-center { background: linear-gradient(145deg, rgba(115, 214, 188, .35), rgba(215, 151, 121, .38)); }
+.orbit-node { background: linear-gradient(145deg, rgba(40, 95, 90, .96), rgba(89, 84, 76, .96)); }
+.orbit-node, .orbit-ring, .premium-bubble-orb { animation: none; }
+
+.auth-screen { min-height: 100vh; min-height: 100dvh; }
+.auth-panel { border-radius: 24px; }
+.auth-status, .auth-hint { font-size: .875rem; }
+.auth-divider { font-size: .8125rem; }
+
+@media (hover: hover) and (pointer: fine) {
+  .quick-tile:hover, .content-card:hover, .timeline-post:hover, .peer-card:hover {
+    transform: translateY(-2px);
+  }
+}
+@media (hover: none) {
+  .quick-tile:hover, .content-card:hover, .timeline-post:hover, .peer-card:hover,
+  .button:hover { transform: none; }
+}
+@media (max-width: 640px) {
+  .auth-intro h1 { font-size: clamp(2rem, 1.5rem + 2vw, 2.5rem); }
+  .hero h1, .page-head h1 { font-size: clamp(1.875rem, 1.35rem + 2.2vw, 2.5rem); }
+  .hero .lede, .page-head .lede { font-size: .9375rem; }
+  .quick-tile strong, .quick-tile small { font-size: .8125rem; }
+  .quick-tile { min-height: 0; }
+}
+@media (max-width: 360px) {
+  .topbar .topbar-chip { display: none !important; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  body::before { animation: light-arrives 1.4s var(--ease-out) both; }
+  .auth-intro, .auth-panel { animation: welcome-in .55s var(--ease-out) both; }
+  .auth-panel { animation-delay: .08s; }
+  @keyframes light-arrives { from { opacity: .35; } }
+  @keyframes welcome-in { from { opacity: 0; transform: translateY(8px); } }
+}

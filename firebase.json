@@ -11,6 +11,7 @@
     "ignore": [
       "firebase.json",
       "context doc.md",
+      "WhatsApp Video 2026-11-21 at 21.45.35.mp4",
       "**/.*",
       ".git/**",
       "**/.git/**",
