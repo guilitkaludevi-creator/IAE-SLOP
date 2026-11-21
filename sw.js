@@ -1,11 +1,11 @@
-const CACHE = "mosaique-sante-v2026-11-21-v35-soft-background";
+const CACHE = "mosaique-sante-v2026-11-21-v36-page-transitions";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css",
-  "./app.js",
-  "./data.js",
-  "./firebase-init.js",
+  "./app.css?v=20261121-page-transitions",
+  "./app.js?v=20261121-page-transitions",
+  "./data.js?v=20261121-soft-background",
+  "./firebase-init.js?v=20261121-glass-filters",
   "./manifest.webmanifest",
   "./icon.svg"
 ];

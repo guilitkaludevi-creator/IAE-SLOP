@@ -17,6 +17,8 @@ let authFlowPending = false;
 let pendingAuthState = null;
 let pendingOnboardingUid = null;
 let pageTransitionToken = 0;
+let pageViewTransition = null;
+let pendingPageUpdate = null;
 let mapRuntime = null;
 let mapClickSuppressionUntil = 0;
 let mapAdjustmentTimer = 0;
@@ -233,9 +235,18 @@ function sectionHead(eyebrow, title, copy, actions = "") {
 function navButton(page, label, iconName = "arrow") {
   return `<button class="button primary" data-nav="${page}">${icon(iconName,16)}${esc(label)}</button>`;
 }
-function renderPage(page = state.page, { immediate = false, fromHistory = false, restoreScrollY = null } = {}) {
+function renderPage(page, { immediate = false, fromHistory = false, restoreScrollY = null } = {}) {
+  if (pageViewTransition) {
+    pageViewTransition.skipTransition();
+    pageViewTransition = null;
+    stage.style.viewTransitionName = "";
+    pendingPageUpdate?.();
+  }
+  if (page === undefined) page = state.page;
   if (state.onboarding) page = "inscription-annuaire";
   if (!NAV.some(item => item.id === page)) page = "accueil";
+  const isNavigation = page !== state.page;
+  const transitionToken = ++pageTransitionToken;
   if (!fromHistory && page !== state.page) {
     pageScrollPositions.set(state.page, window.scrollY || 0);
     try {
@@ -247,8 +258,6 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
       catch { /* La page reste navigable même sans historique du navigateur. */ }
     }
   }
-  const transitionToken = ++pageTransitionToken;
-  const currentPage = $(".page", stage);
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const replacePage = () => {
     if (transitionToken !== pageTransitionToken) return;
@@ -280,7 +289,6 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
     stage.innerHTML = (renderers[page] || renderHome)();
     hydrateIcons(stage);
     attachPageHandlers();
-    if (!immediate && !document.startViewTransition && !reduceMotion) animateIn();
     if (page === "carte") {
       startMapScene();
       updateMapSelection();
@@ -310,26 +318,36 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
     }
   };
 
-  if (document.startViewTransition && !immediate && !reduceMotion) {
-    document.startViewTransition(() => {
+  if (isNavigation && !immediate && !reduceMotion && document.startViewTransition) {
+    stage.style.viewTransitionName = "page-content";
+    const updatePage = () => {
+      if (pendingPageUpdate === updatePage) pendingPageUpdate = null;
       replacePage();
+    };
+    pendingPageUpdate = updatePage;
+    const transition = document.startViewTransition(updatePage);
+    pageViewTransition = transition;
+    transition.ready.catch(error => {
+      if (error.name !== "AbortError") console.error("La transition de page ne peut pas démarrer.", error);
+    });
+    transition.finished.then(() => {
+      if (pageViewTransition === transition) {
+        stage.style.viewTransitionName = "";
+        pageViewTransition = null;
+      }
+    }, error => {
+      if (pageViewTransition === transition) {
+        stage.style.viewTransitionName = "";
+        pageViewTransition = null;
+      }
+      console.error("La transition de page a échoué.", error);
     });
     return;
   }
-
-  if (!currentPage || immediate || reduceMotion || typeof currentPage.animate !== "function") {
-    replacePage();
-    return;
+  replacePage();
+  if (isNavigation && !immediate && !reduceMotion) {
+    $(".page", stage)?.animate?.([{ opacity:0 }, { opacity:1 }], { duration:180, easing:"cubic-bezier(.18,.72,.23,1)" });
   }
-  const exit = currentPage.animate(
-    [{ opacity:1 }, { opacity:0 }],
-    { duration:115, easing:"cubic-bezier(.4,0,1,1)", fill:"forwards" }
-  );
-  exit.onfinish = replacePage;
-}
-function animateIn() {
-  const page = $(".page", stage);
-  page?.animate?.([{ opacity:0 }, { opacity:1 }], { duration:180, easing:"ease-out" });
 }
 
 function renderHome() {
@@ -3366,7 +3384,7 @@ document.addEventListener("click", event => {
   if (nav) {
     event.preventDefault();
     if (state.onboarding) showToast("Enregistrez votre fiche ou passez cette étape pour continuer.");
-    else renderPage(nav.dataset.nav);
+    else renderPage(nav.dataset.nav, { immediate:event.detail === 0 });
     return;
   }
 
