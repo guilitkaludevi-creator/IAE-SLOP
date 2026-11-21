@@ -346,7 +346,7 @@ function renderPage(page, { immediate = false, fromHistory = false, restoreScrol
   }
   replacePage();
   if (isNavigation && !immediate && !reduceMotion) {
-    $(".page", stage)?.animate?.([{ opacity:0 }, { opacity:1 }], { duration:180, easing:"cubic-bezier(.18,.72,.23,1)" });
+    $(".page", stage)?.animate?.([{ opacity:0 }, { opacity:1 }], { duration:240, easing:"cubic-bezier(.18,.72,.23,1)" });
   }
 }
 

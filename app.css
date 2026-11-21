@@ -1209,10 +1209,10 @@
   }
   ::view-transition-group(page-content) { animation-duration: 0s; }
   ::view-transition-old(page-content) {
-    animation: 90ms var(--ease-out) both page-fade-out;
+    animation: 110ms var(--ease-out) both page-fade-out;
   }
   ::view-transition-new(page-content) {
-    animation: 240ms var(--ease-out) 60ms both page-slide-in;
+    animation: 300ms var(--ease-out) 75ms both page-slide-in;
   }
   @keyframes page-fade-out {
     to { opacity: 0; }

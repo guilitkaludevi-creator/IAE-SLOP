@@ -1,9 +1,9 @@
-const CACHE = "mosaique-sante-v2026-11-21-v36-page-transitions";
+const CACHE = "mosaique-sante-v2026-11-21-v37-gentle-transitions";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261121-page-transitions",
-  "./app.js?v=20261121-page-transitions",
+  "./app.css?v=20261121-gentle-transitions",
+  "./app.js?v=20261121-gentle-transitions",
   "./data.js?v=20261121-soft-background",
   "./firebase-init.js?v=20261121-glass-filters",
   "./manifest.webmanifest",
