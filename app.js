@@ -2510,17 +2510,16 @@ function auditTypologyCards() {
       </div>
     </div>
     <div class="meta-row">
-      <span class="tag sky">${esc(item.when)}</span>
       <span class="meta-label">Type 0${idx+1}</span>
+      <span class="tag sky"><strong>Quand :</strong> ${esc(item.when)}</span>
     </div>
-    <p class="card-copy" style="margin:8px 0">${esc(item.scope)}</p>
-    <div class="detail-cell" style="margin:8px 0;background:rgba(255,255,255,0.03);padding:10px;border-radius:8px">
-      <strong style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em">Questions clés investiguées :</strong>
-      <p style="font-size:12px;margin-top:3px;font-style:italic;color:var(--text)">"${esc(item.keyQuestions)}"</p>
+    <p class="card-copy">${esc(item.scope)}</p>
+    <div class="detail-cell audit-questions">
+      <strong>Questions clés investiguées :</strong>
+      <p>${esc(item.keyQuestions)}</p>
     </div>
     <div class="card-foot">
-      <span>Acteurs : ${esc(item.actors)}</span>
-      ${icon("arrow-up-right", 13)}
+      <span><strong>Acteurs :</strong> ${esc(item.actors)}</span>
     </div>
   </article>`).join("");
 }
@@ -2561,7 +2560,7 @@ function renderAudit() {
           <p>Du patient traceur HAS à l'audit flash de 15 minutes, choisir le bon outil d'évaluation.</p>
         </div>
       </div>
-      <div class="result-grid">${auditTypologyCards()}</div>
+      <div class="audit-typology-grid">${auditTypologyCards()}</div>
     </div>
 
     ${renderAccessStatusBar()}
