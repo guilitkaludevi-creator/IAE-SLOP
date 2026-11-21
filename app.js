@@ -100,18 +100,21 @@ function renderAccessStatusBar() {
 }
 
 function paywallGate(title = "Ressource réservée aux abonnés", description = "Ce module approfondi fait partie des 45% de contenus spécialisés du campus (fiches de direction, méthodologies HAS, déclarations ARS et annuaire). Accessible dès 19 €/an pour les étudiants ou 59 €/an en Pass Pro.", previewHtml = "") {
-  return `<div class="paywall-wrapper">
-    ${previewHtml ? `<div class="paywall-blur" aria-hidden="true">${previewHtml}</div>` : ''}
-    <div class="paywall-overlay">
-      <div class="paywall-box">
-        <span class="paywall-badge">${icon("lock", 13)} Ressource Premium (Campus MES)</span>
-        <h3>${esc(title)}</h3>
-        <p>${esc(description)}</p>
-        <div class="paywall-actions">
-          <button class="button primary" data-nav="abonnement">${icon("star", 15)}Découvrir les offres (dès 19 €/an)</button>
-          <button class="button subtle" data-action="prompt-universal-key">${icon("spark", 15)}Entrer mon code d'accès maître</button>
-        </div>
-      </div>
+  return `<div class="premium-bubble" role="region" aria-label="Accès Premium">
+    <div class="premium-bubble-orb premium-bubble-orb-a" aria-hidden="true"></div>
+    <div class="premium-bubble-orb premium-bubble-orb-b" aria-hidden="true"></div>
+    <div class="premium-bubble-icon">${icon("lock",22)}</div>
+    <span class="premium-bubble-kicker">ESPACE PREMIUM CAMPUS</span>
+    <h3>${esc(title)}</h3>
+    <p>${esc(description)}</p>
+    <div class="premium-bubble-benefits">
+      <span>${icon("check",14)} Accès complet</span>
+      <span>${icon("check",14)} Contenu actualisé</span>
+      <span>${icon("check",14)} Outils illimités</span>
+    </div>
+    <div class="paywall-actions">
+      <button class="button primary" data-nav="abonnement">${icon("star",16)}Voir les abonnements</button>
+      <button class="button subtle" data-nav="accueil">${icon("arrow",15)}Continuer gratuitement</button>
     </div>
   </div>`;
 }
@@ -213,7 +216,7 @@ function navMarkup() {
 function syncNavigation() {
   $("#desktop-nav").innerHTML = navMarkup();
   $$('.bottom-link').forEach(link => {
-    const toolsPage = ["reunions","documents","rh","logiciels","qualite","rex","audit","politique","timeline"].includes(state.page);
+    const toolsPage = ["reunions","documents","rh","droit-sante","logiciels","qualite","rex","audit","politique","timeline"].includes(state.page);
     const active = link.dataset.nav === state.page || (toolsPage && link.dataset.nav === "documents");
     link.classList.toggle("is-active", active);
     if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
@@ -259,6 +262,7 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
       documents:renderDocuments,
       acteurs:renderActors,
       rh:renderFaq,
+      "droit-sante":renderHealthLaw,
       logiciels:renderSoftware,
       carte:renderMap,
       reseau:renderNetwork,
@@ -439,10 +443,13 @@ function jobCards(list = JOBS) {
 }
 function renderJobs() {
   const sectors = ["Tout", ...new Set(JOBS.map(item => item.sector))];
+  const premiumCount = JOBS.filter(item => item.isPremium === true).length;
+  const isUnlocked = isPremiumUnlocked();
   return `<section class="page" aria-labelledby="jobs-title">
     ${renderAccessStatusBar()}
     ${sectionHead("VOTRE PARCOURS · MASTER MES", "Des responsabilités <span class=\"text-gradient\">à votre portée.</span>", "Une cartographie de postes cohérente avec le Master Management des établissements de santé, une expérience d’adjoint de direction en MAS et un profil qualité / RH / gestion / transformation.", `<button class="button subtle" data-action="open-profile-note">${icon("spark",16)}Lire le cadrage</button>`)}
     <div class="notice">${icon("info",18)}<span><strong>Le diplôme ouvre des pistes, il ne confère pas une délégation.</strong> Les postes, qualifications requises, voies d’accès publiques et personnes encadrées dépendent du statut, du texte applicable, de l’employeur et de la fiche de poste.</span></div>
+    ${!isUnlocked ? `<div class="premium-hidden-count">${icon("lock",17)}<div><strong>${premiumCount} métiers institutionnels sont masqués</strong><span>Abonnez-vous pour découvrir les postes HAS, ARS, ANAP, Sécurité Sociale et leurs responsabilités détaillées.</span></div><button class="button primary" data-nav="abonnement">${icon("star",14)}Voir le Premium</button></div>` : ""}
     <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="job-query" type="search" placeholder="Poste, décision, équipe…" aria-label="Rechercher un métier"></label></div>
     ${renderPills("jobs", sectors, state.filters.jobs)}
     <div class="jobs-layout section-block"><div class="job-grid" id="job-results">${jobCards()}</div><aside class="job-side glass-panel"><span class="eyebrow">LIRE L’ORGANIGRAMME</span><h3 style="margin-top:12px">Le pouvoir suit la délégation</h3><div class="org-chain"><div class="org-node">Personne morale · conseil / gestionnaire</div><i class="org-connector"></i><div class="org-node focus">Direction d’établissement</div><i class="org-connector"></i><div class="org-node">Adjoint·e / directions fonctionnelles</div><i class="org-connector"></i><div class="org-node">Chefs de service · cadres de proximité</div><i class="org-connector"></i><div class="org-node">Professionnels et équipes</div></div><p class="small-note">Les liens fonctionnels (qualité, finances, RH, projets) traversent cette ligne hiérarchique sans créer automatiquement de responsabilité directe.</p><div class="source-links">${sourceLinks(["iae","d3s","dh","cafdes"])}</div></aside></div>
@@ -599,27 +606,79 @@ function renumberEtptRows() {
   });
 }
 function renderFaq() {
+  const isUnlocked = isPremiumUnlocked();
   return `<section class="page" aria-labelledby="faq-title">${sectionHead("BOÎTE À OUTILS · RH & RECRUTEMENT", "Les bons repères RH, <span class=\"text-gradient\">calculés et prêts à l’emploi.</span>", "Conventions, temps de travail, recrutement et effectifs. Les règles dépendent du statut, de l’accord applicable, du calendrier de l’établissement et des délégations.", `<button class="button subtle" data-nav="logiciels">${icon("layers",16)}Logiciels métiers</button><button class="button subtle" data-action="open-sources">${icon("book",16)}Sources</button>`)}
     <div class="rh-tabs" role="tablist" aria-label="Sections RH">
-      <button class="rh-tab is-active" data-action="rh-tab" data-rh-tab="calculateurs" role="tab" aria-selected="true">${icon("chart",14)} Calculateurs</button>
-      <button class="rh-tab" data-action="rh-tab" data-rh-tab="conventions" role="tab" aria-selected="false">${icon("file",14)} Conventions</button>
-      <button class="rh-tab" data-action="rh-tab" data-rh-tab="recrutement" role="tab" aria-selected="false">${icon("briefcase",14)} Recrutement</button>
+      <button class="rh-tab is-active" data-action="rh-tab" data-rh-tab="conventions" role="tab" aria-selected="true">${icon("file",14)} Conventions</button>
       <button class="rh-tab" data-action="rh-tab" data-rh-tab="questions" role="tab" aria-selected="false">${icon("info",14)} Questions RH</button>
+      <button class="rh-tab" data-action="rh-tab" data-rh-tab="recrutement" role="tab" aria-selected="false">${icon("briefcase",14)} Recrutement</button>
+      <button class="rh-tab" data-action="rh-tab" data-rh-tab="calculateurs" role="tab" aria-selected="false">${icon("chart",14)} Calculateurs ETP</button>
     </div>
-    <div class="rh-tab-panel is-active" data-rh-panel="calculateurs">
-      <div class="rh-calculator-grid section-block">${renderEtpCalculator()}${renderForfaitCalculator()}</div>
-      <section class="section-block" id="etp-disponibles"><div class="section-title-row"><div><span class="eyebrow">OÙ CHERCHER LES MOYENS</span><h2>Retrouver les ETP réellement disponibles</h2><p>Le chiffre dépend de la question posée : autorisation, budget, postes pourvus ou présence réelle.</p></div></div><div class="etp-source-grid"><article class="etp-source-card"><strong>Emplois autorisés / financés</strong><span>Notifications de financement, CPOM, budget prévisionnel ou EPRD/ERRD selon le secteur et le cadre de l'établissement ; tableau d'emplois pour le public.</span></article><article class="etp-source-card"><strong>Postes pourvus</strong><span>Tableau des effectifs RH, contrats, quotités, paie et date d'arrêté. Déduire les vacances et distinguer les postes ouverts des personnes recrutées.</span></article><article class="etp-source-card"><strong>Capacité présente</strong><span>Planning, absences, restrictions, formation, intérim, heures supplémentaires, repos et compétences minimales nécessaires au service.</span></article><article class="etp-source-card"><strong>À rapprocher</strong><span>Budget RH, masse salariale, remplacements et ETP par service/métier. Faire valider les définitions par RH et finances avant de comparer.</span></article></div><p class="formula-note">Un poste budgété vacant n'est pas une personne disponible ; un effectif physique n'est pas une capacité équivalente temps plein. Documentez la date, le périmètre et la définition de chaque chiffre.</p>${sourceLinks(["etpGuide","cnsaData"])}</section>
-    </div>
-    <div class="rh-tab-panel" data-rh-panel="conventions">
+    <div class="rh-tab-panel is-active" data-rh-panel="conventions">
       <section class="section-block" id="conventions"><div class="section-title-row"><div><span class="eyebrow">DROIT SOCIAL · REPÈRES DE BRANCHE</span><h2>Conventions et statuts courants</h2><p>Quelques repères fréquents ; le champ conventionnel de l'employeur doit toujours être confirmé.</p></div></div><div class="convention-grid">${renderConventionCards()}</div><div class="notice section-block">${icon("info",17)}<span><strong>Vérification pratique.</strong> Regardez l'intitulé et l'IDCC sur le bulletin de paie, recherchez l'employeur avec son SIRET, puis relisez le champ d'application, la convention consolidée, les avenants et les accords d'entreprise. L'APE est un indice, pas à lui seul la preuve de la convention applicable.</span></div>${sourceLinks(["collectiveAgreement"])}</section>
     </div>
     <div class="rh-tab-panel" data-rh-panel="recrutement">
-      ${renderRecruitmentGuides()}
-      ${renderJobDescriptionBuilder()}
+      ${isUnlocked ? `${renderRecruitmentGuides()}${renderJobDescriptionBuilder()}` : paywallGate("Recrutement & fiches de poste Premium", "Accédez aux trames de recrutement, aux offres, aux entretiens structurés, aux grilles d’évaluation et au générateur de fiches de poste.", `<div class="premium-preview-grid"><div><strong>Clarifier</strong><span>Mission, périmètre et délégations</span></div><div><strong>Recruter</strong><span>Offre fidèle et diffusion inclusive</span></div><div><strong>Évaluer</strong><span>Entretien structuré sans biais</span></div></div>`)}
     </div>
     <div class="rh-tab-panel" data-rh-panel="questions">
       <section class="section-block" id="faq-search"><div class="section-title-row"><div><span class="eyebrow">RÉPONSES COURTES · ${FAQ.length} REPÈRES</span><h2>Questions RH fréquentes</h2><p>Recherche par thème, sigle ou situation.</p></div></div><div class="faq-layout"><div><label class="search-box"><span data-icon="search"></span><input class="form-control" id="faq-query" type="search" placeholder="Convention, forfait jours, entretien, ETP…" aria-label="Rechercher une réponse RH"></label><div class="faq-list section-block" id="faq-results">${renderFaqList()}</div></div><aside class="faq-aside glass-panel"><span class="eyebrow">POSTURE DE MANAGER</span><h3>Écouter · cadrer · tracer</h3><p>Pour une situation individuelle, protégez la confidentialité, partez des faits, vérifiez le cadre applicable et sollicitez RH ou juridique au bon moment.</p><div class="separator"></div><span class="tag gold">Repères pédagogiques</span><p style="margin-top:10px">Ces réponses facilitent le premier repérage ; elles ne remplacent ni les textes à jour, ni les accords collectifs, ni une analyse individualisée par les personnes habilitées.</p>${sourceLinks(["duerp","cse","servicePublicWork"])}</aside></div></section>
-    </div>  </section>`;
+    </div>
+    <div class="rh-tab-panel" data-rh-panel="calculateurs">
+      ${isUnlocked ? `
+        <div class="rh-calculator-grid section-block">${renderEtpCalculator()}${renderForfaitCalculator()}</div>
+        <section class="section-block" id="etp-disponibles"><div class="section-title-row"><div><span class="eyebrow">OÙ CHERCHER LES MOYENS</span><h2>Retrouver les ETP réellement disponibles</h2><p>Le chiffre dépend de la question posée : autorisation, budget, postes pourvus ou présence réelle.</p></div></div><div class="etp-source-grid"><article class="etp-source-card"><strong>Emplois autorisés / financés</strong><span>Notifications de financement, CPOM, budget prévisionnel ou EPRD/ERRD selon le secteur et le cadre de l'établissement ; tableau d'emplois pour le public.</span></article><article class="etp-source-card"><strong>Postes pourvus</strong><span>Tableau des effectifs RH, contrats, quotités, paie et date d'arrêté.</span></article><article class="etp-source-card"><strong>Capacité présente</strong><span>Planning, absences, formation, intérim, heures supplémentaires, repos et compétences.</span></article><article class="etp-source-card"><strong>À rapprocher</strong><span>Budget RH, masse salariale, remplacements et ETP par service/métier.</span></article></div>${sourceLinks(["etpGuide","cnsaData"])}</section>
+      ` : paywallGate("Calculateurs RH Premium", "Accédez aux calculateurs ETP/ETPT, au forfait jours, au calendrier annuel et à la recherche d’effectifs disponibles.", `<div class="premium-preview-grid"><div><strong>ETP / ETPT</strong><span>Conversion des temps réels</span></div><div><strong>Forfait jours</strong><span>Calendrier annuel ajustable</span></div><div><strong>Effectifs</strong><span>Recherche des moyens disponibles</span></div></div>`)}
+    </div>
+  </section>`;
+}
+function renderHealthLaw() {
+  const sections = [
+    { id:"droits-usager", title:"Droits fondamentaux de l’usager", icon:"people", items:[
+      ["Respect de la dignité","Consentement éclairé, respect de l’intimité, absence de maltraitance et prise en compte des souhaits."],
+      ["Projet personnalisé","Participation à l’élaboration, suivi des objectifs et révision selon les besoins et les choix."],
+      ["Dossier & confidentialité","Accès au dossier, secret professionnel, traçabilité, consentement et durée de conservation proportionnée."],
+      ["Expérience et recours","Réclamation, médiation, conseil de la vie sociale, défenseur des droits et procédures juridictionnelles."]
+    ]},
+    { id:"consentement", title:"Consentement, soins et contraintes", icon:"shield", items:[
+      ["Principe","Toute personne reçoit une information loyale, claire et adaptée avant une décision médicale ou un soin."],
+      ["Personnes protégées","Le consentement du représentant légal ne dispense pas de recueillir la volonté de la personne."],
+      ["Urgence","Les soins nécessaires peuvent être réalisés dans l’urgence, sans substituer à une décision légale."],
+      ["Contention / isolement","Décision motivée, prescription médicale, surveillance renforcée, traçabilité et réévaluation régulière."]
+    ]},
+    { id:"maltraitance", title:"Maltraitance, signalement et sanctions", icon:"alert", items:[
+      ["Maltraitance avérée","Informer les autorités compétentes, protéger la personne, préserver les preuves et conduire une analyse indépendante."],
+      ["Signe ou suspicion","Évaluation immédiate selon les procédures internes, signalement proportionné et vigilance sur les représailles."],
+      ["Sanctions pénales","Abandonner les soins, violences, omission de porter secours ou atteinte aux droits peuvent relever du Code pénal."],
+      ["Sanctions professionnelles","Sanctions disciplinaires, suspension temporaire, retrait d’autorisation ou contrôle judiciaire selon les faits."]
+    ]},
+    { id:"evenements", title:"Événements indésirables et déclarations", icon:"pulse", items:[
+      ["ARS / e-SIN","Désignations locales, délais propres à la gravité et obligations selon le type d’établissement."],
+      ["Malveillance / incendie / décès","Signalement rapide aux autorités compétentes, sécurisation du lieu et accompagnement des proches."],
+      ["Parquet / procureur","Obligation de certaines personnes dès connaissance d’un crime ou délit, notamment via l’article 40 du Code de procédure pénale."],
+      ["Assureur","Déclaration contractuelle, conservation des pièces, gestion des demandes et accompagnement du sinistre."]
+    ]},
+    { id:"responsabilites", title:"Responsabilités du directeur et des équipes", icon:"briefcase", items:[
+      ["Responsabilité civile","Réparer un dommage causé par une faute, une organisation défaillante ou un manquement de prévention."],
+      ["Responsabilité pénale","Individualiser les actes ou omissions fautifs ; déléguer ne dispense pas de contrôler les moyens."],
+      ["Responsabilité disciplinaire","Respect des obligations du statut, de la convention, du contrat et des règles hiérarchiques."],
+      ["Droits du travail","Information, prévention, surveillance de la santé, délégations écrites et maîtrise des horaires."]
+    ]},
+    { id:"autorites", title:"Autorités, contrôles et recours", icon:"network", items:[
+      ["ARS","Autorisation, contrôle, tarification, CPOM, déclaration des événements graves et mises en demeure."],
+      ["Conseil départemental / CNSA","Droits sociaux, aides, tarification médico-sociale, financement, inspections et procédures territoriales."],
+      ["HAS","Évaluation de la qualité, référentiels, patients traceurs, rapports et recommandations."],
+      ["Justice","Tribunal judiciaire, administratif, pénal, prud’hommes et commissions selon la nature du litige."]
+    ]}
+  ];
+  return `<section class="page" aria-labelledby="health-law-title">
+    ${sectionHead("DROIT DE LA SANTÉ & RESPONSABILITÉ", "Les droits, obligations <span class=\"text-gradient\">et sanctions à connaître</span>", "Repères pratiques pour les directeurs, cadres, professionnels qualité et futurs managers. Les sanctions dépendent toujours des faits, du statut, des textes applicables et de la procédure.", ``)}
+    <div class="law-alert">${icon("info",18)}<span><strong>Cadre pédagogique.</strong> Cette page aide au repérage. Elle ne remplace pas la consultation du texte officiel, du conseil juridique ou d’un défenseur des droits.</span></div>
+    <div class="law-grid">${sections.map(section => `<article class="law-card glass-panel">
+      <div class="law-card-head"><span class="icon-bubble">${icon(section.icon,18)}</span><h2>${esc(section.title)}</h2></div>
+      <div class="law-list">${section.items.map(([title,body]) => `<div><strong>${esc(title)}</strong><p>${esc(body)}</p></div>`).join("")}</div>
+    </article>`).join("")}</div>
+    ${sourceLinks(["loi2002","cdu","cnil","signalement","vigilances","loi2005"])}
+  </section>`;
 }
 function softwareCards(list=SOFTWARES) {
   if(!list.length) return `<div class="empty-state"><strong>Aucun logiciel correspondant</strong>Essayez un autre terme ou un acronyme.</div>`;
@@ -656,6 +715,12 @@ function mapMarkup() {
   return `<div class="map-world" id="map-world" role="group" aria-label="Espace 3D interactif : faites glisser le fond pour orbiter et les bulles pour les déplacer"><canvas class="map-canvas" id="map-canvas" aria-hidden="true"></canvas><div class="map-nodes" id="map-nodes">${nodes}</div></div>`;
 }
 function renderMap() {
+  if (!isPremiumUnlocked()) {
+    return `<section class="page" aria-labelledby="map-title">
+      ${sectionHead("VUE SYSTÉMIQUE · CARTE 3D", "Les interactions de votre établissement, <span class='text-gradient'>en accès Premium</span>", "Explorez les liens entre personnes accompagnées, directions, équipes, instances, documents et partenaires dans une carte 3D interactive.", ``)}
+      ${paywallGate("Carte des interactions Premium", "Accédez à la vue 3D interactive, aux filtres, aux liens directionnels, aux déplacements et à la profondeur de lecture du système.", `<div class="premium-preview-grid"><div><strong>Vue 3D</strong><span>Orbite, zoom et profondeur</span></div><div><strong>Liens</strong><span>Relations directionnelles</span></div><div><strong>Filtres</strong><span>Par métiers, instances et acteurs</span></div></div>`)}
+    </section>`;
+  }
   const groups = ["Tout", ...new Set(MAP_NODES.map(node => node.type))];
   return `<section class="page" aria-labelledby="map-title">
     ${sectionHead("VUE SYSTÉMIQUE · CARTE 3D", "Qui demande quoi ? <span class='text-gradient'>Qui agit avec qui ?</span>", "Faites glisser le fond pour orbiter autour du réseau. Les bulles se déplacent indépendamment dans l’espace ; leurs textes restent lisibles et suivent chaque mouvement.", `<button class="button subtle" data-action="map-reset">${icon("reset",15)}Réinitialiser la vue</button>`)}
@@ -2516,6 +2581,12 @@ function renderAudit() {
 function renderSecu() {
   const secu = SECURITY_SOCIALE;
   const isUnlocked = isPremiumUnlocked();
+  if (!isUnlocked) {
+    return `<section class="page" aria-labelledby="secu-title">
+      ${sectionHead("PROTECTION SOCIALE & FINANCEMENT", "La Sécurité Sociale, <span class=\"text-gradient\">réservée au Premium</span>", "Comprenez les branches, l’ONDAM, les financements, les mécanismes de tarification et la matrice « Qui paie quoi ».", ``)}
+      ${paywallGate("Sécurité Sociale & financement Premium", "Accédez à l’intégralité de l’analyse de la Sécurité Sociale, aux matrices de financement, aux interactions directeur/caisses et aux impacts budgétaires.", `<div class="premium-preview-grid"><div><strong>5 branches</strong><span>Maladie, retraite, famille, AT/MP, autonomie</span></div><div><strong>ONDAM</strong><span>Plafonds et sous-objectifs</span></div><div><strong>Qui paie quoi</strong><span>Matrice des établissements</span></div></div>`)}
+    </section>`;
+  }
 
   return `<section class="page" aria-labelledby="secu-title">
     ${renderAccessStatusBar()}

@@ -1886,6 +1886,7 @@
     { id: "documents", label: "Documents de pilotage", icon: "file", group: "Pilotage & Gestion" },
     { id: "reunions", label: "Réunions & instances", icon: "calendar", group: "Pilotage & Gestion" },
     { id: "rh", label: "Questions RH & Droit", icon: "users", group: "Pilotage & Gestion" },
+    { id: "droit-sante", label: "Droit de la santé", icon: "shield", group: "Pilotage & Gestion" },
 
     { id: "secu", label: "Sécurité Sociale & Liens", icon: "shield", group: "Stratégie & Réseau" },
     { id: "politique", label: "Politique de santé & Lois", icon: "clipboard", group: "Stratégie & Réseau" },
