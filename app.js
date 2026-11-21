@@ -19,6 +19,8 @@ let pendingOnboardingUid = null;
 let pageTransitionToken = 0;
 let pageViewTransition = null;
 let pendingPageUpdate = null;
+const selectedPageThemes = {};
+const resultPages = {};
 let mapRuntime = null;
 let mapClickSuppressionUntil = 0;
 let mapAdjustmentTimer = 0;
@@ -235,6 +237,46 @@ function sectionHead(eyebrow, title, copy, actions = "") {
 function navButton(page, label, iconName = "arrow") {
   return `<button class="button primary" data-nav="${page}">${icon(iconName,16)}${esc(label)}</button>`;
 }
+function initPageThemes(page) {
+  const container = $(".page", stage);
+  const panels = $$(":scope > [data-page-theme]", container);
+  if (panels.length < 2) return;
+  const selected = panels.some(panel => panel.dataset.pageTheme === selectedPageThemes[page])
+    ? selectedPageThemes[page] : panels[0].dataset.pageTheme;
+  const tabs = document.createElement("div");
+  tabs.className = "page-theme-tabs";
+  tabs.setAttribute("role", "tablist");
+  tabs.setAttribute("aria-label", "Thèmes de la page");
+  panels.forEach((panel, index) => {
+    const active = panel.dataset.pageTheme === selected;
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = "page-theme-tab";
+    tab.id = `theme-tab-${page}-${index}`;
+    tab.setAttribute("role", "tab");
+    tab.setAttribute("aria-controls", `theme-panel-${page}-${index}`);
+    tab.setAttribute("aria-selected", String(active));
+    tab.tabIndex = active ? 0 : -1;
+    tab.textContent = panel.dataset.pageTheme;
+    tabs.append(tab);
+    panel.id = `theme-panel-${page}-${index}`;
+    panel.setAttribute("role", "tabpanel");
+    panel.setAttribute("aria-labelledby", tab.id);
+    panel.tabIndex = 0;
+    panel.hidden = !active;
+  });
+  panels[0].before(tabs);
+}
+function selectPageTheme(tab) {
+  const tabs = $$('[role="tab"]', tab.parentElement);
+  tabs.forEach(item => {
+    const active = item === tab;
+    item.setAttribute("aria-selected", String(active));
+    item.tabIndex = active ? 0 : -1;
+    document.getElementById(item.getAttribute("aria-controls")).hidden = !active;
+  });
+  selectedPageThemes[state.page] = tab.textContent;
+}
 function renderPage(page, { immediate = false, fromHistory = false, restoreScrollY = null } = {}) {
   if (pageViewTransition) {
     pageViewTransition.skipTransition();
@@ -289,6 +331,7 @@ function renderPage(page, { immediate = false, fromHistory = false, restoreScrol
     stage.innerHTML = (renderers[page] || renderHome)();
     hydrateIcons(stage);
     attachPageHandlers();
+    initPageThemes(page);
     if (page === "carte") {
       startMapScene();
       updateMapSelection();
@@ -446,7 +489,7 @@ function renderEstablishments() {
     <div class="section-block"><div class="result-grid" id="establishment-results">${establishmentCards()}</div></div>
   </section>`;
 }
-function jobCards(list = JOBS) {
+function jobCards(list = JOBS, offset = 0) {
   if (!list.length) return `<div class="empty-state"><strong>Aucune piste correspondante</strong>Essayez un autre domaine ou un mot-clé.</div>`;
   const isUnlocked = isPremiumUnlocked();
   const visibleList = isUnlocked ? list : list.filter(item => item.isPremium !== true);
@@ -457,7 +500,7 @@ function jobCards(list = JOBS) {
       ${item.isPremium && !isUnlocked ? `<span class="tag gold" style="display:inline-flex;align-items:center;gap:4px;font-size:10px">${icon("lock",11)} Premium</span>` : ''}
     </div>
     <div class="card-top"><div><h3>${esc(item.name)}</h3><p class="card-copy">${esc(item.placement)}</p></div></div>
-    <div class="meta-row"><span class="tag ${tagColor(item.sector)}">${esc(item.sector)}</span><span class="meta-label">Piste ${String(index+1).padStart(2,"0")}</span></div>
+    <div class="meta-row"><span class="tag ${tagColor(item.sector)}">${esc(item.sector)}</span><span class="meta-label">Piste ${String(index+offset+1).padStart(2,"0")}</span></div>
     <div class="card-foot"><span>Responsabilités et déclinaisons</span>${icon("arrow-up-right",13)}</div>
   </button></article>`).join("");
 }
@@ -470,9 +513,11 @@ function renderJobs() {
     ${sectionHead("VOTRE PARCOURS · MASTER MES", "Des responsabilités <span class=\"text-gradient\">à votre portée.</span>", "Une cartographie de postes cohérente avec le Master Management des établissements de santé, une expérience d’adjoint de direction en MAS et un profil qualité / RH / gestion / transformation.", `<button class="button subtle" data-action="open-profile-note">${icon("spark",16)}Lire le cadrage</button>`)}
     <div class="notice">${icon("info",18)}<span><strong>Le diplôme ouvre des pistes, il ne confère pas une délégation.</strong> Les postes, qualifications requises, voies d’accès publiques et personnes encadrées dépendent du statut, du texte applicable, de l’employeur et de la fiche de poste.</span></div>
     ${!isUnlocked ? `<div class="premium-hidden-count">${icon("lock",17)}<div><strong>${premiumCount} métiers institutionnels sont masqués</strong><span>Abonnez-vous pour découvrir les postes HAS, ARS, ANAP, Sécurité Sociale et leurs responsabilités détaillées.</span></div><button class="button primary" data-nav="abonnement">${icon("star",14)}Voir le Premium</button></div>` : ""}
+    <div data-page-theme="Les métiers">
     <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="job-query" type="search" placeholder="Poste, décision, équipe…" aria-label="Rechercher un métier"></label>${renderFilterSelect("jobs", sectors, state.filters.jobs, "Filtrer les métiers de direction par secteur", "Tous les secteurs")}</div>
     <div class="jobs-layout section-block"><div class="job-grid" id="job-results">${jobCards()}</div><aside class="job-side glass-panel"><span class="eyebrow">LIRE L’ORGANIGRAMME</span><h3 style="margin-top:12px">Le pouvoir suit la délégation</h3><div class="org-chain"><div class="org-node">Personne morale · conseil / gestionnaire</div><i class="org-connector"></i><div class="org-node focus">Direction d’établissement</div><i class="org-connector"></i><div class="org-node">Adjoint·e / directions fonctionnelles</div><i class="org-connector"></i><div class="org-node">Chefs de service · cadres de proximité</div><i class="org-connector"></i><div class="org-node">Professionnels et équipes</div></div><p class="small-note">Les liens fonctionnels (qualité, finances, RH, projets) traversent cette ligne hiérarchique sans créer automatiquement de responsabilité directe.</p><div class="source-links">${sourceLinks(["iae","d3s","dh","cafdes"])}</div></aside></div>
-    <div class="section-block"><div class="section-title-row"><div><h2>Points à vérifier avant une candidature</h2><p>La réalité du poste tient dans ses délégations, son équipe et son régime d’emploi.</p></div></div><div class="focus-row"><article class="focus-card glass-panel"><span class="eyebrow">STATUT</span><h3>Public, associatif, privé</h3><p>Concours/statut, convention collective, employeur et autorité de rattachement changent les marges de manœuvre.</p></article><article class="focus-card glass-panel"><span class="eyebrow">PÉRIMÈTRE</span><h3>Hiérarchique ou transversal</h3><p>Demandez qui vous reporte, qui vous évalue et qui tranche un désaccord de ressources ou de soins.</p></article><article class="focus-card glass-panel"><span class="eyebrow">DÉLÉGATION</span><h3>Décisions réellement confiées</h3><p>Vérifiez budget délégué, actes RH, astreintes, signatures et responsabilités en cas d’incident.</p></article></div></div>
+    </div>
+    <div class="section-block" data-page-theme="Avant de candidater"><div class="section-title-row"><div><h2>Points à vérifier avant une candidature</h2><p>La réalité du poste tient dans ses délégations, son équipe et son régime d’emploi.</p></div></div><div class="focus-row"><article class="focus-card glass-panel"><span class="eyebrow">STATUT</span><h3>Public, associatif, privé</h3><p>Concours/statut, convention collective, employeur et autorité de rattachement changent les marges de manœuvre.</p></article><article class="focus-card glass-panel"><span class="eyebrow">PÉRIMÈTRE</span><h3>Hiérarchique ou transversal</h3><p>Demandez qui vous reporte, qui vous évalue et qui tranche un désaccord de ressources ou de soins.</p></article><article class="focus-card glass-panel"><span class="eyebrow">DÉLÉGATION</span><h3>Décisions réellement confiées</h3><p>Vérifiez budget délégué, actes RH, astreintes, signatures et responsabilités en cas d’incident.</p></article></div></div>
   </section>`;
 }
 function meetingCards(list = MEETINGS) {
@@ -692,10 +737,10 @@ function renderHealthLaw() {
   return `<section class="page" aria-labelledby="health-law-title">
     ${sectionHead("DROIT DE LA SANTÉ & RESPONSABILITÉ", "Les droits, obligations <span class=\"text-gradient\">et sanctions à connaître</span>", "Repères pratiques pour les directeurs, cadres, professionnels qualité et futurs managers. Les sanctions dépendent toujours des faits, du statut, des textes applicables et de la procédure.", ``)}
     <div class="law-alert">${icon("info",18)}<span><strong>Cadre pédagogique.</strong> Cette page aide au repérage. Elle ne remplace pas la consultation du texte officiel, du conseil juridique ou d’un défenseur des droits.</span></div>
-    <div class="law-grid">${sections.map(section => `<article class="law-card glass-panel">
+    ${[["Droits & consentement", sections.slice(0, 2)], ["Signalements", sections.slice(2, 4)], ["Responsabilités & autorités", sections.slice(4)]].map(([label, items]) => `<div data-page-theme="${esc(label)}"><div class="law-grid">${items.map(section => `<article class="law-card glass-panel">
       <div class="law-card-head"><span class="icon-bubble">${icon(section.icon,18)}</span><h2>${esc(section.title)}</h2></div>
       <div class="law-list">${section.items.map(([title,body]) => `<div><strong>${esc(title)}</strong><p>${esc(body)}</p></div>`).join("")}</div>
-    </article>`).join("")}</div>
+    </article>`).join("")}</div></div>`).join("")}
     ${sourceLinks(["loi2002","cdu","cnil","signalement","vigilances","loi2005"])}
   </section>`;
 }
@@ -706,9 +751,11 @@ function softwareCards(list=SOFTWARES) {
 function renderSoftware() {
   return `<section class="page" aria-labelledby="software-title">${sectionHead("BOÎTE À OUTILS · NUMÉRIQUE", "Les logiciels qui font tourner <span class=\"text-gradient\">les établissements.</span>", "Une carte des grandes familles d’outils sanitaires et médico-sociaux : à quoi ils servent, qui les utilise et ce qu’un manager doit vérifier avant un choix ou un déploiement.", `<button class="button subtle" data-action="open-sources">${icon("book",16)}Références</button>`)}
     <div class="notice">${icon("shield",17)}<span><strong>À garder en tête.</strong> Les noms de produits ci-dessous sont des exemples, pas un classement ni une recommandation. Les gammes évoluent ; vérifiez le référencement Ségur demandé, la sécurité, l’interopérabilité, les coûts complets et les conditions de sortie du contrat.</span></div>
+    <div data-page-theme="Familles de logiciels">
     <div class="software-toolbar section-block"><label class="search-box"><span data-icon="search"></span><input id="software-query" class="form-control" type="search" placeholder="DPI, DUI, planning, paie, qualité…" aria-label="Rechercher un logiciel ou une famille"></label><span class="tag mint" id="software-count">${SOFTWARES.length} familles</span></div>
     <div class="software-grid section-block" id="software-results">${softwareCards()}</div>
-    <section class="section-block software-selection"><div class="section-title-row"><div><span class="eyebrow">AVANT DE SIGNER</span><h2>La checklist d’un choix numérique</h2></div></div><div class="focus-row"><article class="focus-card glass-panel"><span class="eyebrow">USAGES</span><h3>Tester avec le terrain</h3><p>Associer soignants, équipes d’accompagnement, fonctions support, personnes accompagnées et représentants selon le projet.</p></article><article class="focus-card glass-panel"><span class="eyebrow">DONNÉES</span><h3>Protéger les accès</h3><p>Vérifier hébergement, habilitations par rôle, journalisation, sauvegardes, continuité et procédure de violation.</p></article><article class="focus-card glass-panel"><span class="eyebrow">DÉPLOIEMENT</span><h3>Prévoir l’après</h3><p>Chiffrer reprise et qualité des données, interfaces, formation, support, dépendances, réversibilité et temps métier nécessaire.</p></article></div>${sourceLinks(["ansSoftware","ansDui","mssante","viaTrajectoire"])}</section>
+    </div>
+    <section class="section-block software-selection" data-page-theme="Avant de choisir"><div class="section-title-row"><div><span class="eyebrow">AVANT DE SIGNER</span><h2>La checklist d’un choix numérique</h2></div></div><div class="focus-row"><article class="focus-card glass-panel"><span class="eyebrow">USAGES</span><h3>Tester avec le terrain</h3><p>Associer soignants, équipes d’accompagnement, fonctions support, personnes accompagnées et représentants selon le projet.</p></article><article class="focus-card glass-panel"><span class="eyebrow">DONNÉES</span><h3>Protéger les accès</h3><p>Vérifier hébergement, habilitations par rôle, journalisation, sauvegardes, continuité et procédure de violation.</p></article><article class="focus-card glass-panel"><span class="eyebrow">DÉPLOIEMENT</span><h3>Prévoir l’après</h3><p>Chiffrer reprise et qualité des données, interfaces, formation, support, dépendances, réversibilité et temps métier nécessaire.</p></article></div>${sourceLinks(["ansSoftware","ansDui","mssante","viaTrajectoire"])}</section>
   </section>`;
 }
 
@@ -987,7 +1034,7 @@ function renderQuality() {
     
     <div class="notice">${icon("info",18)}<span><strong>Culture juste & non punitive.</strong> ${esc(ei.culture)}</span></div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Niveaux d’EI">
       <div class="section-title-row">
         <div>
           <h2>Les 4 niveaux d'Événements Indésirables</h2>
@@ -997,7 +1044,7 @@ function renderQuality() {
       <div class="result-grid">${adverseEventCards()}</div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Circuit de traitement">
       <div class="section-title-row">
         <div>
           <h2>Le circuit décisionnel du traitement d'un EI</h2>
@@ -1012,7 +1059,7 @@ function renderQuality() {
       </div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Outils qualité">
       <div class="section-title-row">
         <div>
           <h2>Outils institutionnels de la qualité</h2>
@@ -1022,7 +1069,7 @@ function renderQuality() {
       <div class="result-grid">${qualityToolCards()}</div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Déclarations">
       <div class="section-title-row">
         <div>
           <h2>Matrice des déclarations externes obligatoires</h2>
@@ -1066,7 +1113,8 @@ function renderRex() {
     
     <div class="notice">${icon("info",18)}<span><strong>Définition clé.</strong> ${esc(rex.definition)}</span></div>
 
-    <div class="section-block">
+    ${renderAccessStatusBar()}
+    <div class="section-block" data-page-theme="Intérêt du REX">
       <div class="section-title-row">
         <div>
           <h2>Pourquoi mener un REX ? Les 6 bénéfices majeurs</h2>
@@ -1087,9 +1135,8 @@ function renderRex() {
       </div>
     </div>
 
-    ${renderAccessStatusBar()}
     ${isUnlocked ? `
-    <div class="section-block">
+    <div class="section-block" data-page-theme="La méthode">
       <div class="section-title-row">
         <div>
           <h2>Les 6 étapes de la méthode REX</h2>
@@ -1111,7 +1158,7 @@ function renderRex() {
       </div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Participants">
       <div class="section-title-row">
         <div>
           <h2>Avec qui mener le REX ?</h2>
@@ -1137,7 +1184,7 @@ function renderRex() {
       </div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Formats">
       <div class="section-title-row">
         <div>
           <h2>Les différents formats de retour d'expérience</h2>
@@ -1161,16 +1208,16 @@ function renderRex() {
       </div>
     </div>
 
-    ` : paywallGate("Méthode ALARM & Protocole d'Animation REX (45% Campus)", "Accédez à la démarche complète en 6 étapes, aux 7 dimensions causales de la grille ALARM et à la composition type d'une séance sans culpabilisation.", `
+    ` : `<div data-page-theme="Méthode Premium">${paywallGate("Méthode ALARM & Protocole d'Animation REX (45% Campus)", "Accédez à la démarche complète en 6 étapes, aux 7 dimensions causales de la grille ALARM et à la composition type d'une séance sans culpabilisation.", `
       <div class="section-block"><div class="result-grid">${rex.steps.slice(0,2).map(s => `<article class="content-card"><h3>${esc(s.title)}</h3><p>${esc(s.detail)}</p></article>`).join("")}</div></div>
-    `)}
+    `)}</div>`}
 
     ${sourceLinks(["rexHas","crex","rexEssms","hasHealth"])}
   </section>`;
 }
 
 /* --- MODULE CORPS DE MÉTIER SUPPORT & ORGANIGRAMME --- */
-function supportJobCards(list = SUPPORT_JOBS) {
+function supportJobCards(list = SUPPORT_JOBS, offset = 0) {
   if (!list.length) return `<div class="empty-state"><strong>Aucun métier support trouvé</strong>Essayez une autre recherche ou un autre filtre.</div>`;
   return list.map((job, idx) => `<article class="content-card job-card">
     <button class="card-hit" data-action="open-support-job" data-id="${esc(job.id)}">
@@ -1183,7 +1230,7 @@ function supportJobCards(list = SUPPORT_JOBS) {
       </div>
       <div class="meta-row">
         <span class="tag ${tagColor(job.family)}">${esc(job.family)}</span>
-        <span class="meta-label">Métier support 0${idx+1}</span>
+        <span class="meta-label">Métier support ${String(idx+offset+1).padStart(2,"0")}</span>
       </div>
       <p class="card-copy" style="font-size:12px;margin:8px 0">${esc(job.role.slice(0, 110))}...</p>
       <div class="card-foot">
@@ -1205,6 +1252,7 @@ function renderSupportJobs() {
     
     <div class="notice">${icon("info",18)}<span><strong>L'interdépendance au cœur de la performance.</strong> Un établissement ne fonctionne pas sans une alliance étroite entre le soin, l'éducatif et les fonctions support. Une panne d'ascenseur, une rupture de protections ou un bionettoyage défaillant impactent immédiatement la dignité de la personne accompagnée.</span></div>
 
+    <div data-page-theme="Les métiers">
     <div class="filter-bar">
       <label class="search-box">
         <span data-icon="search"></span>
@@ -1232,7 +1280,8 @@ function renderSupportJobs() {
       </aside>
     </div>
 
-    <div class="section-block">
+    </div>
+    <div class="section-block" data-page-theme="Interactions entre métiers">
       <div class="section-title-row">
         <div>
           <h2>Matrice des interactions transversales</h2>
@@ -1312,19 +1361,19 @@ function renderHealthPolicy() {
     
     <div class="notice">${icon("info",18)}<span><strong>Veille réglementaire active (Mise à jour ${esc(hp.lastUpdate)}).</strong> ${esc(hp.vision)}</span></div>
 
-    <div class="section-block">
+    ${renderAccessStatusBar()}
+    <div class="section-block" data-page-theme="Lois nationales">
       <div class="section-title-row">
         <div>
           <h2>Les 10 grandes lois structurantes</h2>
           <p>De la loi 2002-2 à la loi Bien Vieillir de 2024 : le socle juridique indispensable à tout dirigeant.</p>
         </div>
       </div>
-      <div class="result-grid">${lawCards()}</div>
+      <div class="result-grid" id="law-results">${pagedCards("laws", hp.nationalLaws, lawCards)}</div>
     </div>
 
-    ${renderAccessStatusBar()}
     ${isUnlocked ? `
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Projet régional">
       <div class="section-title-row">
         <div>
           <h2>L'échelon régional : Le Projet Régional de Santé (PRS 3 de l'ARS)</h2>
@@ -1341,7 +1390,7 @@ function renderHealthPolicy() {
       <div class="notice" style="margin-top:14px">${icon("info",16)}<span><strong>Conseil stratégique pour le manager :</strong> ${esc(hp.regionalFramework.managerAction)}</span></div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Département">
       <div class="section-title-row">
         <div>
           <h2>L'échelon départemental & la tarification</h2>
@@ -1357,7 +1406,7 @@ function renderHealthPolicy() {
       </div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Qui décide ?">
       <div class="section-title-row">
         <div>
           <h2>Grille de synthèse : qui décide quoi dans le système ?</h2>
@@ -1384,9 +1433,9 @@ function renderHealthPolicy() {
       </div>
     </div>
 
-    ` : paywallGate("Cadre Stratégique ARS, Département & Synthèse Décisionnelle (45% Campus)", "Accédez aux orientations du PRS 3 ARS, aux mécanismes d'arbitrage départemental et à la grille comparative des compétences institutionnelles.", `
+    ` : `<div data-page-theme="Cadre territorial Premium">${paywallGate("Cadre Stratégique ARS, Département & Synthèse Décisionnelle (45% Campus)", "Accédez aux orientations du PRS 3 ARS, aux mécanismes d'arbitrage départemental et à la grille comparative des compétences institutionnelles.", `
       <div class="section-block"><div class="focus-row">${hp.regionalFramework.components.slice(0,2).map(c => `<article class="focus-card glass-panel"><h3>${esc(c.name)}</h3><p>${esc(c.role)}</p></article>`).join("")}</div></div>
-    `)}
+    `)}</div>`}
 
     ${sourceLinks(["loi2002","loi2005","loi2015","loi2024autonomie","prs","segurNum"])}
   </section>`;
@@ -1567,7 +1616,21 @@ function globalSearchResults(query) {
   resultBox.innerHTML = matches.length ? matches.map((record,index) => `<button class="quick-tile search-result" style="width:100%;min-height:60px;margin-bottom:7px;align-items:center" data-action="open-search-result" data-kind="${record.kind}" data-id="${record.kind === "faq" ? index : record.item.id}"><span class="icon-bubble">${icon(record.kind === "document" ? "file" : record.kind === "job" ? "briefcase" : record.kind === "meeting" ? "calendar" : record.kind === "actor" ? "network" : record.kind === "software" ? "layers" : "building",15)}</span><span><strong>${esc(record.label)}</strong><small>${esc(record.detail)}</small></span>${icon("arrow-up-right",14)}</button>`).join("") : `<div class="empty-state"><strong>Aucun résultat</strong>Essayez un autre mot-clé.</div>`;
 }
 
-function applyFilter(group) {
+function pagedCards(group, list, renderCards) {
+  const pageSize = 6;
+  const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+  const page = Math.min(resultPages[group] || 0, totalPages - 1);
+  resultPages[group] = page;
+  const cards = renderCards(list.slice(page * pageSize, (page + 1) * pageSize), page * pageSize);
+  if (totalPages === 1) return cards;
+  return `${cards}<nav class="result-pagination" aria-label="Pages des résultats">
+    <button class="button subtle" type="button" data-result-group="${group}" data-result-page="${page - 1}" ${page === 0 ? "disabled" : ""}>Précédent</button>
+    <span role="status">Page ${page + 1} sur ${totalPages} · ${list.length} résultats</span>
+    <button class="button subtle" type="button" data-result-group="${group}" data-result-page="${page + 1}" ${page === totalPages - 1 ? "disabled" : ""}>Suivant</button>
+  </nav>`;
+}
+function applyFilter(group, preservePage = false) {
+  if (!preservePage) resultPages[group] = 0;
   if (group === "supportJobs") {
     const value = state.filters.supportJobs;
     const query = state.queries.supportJobs.trim().toLocaleLowerCase("fr");
@@ -1577,42 +1640,45 @@ function applyFilter(group) {
       return matchGroup && matchQuery;
     });
     const results = $("#support-job-results");
-    if (results) results.innerHTML = supportJobCards(filtered);
+    if (results) results.innerHTML = pagedCards(group, filtered, supportJobCards);
     const countEl = $("#support-job-count");
     if (countEl) countEl.textContent = `${filtered.length} métier${filtered.length === 1 ? "" : "s"}`;
+    hydrateIcons(stage);
     return;
   }
 
   if (group === "establishments") {
     const query = state.queries.establishments.toLocaleLowerCase("fr");
     const list = ESTABLISHMENTS.filter(item => (state.filters.establishments === "Tout" || item.family === state.filters.establishments) && JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
-    $("#establishment-results").innerHTML = establishmentCards(list);
+    $("#establishment-results").innerHTML = pagedCards(group, list, establishmentCards);
     $("#establishment-count").textContent = `${list.length} fiche${list.length === 1 ? "" : "s"}`;
   } else if (group === "jobs") {
     const query = state.queries.jobs.toLocaleLowerCase("fr");
     const source = isPremiumUnlocked() ? JOBS : JOBS.filter(item => item.isPremium !== true);
     const list = source.filter(item => (state.filters.jobs === "Tout" || item.sector === state.filters.jobs) && JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
-    $("#job-results").innerHTML = jobCards(list);
+    $("#job-results").innerHTML = pagedCards(group, list, jobCards);
   } else if (group === "meetings") {
     const query = state.queries.meetings.toLocaleLowerCase("fr");
     const list = MEETINGS.filter(item => (state.filters.meetings === "Tout" || item.kind === state.filters.meetings) && JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
-    $("#meeting-results").innerHTML = meetingCards(list);
+    $("#meeting-results").innerHTML = pagedCards(group, list, meetingCards);
   } else if (group === "documents") {
     const query = state.queries.documents.toLocaleLowerCase("fr");
     const list = DOCUMENTS.filter(item => (state.filters.documents === "Tout" || item.category === state.filters.documents) && JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
-    $("#document-results").innerHTML = documentCards(list);
+    $("#document-results").innerHTML = pagedCards(group, list, documentCards);
   } else if (group === "actors") {
     const query = state.queries.actors.toLocaleLowerCase("fr");
     const list = ACTORS.filter(item => (state.filters.actors === "Tout" || item.type === state.filters.actors) && JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
-    $("#actor-results").innerHTML = actorCards(list);
+    $("#actor-results").innerHTML = pagedCards(group, list, actorCards);
   } else if (group === "faq") {
     const query = state.queries.faq.toLocaleLowerCase("fr");
     const list = FAQ.filter(item => JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
-    $("#faq-results").innerHTML = renderFaqList(list);
+    $("#faq-results").innerHTML = pagedCards(group, list, renderFaqList);
+  } else if (group === "laws") {
+    $("#law-results").innerHTML = pagedCards(group, HEALTH_POLICY.nationalLaws, lawCards);
   } else if (group === "software") {
     const query = state.queries.software.toLocaleLowerCase("fr");
     const list = SOFTWARES.filter(item => JSON.stringify(item).toLocaleLowerCase("fr").includes(query));
-    $("#software-results").innerHTML = softwareCards(list);
+    $("#software-results").innerHTML = pagedCards(group, list, softwareCards);
     const count=$("#software-count"); if(count) count.textContent=`${list.length} famille${list.length===1?"":"s"}`;
   }
   hydrateIcons(stage);
@@ -2820,7 +2886,8 @@ function renderAudit() {
     
     <div class="notice">${icon("info",18)}<span><strong>Définition & posture.</strong> ${esc(guide.definition)}</span></div>
 
-    <div class="section-block">
+    ${renderAccessStatusBar()}
+    <div class="section-block" data-page-theme="Finalités">
       <div class="section-title-row">
         <div>
           <h2>À quoi sert un audit ? Les 5 finalités fondamentales</h2>
@@ -2841,7 +2908,7 @@ function renderAudit() {
       </div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Types d’audits">
       <div class="section-title-row">
         <div>
           <h2>Les 6 types d'audits : qui est visé selon quel cas ?</h2>
@@ -2851,9 +2918,8 @@ function renderAudit() {
       <div class="audit-typology-grid">${auditTypologyCards()}</div>
     </div>
 
-    ${renderAccessStatusBar()}
     ${isUnlocked ? `
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Méthode">
       <div class="section-title-row">
         <div>
           <h2>Comment mener un audit en 5 étapes</h2>
@@ -2875,7 +2941,7 @@ function renderAudit() {
       </div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Bonnes pratiques">
       <div class="section-title-row">
         <div>
           <h2>Les 4 facteurs clés de succès d'un audit réussi</h2>
@@ -2903,9 +2969,9 @@ function renderAudit() {
       </div>
     </div>
 
-    ` : paywallGate("Méthodologie d'Audit en 5 Étapes & Grilles Types HAS (45% Campus)", "Accédez au protocole d'évaluation en 5 étapes, aux 4 grilles d'audit types (patient traceur, bionettoyage, médicament, DUI) et aux facteurs clés de succès.", `
+    ` : `<div data-page-theme="Méthode Premium">${paywallGate("Méthodologie d'Audit en 5 Étapes & Grilles Types HAS (45% Campus)", "Accédez au protocole d'évaluation en 5 étapes, aux 4 grilles d'audit types (patient traceur, bionettoyage, médicament, DUI) et aux facteurs clés de succès.", `
       <div class="section-block"><div class="result-grid">${guide.steps.slice(0,2).map(s => `<article class="content-card"><h3>${esc(s.title)}</h3><p>${esc(s.detail)}</p></article>`).join("")}</div></div>
-    `)}
+    `)}</div>`}
 
     ${sourceLinks(["auditHas","hasEsms","anapAudit","cofrac"])}
   </section>`;
@@ -2926,7 +2992,7 @@ function renderSecu() {
     ${sectionHead("PROTECTION SOCIALE & FINANCEMENT DE LA SANTÉ", "La Sécurité Sociale, <span class=\"text-gradient\">moteur financier et régulateur.</span>", "Comprendre les ordonnances de 1945, l'architecture des 5 branches (dont la Branche Autonomie), l'enveloppe ONDAM, les modèles de tarification (T2A, forfaits soins, CPOM) et la matrice comparative 'Qui paie quoi' pour 9 catégories d'établissements.", `<button class="button subtle" data-nav="etablissements">${icon("building",16)}Établissements</button>`)}
 
     <!-- Principes Fondateurs 1945 -->
-    <div class="secu-hero-card">
+    <div class="secu-hero-card" data-page-theme="Fondations">
       <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
         <span class="icon-bubble" style="background:rgba(135,199,247,0.18);color:var(--sky);flex:0 0 44px;width:44px;height:44px;border-radius:14px">${icon("shield", 22)}</span>
         <div style="flex:1;min-width:280px">
@@ -2946,7 +3012,7 @@ function renderSecu() {
     </div>
 
     <!-- Les 5 Branches -->
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Les branches">
       <div class="section-title-row">
         <div>
           <h2>Les 5 Branches de la Sécurité Sociale & Leurs Liens avec le Manager</h2>
@@ -2981,7 +3047,7 @@ function renderSecu() {
     </div>
 
     <!-- ONDAM -->
-    <div class="section-block">
+    <div class="section-block" data-page-theme="ONDAM">
       <div class="section-title-row">
         <div>
           <h2>L'ONDAM : Le Plafond National de Dépenses de Santé</h2>
@@ -3015,7 +3081,7 @@ function renderSecu() {
     </div>
 
     <!-- Modèles de Tarification -->
-    <div class="section-block">
+    <div class="section-block" data-page-theme="Tarification">
       <div class="section-title-row">
         <div>
           <h2>Les Principaux Mécanismes de Tarification</h2>
@@ -3035,7 +3101,7 @@ function renderSecu() {
 
     <!-- 6 Interactions Directeur & Sécu + Matrice Qui Paie Quoi (Campus Gate) -->
     ${isUnlocked ? `
-      <div class="section-block">
+      <div class="section-block" data-page-theme="Rôle du directeur">
         <div class="section-title-row">
           <div>
             <h2>Les 6 Interactions Directes Directeur — Sécurité Sociale</h2>
@@ -3055,7 +3121,7 @@ function renderSecu() {
         </div>
       </div>
 
-      <div class="section-block">
+      <div class="section-block" data-page-theme="Qui paie quoi ?">
         <div class="section-title-row">
           <div>
             <h2>Matrice Comparative 'Qui Paie Quoi' par Type d'Établissement</h2>
@@ -3367,6 +3433,20 @@ function updateChecklistProgress() {
   if (countEl) countEl.textContent = `${count} repère${count === 1 ? "" : "s"} coché${count === 1 ? "" : "s"}`;
 }
 document.addEventListener("click", event => {
+  const resultPage = event.target.closest("[data-result-page]");
+  if (resultPage) {
+    const results = resultPage.closest("[id$='-results']");
+    resultPages[resultPage.dataset.resultGroup] = Number(resultPage.dataset.resultPage);
+    applyFilter(resultPage.dataset.resultGroup, true);
+    results?.querySelector("button, a")?.focus({ preventScroll:true });
+    results?.scrollIntoView({ block:"start", behavior:"auto" });
+    return;
+  }
+  const pageTheme = event.target.closest(".page-theme-tab");
+  if (pageTheme) {
+    selectPageTheme(pageTheme);
+    return;
+  }
   const authMode = event.target.closest("[data-auth-mode]");
   if (authMode) {
     const signup = authMode.dataset.authMode === "signup";
@@ -3819,6 +3899,16 @@ document.addEventListener("click", event => {
   state.selectedMapNode=node.dataset.mapNode; updateMapSelection();
 });
 document.addEventListener("keydown", event => {
+  const pageTheme = event.target.closest(".page-theme-tab");
+  if (pageTheme && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+    event.preventDefault();
+    const tabs = $$(".page-theme-tab", pageTheme.parentElement);
+    const index = tabs.indexOf(pageTheme);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    selectPageTheme(tabs[next]);
+    tabs[next].focus();
+    return;
+  }
   const dropdown = event.target.closest(".filter-select");
   if (dropdown) {
     const options = $$("[data-filter-choice]", dropdown);
