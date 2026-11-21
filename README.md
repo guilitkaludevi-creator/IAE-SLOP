@@ -15,6 +15,7 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 - Calculateurs interactifs ETP / ETPT et forfait jours, dont un calendrier annuel lun–ven ajustable.
 - Guides pratiques de fiche de poste, rédaction d’offre, entretien structuré et recherche des effectifs disponibles.
 - Répertoire filtrable des grandes familles de logiciels sanitaires et médico-sociaux (DPI, DUI, SIRH, planning, qualité/AgEval, budget, coordination, etc.).
+- Carte des interactions 3D plein format : un doigt pour orbiter (ou déplacer une bulle), pincement à deux doigts pour zoomer, glissement à deux doigts pour se déplacer, torsion pour tourner, double-tap pour zoomer / recentrer, boutons +/−/recentrer/agrandir, réglages avancés repliés ; panneau de détails flottant repliable ; ctrl + molette (ou pincement du pavé tactile) pour zoomer sur ordinateur.
 - Carte 3D animée en temps réel : bulles mobiles dans l’espace, liens directionnels et libellés projetés à chaque mouvement ; rotation libre, translation, profondeur, zoom et perspective.
 - Raccourcis cliquables depuis l’accueil vers les métiers, la qualité, les outils, la politique de santé et les partenaires.
 - Navigation précédent/suivant avec conservation de la page, du scroll et des filtres.

@@ -62,6 +62,8 @@ const state = {
   mapPerspective: 1050,
   mapSceneDepth: 0,
   mapZoom: 1,
+  mapZoomAuto: true,
+  mapDetailsOpen: undefined,
   mapPan: { x:0, y:0 },
   mapGesture: "rotate",
   toastTimer: 0
@@ -732,24 +734,34 @@ function renderMap() {
     </section>`;
   }
   const groups = ["Tout", ...new Set(MAP_NODES.map(node => node.type))];
-  return `<section class="page" aria-labelledby="map-title">
-    ${sectionHead("VUE SYSTÉMIQUE · CARTE 3D", "Qui demande quoi ? <span class='text-gradient'>Qui agit avec qui ?</span>", "Faites glisser le fond pour orbiter autour du réseau. Les bulles se déplacent indépendamment dans l’espace ; leurs textes restent lisibles et suivent chaque mouvement.", `<button class="button subtle" data-action="map-reset">${icon("reset",15)}Réinitialiser la vue</button>`)}
+  const detailsOpen = state.mapDetailsOpen === true;
+  return `<section class="page map-page" aria-labelledby="map-title">
+    ${sectionHead("VUE SYSTÉMIQUE · CARTE 3D", "Qui demande quoi ? <span class='text-gradient'>Qui agit avec qui ?</span>", "Pincez pour zoomer, glissez à deux doigts pour vous déplacer, un doigt pour orbiter ou déplacer une bulle.", `<button class="button subtle" data-action="map-reset">${icon("reset",15)}Réinitialiser la vue</button>`)}
     <div class="map-layout">
-      <div class="map-frame glass-panel">
-        <div class="map-toolbar">${renderPills("map", groups, state.mapFilter)}<label class="meta-row map-zoom-label"><span class="meta-label">Zoom</span><input id="map-zoom" type="range" min="70" max="145" value="${Math.round(state.mapZoom * 100)}" aria-label="Zoom de la scène 3D"></label></div>
-        <div class="map-controls" role="group" aria-label="Réglages de la scène en trois dimensions">
+      <div class="map-frame glass-panel" id="map-frame">
+        <div class="map-toolbar">${renderPills("map", groups, state.mapFilter)}<div class="map-toolbar-actions"><button class="button subtle map-gesture-toggle" data-action="map-gesture" aria-pressed="${state.mapGesture === "rotate"}" title="Geste à un doigt sur le fond de la carte">${icon(state.mapGesture === "rotate" ? "rotate" : "move",15)}${state.mapGesture === "rotate" ? "Orbite" : "Déplacer"}</button><button class="button subtle" data-action="map-settings" aria-expanded="false" aria-controls="map-controls">${icon("layers",15)}Réglages</button></div></div>
+        <div class="map-controls" id="map-controls" role="group" aria-label="Réglages de la scène en trois dimensions" hidden>
+          <label class="map-control"><span>Zoom <output id="map-zoom-output">${Math.round(state.mapZoom * 100)} %</output></span><input id="map-zoom" type="range" min="40" max="300" value="${Math.round(state.mapZoom * 100)}" aria-label="Zoom de la scène 3D"></label>
           <label class="map-control"><span>Inclinaison · X <output id="map-angle-x-output">${Math.round(state.mapRotation.x)}°</output></span><input id="map-rotate-x" type="range" min="0" max="360" value="${Math.round(state.mapRotation.x)}" aria-label="Incliner la scène sur l’axe X, rotation complète de 360 degrés"></label>
           <label class="map-control"><span>Orientation · Y <output id="map-angle-y-output">${Math.round(state.mapRotation.y)}°</output></span><input id="map-rotate-y" type="range" min="0" max="360" value="${Math.round(state.mapRotation.y)}" aria-label="Orienter la scène sur l’axe Y, rotation complète de 360 degrés"></label>
           <label class="map-control"><span>Profondeur · Z <output id="map-angle-z-output">${Math.round(state.mapRotation.z)}°</output></span><input id="map-rotate-z" type="range" min="0" max="360" value="${Math.round(state.mapRotation.z)}" aria-label="Tourner la scène autour de l’axe de profondeur Z, rotation complète de 360 degrés"></label>
           <label class="map-control"><span>Perspective <output id="map-depth-output">${state.mapPerspective} px</output></span><input id="map-depth" type="range" min="450" max="1800" step="50" value="${state.mapPerspective}" aria-label="Régler la profondeur de la perspective"></label>
           <label class="map-control"><span>Avancer / reculer · Z <output id="map-scene-depth-output">${state.mapSceneDepth}</output></span><input id="map-scene-depth" type="range" min="-220" max="220" value="${state.mapSceneDepth}" aria-label="Déplacer toute la carte vers l’avant ou l’arrière sur l’axe Z"></label>
-          <button class="button subtle map-gesture-toggle" data-action="map-gesture" aria-pressed="${state.mapGesture === "rotate"}">${icon(state.mapGesture === "rotate" ? "rotate" : "move",15)}Mode : ${state.mapGesture === "rotate" ? "orbite" : "déplacement"}</button>
+          <button type="button" class="button subtle map-reset-inline" data-action="map-reset">${icon("reset",15)}Réinitialiser la vue</button>
         </div>
-        <div class="map-viewport${state.mapGesture === "pan" ? " is-panning" : ""}" id="map-viewport" role="region" aria-label="Carte en trois dimensions">${mapMarkup()}</div>
+        <div class="map-viewport${state.mapGesture === "pan" ? " is-panning" : ""}" id="map-viewport" role="region" aria-label="Carte en trois dimensions">
+          ${mapMarkup()}
+          <div class="map-hint" id="map-hint" aria-hidden="true">${icon("move",14)}<span>Pincez pour zoomer · 2 doigts pour déplacer</span></div>
+          <div class="map-fab" role="group" aria-label="Zoom et affichage">
+            <button type="button" class="map-fab-btn" data-action="map-zoom-in" aria-label="Zoom avant">+</button>
+            <button type="button" class="map-fab-btn" data-action="map-zoom-out" aria-label="Zoom arrière">−</button>
+            <button type="button" class="map-fab-btn" data-action="map-fit" aria-label="Recentrer la carte">${icon("target",16)}</button>
+            <button type="button" class="map-fab-btn" data-action="map-expand" aria-pressed="false" aria-label="Agrandir la carte">${icon("zoomin",16)}</button>
+          </div>
+          <aside class="map-details glass-panel${detailsOpen ? "" : " is-collapsed"}" id="map-details" aria-live="polite" aria-atomic="true"></aside>
+        </div>
         <div class="map-legend"><span><i></i>Personnes & métiers</span><span><i></i>Gouvernance</span><span><i></i>Instances</span><span><i></i>Documents</span><span><i></i>Acteurs externes</span></div>
-        <div class="map-callout"><strong>Gestes :</strong> glissez le fond pour orbiter, ou passez en déplacement pour translater la scène. Glissez une bulle pour déplacer X/Y ; utilisez la molette ou son réglage Z pour sa profondeur. Le curseur « Avancer / reculer » agit sur toute la scène. Sur ordinateur, Maj + glisser règle Z.</div>
       </div>
-      <aside class="map-details glass-panel" id="map-details" aria-live="polite" aria-atomic="true"></aside>
     </div>
   </section>`;
 }
@@ -2335,7 +2347,7 @@ function projectMapPoint(point, width, height, time = 0, index = 0, drift = true
     x:width/2+state.mapPan.x+rotated.x*perspectiveScale*zoom,
     y:height/2+state.mapPan.y-rotated.y*perspectiveScale*zoom,
     z:rotated.z,
-    scale:clamp(perspectiveScale*zoom,.82,1.38),
+    scale:clamp(perspectiveScale*zoom,.8,1.5),
     perspectiveScale
   };
 }
@@ -2347,6 +2359,7 @@ function resizeMapScene(scene) {
   scene.canvas.width=Math.round(scene.width*scene.dpr);
   scene.canvas.height=Math.round(scene.height*scene.dpr);
   scene.context.setTransform(scene.dpr,0,0,scene.dpr,0,0);
+  if (state.mapZoomAuto) { state.mapZoom=fitMapZoom(scene); syncMapZoomControl(); }
   requestMapFrame();
 }
 function traceMapLine(context, from, to, color, alpha, width = 1) {
@@ -2453,6 +2466,7 @@ function destroyMapScene() {
   scene.intersectionObserver?.disconnect();
   window.removeEventListener("resize",scene.onResize);
   document.removeEventListener("visibilitychange",scene.onVisibility);
+  document.body.classList.remove("map-expanded");
   mapRuntime=null;
 }
 function startMapScene() {
@@ -2494,38 +2508,112 @@ function updateMapSelection() {
   const node=MAP_NODES.find(item=>item.id===selected), detail=mapDescriptions[selected], box=$("#map-details");
   if (node && detail && box) {
     const z=Math.round(state.mapPositions[selected]?.z || 0);
-    box.innerHTML=`<span class="tag ${tagColor(node.type)}">${esc(detail.type)}</span><h3>${esc(detail.title)}</h3><p>${esc(detail.copy)}</p><span class="meta-label">LIENS DIRECTS</span><div class="map-detail-related">${detail.related.map(item=>`<span>${esc(item)}</span>`).join("")}</div><label class="map-node-depth"><span>Profondeur de cette bulle <output id="map-node-depth-output">${z}</output></span><input id="map-node-depth" type="range" min="-260" max="260" value="${z}" aria-label="Déplacer ${esc(detail.title)} en profondeur sur l’axe Z"><small>La position et le texte de la bulle suivent en direct.</small></label><p class="map-node-tip">Glisser la bulle : X/Y · Maj + glisser ou molette : Z.</p><div class="source-links">${sourceLinks(selected === "duerp" ? ["duerp"] : selected === "eprd" ? ["cnsaData"] : selected === "has" ? ["hasEsms","hasHealth"] : selected === "anap" ? ["anap"] : selected === "cnsa" ? ["cnsa"] : selected === "cvscse" ? ["cvs","cse"] : ["casfRights"])}</div>`;
+    box.innerHTML=`<div class="map-details-head"><div><span class="tag ${tagColor(node.type)}">${esc(detail.type)}</span><h3>${esc(detail.title)}</h3></div><button type="button" class="map-details-toggle" data-action="map-details-toggle" aria-expanded="${!box.classList.contains("is-collapsed")}" aria-label="Afficher ou masquer le détail">${icon("chevron-down",16)}</button></div><div class="map-details-body"><p>${esc(detail.copy)}</p><span class="meta-label">LIENS DIRECTS</span><div class="map-detail-related">${detail.related.map(item=>`<span>${esc(item)}</span>`).join("")}</div><label class="map-node-depth"><span>Profondeur de cette bulle <output id="map-node-depth-output">${z}</output></span><input id="map-node-depth" type="range" min="-260" max="260" value="${z}" aria-label="Déplacer ${esc(detail.title)} en profondeur sur l’axe Z"></label><div class="source-links">${sourceLinks(selected === "duerp" ? ["duerp"] : selected === "eprd" ? ["cnsaData"] : selected === "has" ? ["hasEsms","hasHealth"] : selected === "anap" ? ["anap"] : selected === "cnsa" ? ["cnsa"] : selected === "cvscse" ? ["cvs","cse"] : ["casfRights"])}</div></div>`;
     hydrateIcons(box);
     if (!matchMedia("(prefers-reduced-motion: reduce)").matches && box.animate) box.animate([{opacity:.55,transform:"translate3d(0,5px,0)"},{opacity:1,transform:"translate3d(0,0,0)"}],{duration:190,easing:"cubic-bezier(.18,.72,.23,1)"});
   }
   requestMapFrame();
 }
+const MAP_ZOOM_MIN = .4, MAP_ZOOM_MAX = 3;
+function fitMapZoom(scene = mapRuntime) {
+  if (!scene?.width) return 1;
+  return clamp(Math.min(scene.width / 1000, scene.height / 700), .5, 1.6);
+}
+function syncMapZoomControl() {
+  const slider=$("#map-zoom"), output=$("#map-zoom-output");
+  const percent=Math.round(state.mapZoom*100);
+  if (slider) slider.value=String(percent);
+  if (output) output.value=`${percent} %`;
+}
+function zoomMapAt(factor, focusX, focusY, scene = mapRuntime) {
+  if (!scene) return;
+  const next=clamp(state.mapZoom*factor,MAP_ZOOM_MIN,MAP_ZOOM_MAX), ratio=next/state.mapZoom;
+  const dx=focusX-scene.width/2, dy=focusY-scene.height/2;
+  state.mapPan={x:clamp(dx-(dx-state.mapPan.x)*ratio,-2400,2400),y:clamp(dy-(dy-state.mapPan.y)*ratio,-1800,1800)};
+  state.mapZoom=next;
+  state.mapZoomAuto=false;
+  syncMapZoomControl();
+  requestMapFrame();
+}
+function fitMapView() {
+  const scene=mapRuntime;
+  if (!scene) return;
+  state.mapZoom=fitMapZoom(scene);
+  state.mapZoomAuto=true;
+  state.mapPan={x:0,y:0};
+  syncMapZoomControl();
+  requestMapFrame();
+}
+function setMapExpanded(expanded) {
+  const frame=$("#map-frame");
+  if (!frame) return;
+  frame.classList.toggle("is-expanded",expanded);
+  document.body.classList.toggle("map-expanded",expanded);
+  const button=$("[data-action='map-expand']");
+  button?.setAttribute("aria-pressed",String(expanded));
+  button?.setAttribute("aria-label",expanded ? "Réduire la carte" : "Agrandir la carte");
+  if (button) button.innerHTML=icon(expanded ? "close" : "zoomin",16);
+  requestAnimationFrame(() => mapRuntime && resizeMapScene(mapRuntime));
+}
 function attach3DMap(scene) {
   const {world}=scene;
-  let drag=null;
-  world.addEventListener("pointerdown",event=>{
-    if (event.button!==undefined && event.button!==0) return;
-    const nodeButton=event.target.closest("[data-map-node]");
+  const pointers=new Map();
+  let drag=null, pinch=null, momentum=0, lastTap={time:0,x:0,y:0};
+  const stopMomentum=()=>{ if (momentum) { cancelAnimationFrame(momentum); momentum=0; } };
+  const pair=()=>{
+    const [a,b]=[...pointers.values()];
+    return { cx:(a.x+b.x)/2, cy:(a.y+b.y)/2, dist:Math.hypot(a.x-b.x,a.y-b.y)||1, angle:Math.atan2(b.y-a.y,b.x-a.x) };
+  };
+  const hideHint=()=>$("#map-hint")?.classList.add("is-hidden");
+  const startSingle=(event,nodeButton)=>{
     if (nodeButton) {
       const id=nodeButton.dataset.mapNode;
       state.selectedMapNode=id;
       updateMapSelection();
       drag={kind:"node",id,startX:event.clientX,startY:event.clientY,position:{...state.mapPositions[id]},moved:false};
-      scene.drag=drag;
       nodeButton.setPointerCapture?.(event.pointerId);
     } else {
-      drag={kind:state.mapGesture,startX:event.clientX,startY:event.clientY,rotation:{...state.mapRotation},pan:{...state.mapPan},moved:false};
-      scene.drag=drag;
+      drag={kind:state.mapGesture,startX:event.clientX,startY:event.clientY,rotation:{...state.mapRotation},pan:{...state.mapPan},moved:false,last:{x:event.clientX,y:event.clientY,t:event.timeStamp},vx:0,vy:0};
       world.setPointerCapture?.(event.pointerId);
     }
+    scene.drag=drag;
+  };
+  world.addEventListener("pointerdown",event=>{
+    if (event.pointerType==="mouse" && event.button!==0) return;
+    stopMomentum();
+    hideHint();
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
     world.classList.add("is-dragging");
+    if (pointers.size===2) {
+      drag=null; scene.drag=null;
+      const t=pair();
+      pinch={dist:t.dist,cx:t.cx,cy:t.cy,angle:t.angle,rotZ:state.mapRotation.z};
+      world.setPointerCapture?.(event.pointerId);
+      return;
+    }
+    if (pointers.size>2) return;
+    startSingle(event,event.target.closest("[data-map-node]"));
   });
   world.addEventListener("pointermove",event=>{
+    if (!pointers.has(event.pointerId)) return;
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if (pinch && pointers.size>=2) {
+      const t=pair(), rect=world.getBoundingClientRect();
+      zoomMapAt(t.dist/pinch.dist,t.cx-rect.left,t.cy-rect.top,scene);
+      state.mapPan={x:clamp(state.mapPan.x+t.cx-pinch.cx,-2400,2400),y:clamp(state.mapPan.y+t.cy-pinch.cy,-1800,1800)};
+      let twist=(t.angle-pinch.angle)*180/Math.PI;
+      twist=((twist+180)%360+360)%360-180;
+      const effective=Math.sign(twist)*Math.max(0,Math.abs(twist)-12);
+      if (effective) { state.mapRotation.z=(((pinch.rotZ-effective)%360)+360)%360; syncMapAngles(); }
+      pinch.dist=t.dist; pinch.cx=t.cx; pinch.cy=t.cy;
+      requestMapFrame();
+      return;
+    }
     if (!drag) return;
     const dx=event.clientX-drag.startX, dy=event.clientY-drag.startY;
     if (Math.abs(dx)+Math.abs(dy)>3) drag.moved=true;
     if (drag.kind==="node") {
-      const point=scene.projected.get(drag.id), scale=point?.perspectiveScale || 1;
+      const point=scene.projected.get(drag.id), scale=(point?.perspectiveScale || 1)*state.mapZoom;
       if (event.shiftKey || event.altKey) state.mapPositions[drag.id].z=clamp(drag.position.z-dy/scale,-260,260);
       else {
         const delta=inverseRotateMapPoint({x:dx/scale,y:-dy/scale,z:0});
@@ -2536,17 +2624,63 @@ function attach3DMap(scene) {
         if(slider) slider.value=String(Math.round(state.mapPositions[drag.id].z));
         if(output) output.value=String(Math.round(state.mapPositions[drag.id].z));
       }
-    } else if (drag.kind==="rotate") {
-      state.mapRotation.y=((drag.rotation.y+dx*.48)%360+360)%360;
-      state.mapRotation.x=((drag.rotation.x-dy*.48)%360+360)%360;
-      syncMapAngles();
     } else {
-      state.mapPan={x:clamp(drag.pan.x+dx,-1200,1200),y:clamp(drag.pan.y+dy,-800,800)};
+      const elapsed=Math.max(1,event.timeStamp-drag.last.t);
+      drag.vx=drag.vx*.6+((event.clientX-drag.last.x)/elapsed)*.4;
+      drag.vy=drag.vy*.6+((event.clientY-drag.last.y)/elapsed)*.4;
+      drag.last={x:event.clientX,y:event.clientY,t:event.timeStamp};
+      if (drag.kind==="rotate") {
+        state.mapRotation.y=((drag.rotation.y+dx*.48)%360+360)%360;
+        state.mapRotation.x=((drag.rotation.x-dy*.48)%360+360)%360;
+        syncMapAngles();
+      } else {
+        state.mapPan={x:clamp(drag.pan.x+dx,-2400,2400),y:clamp(drag.pan.y+dy,-1800,1800)};
+      }
     }
     requestMapFrame();
   });
-  const finish=()=>{
+  const glide=(kind,vx,vy)=>{
+    if (scene.reduced || Math.hypot(vx,vy)<.12) return;
+    let last=performance.now();
+    const step=now=>{
+      const dt=Math.min(32,now-last); last=now;
+      const decay=Math.pow(.94,dt/16);
+      vx*=decay; vy*=decay;
+      if (Math.hypot(vx,vy)<.02 || mapRuntime!==scene) { momentum=0; return; }
+      if (kind==="rotate") {
+        state.mapRotation.y=((state.mapRotation.y+vx*dt*.48)%360+360)%360;
+        state.mapRotation.x=((state.mapRotation.x-vy*dt*.48)%360+360)%360;
+        syncMapAngles();
+      } else state.mapPan={x:clamp(state.mapPan.x+vx*dt,-2400,2400),y:clamp(state.mapPan.y+vy*dt,-1800,1800)};
+      requestMapFrame();
+      momentum=requestAnimationFrame(step);
+    };
+    momentum=requestAnimationFrame(step);
+  };
+  const finish=event=>{
+    if (!pointers.has(event.pointerId)) return;
+    pointers.delete(event.pointerId);
+    if (pinch) {
+      if (pointers.size<2) {
+        pinch=null;
+        const rest=[...pointers.values()][0];
+        if (rest) { drag={kind:"pan",startX:rest.x,startY:rest.y,pan:{...state.mapPan},moved:true,last:{x:rest.x,y:rest.y,t:event.timeStamp},vx:0,vy:0}; scene.drag=drag; }
+      }
+      if (!pointers.size) world.classList.remove("is-dragging");
+      return;
+    }
+    if (pointers.size) return;
     if (drag?.moved) mapClickSuppressionUntil=performance.now()+260;
+    if (drag && drag.kind!=="node") {
+      if (!drag.moved && event.type==="pointerup") {
+        const now=performance.now();
+        if (now-lastTap.time<320 && Math.hypot(event.clientX-lastTap.x,event.clientY-lastTap.y)<32) {
+          const rect=world.getBoundingClientRect();
+          if (state.mapZoom>1.35) fitMapView(); else zoomMapAt(2,event.clientX-rect.left,event.clientY-rect.top,scene);
+          lastTap={time:0,x:0,y:0};
+        } else lastTap={time:now,x:event.clientX,y:event.clientY};
+      } else if (drag.moved && event.type==="pointerup" && event.timeStamp-drag.last.t<80) glide(drag.kind,drag.vx,drag.vy);
+    }
     drag=null; scene.drag=null; world.classList.remove("is-dragging");
   };
   world.addEventListener("pointerup",finish);
@@ -2554,16 +2688,23 @@ function attach3DMap(scene) {
   world.addEventListener("lostpointercapture",finish);
   world.addEventListener("wheel",event=>{
     const nodeButton=event.target.closest("[data-map-node]");
-    if (!nodeButton) return;
+    if (nodeButton && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      const selectionChanged=state.selectedMapNode!==nodeButton.dataset.mapNode;
+      state.selectedMapNode=nodeButton.dataset.mapNode;
+      state.mapPositions[state.selectedMapNode].z=clamp(state.mapPositions[state.selectedMapNode].z-event.deltaY*.34,-260,260);
+      if(selectionChanged) updateMapSelection();
+      const slider=$("#map-node-depth"), output=$("#map-node-depth-output");
+      if(slider) slider.value=String(Math.round(state.mapPositions[state.selectedMapNode].z));
+      if(output) output.value=String(Math.round(state.mapPositions[state.selectedMapNode].z));
+      requestMapFrame();
+      return;
+    }
+    // Pincement du pavé tactile (ctrl + molette) ou molette en mode agrandi : zoom ; sinon la page défile normalement.
+    if (!event.ctrlKey && !event.metaKey && !$("#map-frame")?.classList.contains("is-expanded")) return;
     event.preventDefault();
-    const selectionChanged=state.selectedMapNode!==nodeButton.dataset.mapNode;
-    state.selectedMapNode=nodeButton.dataset.mapNode;
-    state.mapPositions[state.selectedMapNode].z=clamp(state.mapPositions[state.selectedMapNode].z-event.deltaY*.34,-260,260);
-    if(selectionChanged) updateMapSelection();
-    const slider=$("#map-node-depth"), output=$("#map-node-depth-output");
-    if(slider) slider.value=String(Math.round(state.mapPositions[state.selectedMapNode].z));
-    if(output) output.value=String(Math.round(state.mapPositions[state.selectedMapNode].z));
-    requestMapFrame();
+    const rect=world.getBoundingClientRect();
+    zoomMapAt(Math.exp(-event.deltaY*(event.ctrlKey ? .01 : .0016)),event.clientX-rect.left,event.clientY-rect.top,scene);
   },{passive:false});
 }
 function syncMapAngles() {
@@ -2577,7 +2718,7 @@ function syncMapControls() {
   syncMapAngles();
   const gesture=$(".map-gesture-toggle"), rotating=state.mapGesture==="rotate";
   $("#map-viewport")?.classList.toggle("is-panning",!rotating);
-  if(gesture) { gesture.setAttribute("aria-pressed",String(rotating)); gesture.innerHTML=`${icon(rotating?"rotate":"move",15)}Mode : ${rotating?"orbite":"déplacement"}`; }
+  if(gesture) { gesture.setAttribute("aria-pressed",String(rotating)); gesture.innerHTML=`${icon(rotating?"rotate":"move",15)}${rotating?"Orbite":"Déplacer"}`; }
 }
 function beginMapAdjustment() {
   $("#map-world")?.classList.add("is-adjusting");
@@ -3490,10 +3631,28 @@ document.addEventListener("click", event => {
     $$("[data-check]").forEach(input => { input.checked = false; }); updateChecklistProgress();
   }
   if (action === "map-reset") {
-    state.mapPositions=createInitialMapPositions(); state.mapRotation={x:8,y:352,z:0}; state.mapPerspective=1050; state.mapSceneDepth=0; state.mapZoom=1; state.mapPan={x:0,y:0}; state.mapGesture="rotate"; state.mapFilter="Tout"; state.selectedMapNode="direction";
+    state.mapPositions=createInitialMapPositions(); state.mapRotation={x:8,y:352,z:0}; state.mapPerspective=1050; state.mapSceneDepth=0; state.mapZoom=1; state.mapZoomAuto=true; state.mapPan={x:0,y:0}; state.mapGesture="rotate"; state.mapFilter="Tout"; state.selectedMapNode="direction";
     renderPage("carte");
   }
   if (action === "map-gesture") { state.mapGesture=state.mapGesture === "rotate" ? "pan" : "rotate"; syncMapControls(); }
+  if (action === "map-settings") {
+    const panel=$("#map-controls");
+    if (panel) { panel.hidden=!panel.hidden; actionEl.setAttribute("aria-expanded",String(!panel.hidden)); requestAnimationFrame(() => mapRuntime && resizeMapScene(mapRuntime)); }
+  }
+  if (action === "map-zoom-in" || action === "map-zoom-out") {
+    const scene=mapRuntime;
+    if (scene) zoomMapAt(action === "map-zoom-in" ? 1.3 : 1/1.3,scene.width/2,scene.height/2,scene);
+  }
+  if (action === "map-fit") fitMapView();
+  if (action === "map-expand") setMapExpanded(!$("#map-frame")?.classList.contains("is-expanded"));
+  if (action === "map-details-toggle") {
+    const box=$("#map-details");
+    if (box) {
+      const collapsed=box.classList.toggle("is-collapsed");
+      state.mapDetailsOpen=!collapsed;
+      actionEl.setAttribute("aria-expanded",String(!collapsed));
+    }
+  }
   if (action === "delete-peer") {
     state.peers = state.peers.filter(peer => peer.id !== actionEl.dataset.id); writeJSON(STORE.peers,state.peers); renderPeerList(); showToast("Fiche supprimée de cet appareil.");
   }
@@ -3535,6 +3694,9 @@ document.addEventListener("input", event => {
   if (el.id === "peer-query") { state.queries.peers=el.value; renderPeerList(); }
   if (el.id === "map-zoom") {
     state.mapZoom=Number(el.value)/100;
+    state.mapZoomAuto=false;
+    const output=$("#map-zoom-output");
+    if (output) output.value=`${el.value} %`;
     requestMapFrame();
   }
   const mapAxis = el.id.match(/^map-rotate-([xyz])$/)?.[1];
@@ -3603,6 +3765,7 @@ document.addEventListener("click", event => {
   state.selectedMapNode=node.dataset.mapNode; updateMapSelection();
 });
 document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && document.body.classList.contains("map-expanded")) { setMapExpanded(false); return; }
   if (event.key === "Escape" && peerMultiSelect.isOpen) { peerMultiSelect.close(); return; }
   if (event.key === "Escape" && sidebar.classList.contains("is-open")) { closeMenu(); return; }
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openSearch(); }
