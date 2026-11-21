@@ -1,9 +1,9 @@
-const CACHE = "mosaique-sante-v2026-11-22-v41-access-motion";
+const CACHE = "mosaique-sante-v2026-11-22-v42-glass-menu";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261122-access-motion",
-  "./app.js?v=20261122-access-motion",
+  "./app.css?v=20261122-glass-menu",
+  "./app.js?v=20261122-glass-menu",
   "./data.js?v=20261121-lock-motion",
   "./firebase-init.js?v=20261121-lock-motion",
   "./manifest.webmanifest",

@@ -24,7 +24,7 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 - Réseau de promotion volontaire en deux onglets distincts : « Réseau » (consultation Premium, recherche et filtres) et « Inscription au réseau » (formulaire accessible aussi en Freemium).
 - Fil d’actualités : publication d’offres, événements et annonces ; commentaires via une boîte de dialogue permettant d’indiquer sa venue ou l’envoi d’un salarié, d’un alternant, de résidents / patients ou d’une autre délégation ; suppression de ses propres publications après confirmation (règles Firestore : auteur ou administrateur).
 - Connexion et inscription par email ou Google via Firebase Authentication. Après création d’un compte par email, l’utilisateur revient à la connexion, puis peut s’inscrire facultativement au réseau avant l’accueil ou passer cette étape. L’inscription Google mène directement à cette étape. Une étape inachevée est reprise sur le même navigateur. La page « Mon compte » permet de modifier le nom affiché, gérer son mot de passe si la connexion utilise un mot de passe, et se déconnecter.
-- Affichage mobile, thème sombre/clair, panneaux de détails en feuille iOS, fermeture par glissement, transitions fluides, mode hors-ligne de base et ajout à l’écran d’accueil.
+- Affichage mobile, thème sombre/clair, menu flottant translucide sur toute la hauteur de l’écran, panneaux de détails en feuille iOS, fermeture par glissement, transitions fluides, mode hors-ligne de base et ajout à l’écran d’accueil.
 - Document de pitch commercial complet pour les écoles (abonnements Découverte, Partenaire, Campus Santé) et tarification individuelle dans `pitch-mosaique-sante-ecoles.md`.
 
 ## Lancer en local

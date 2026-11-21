@@ -7,6 +7,7 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const stage = $("#page-stage");
 const sidebar = $("#sidebar");
+const mobileMenuQuery = matchMedia("(max-width: 900px)");
 const dialog = $("#app-dialog");
 const dialogContent = $("#dialog-content");
 const dialogKicker = $("#dialog-kicker");
@@ -2453,11 +2454,15 @@ function showToast(message) {
   state.toastTimer = setTimeout(() => toastEl.classList.remove("is-visible"),2600);
 }
 function closeMenu() {
-  const shouldRestoreFocus = sidebar.contains(document.activeElement);
+  const shouldRestoreFocus = mobileMenuQuery.matches;
   sidebar.classList.remove("is-open");
+  sidebar.removeAttribute("role");
+  sidebar.removeAttribute("aria-modal");
+  sidebar.inert = mobileMenuQuery.matches;
   document.body.classList.remove("menu-open");
   const backdrop = $(".sidebar-backdrop");
   if (backdrop) {
+    backdrop.style.pointerEvents = "none";
     if (matchMedia("(prefers-reduced-motion: reduce)").matches || typeof backdrop.animate !== "function") backdrop.remove();
     else {
       const exit = backdrop.animate([{ opacity:1 }, { opacity:0 }], { duration:245, easing:"ease-in", fill:"forwards" });
@@ -2473,10 +2478,21 @@ function toggleMenu() {
   $(".sidebar-backdrop")?.remove();
   document.body.classList.add("menu-open");
   sidebar.classList.add("is-open");
+  sidebar.inert = false;
+  sidebar.setAttribute("role", "dialog");
+  sidebar.setAttribute("aria-modal", "true");
   $(".menu-toggle")?.setAttribute("aria-expanded","true");
   const backdrop = document.createElement("button"); backdrop.className="sidebar-backdrop"; backdrop.type="button"; backdrop.setAttribute("aria-label","Fermer le menu"); backdrop.addEventListener("click",closeMenu); document.body.append(backdrop);
   if (!matchMedia("(prefers-reduced-motion: reduce)").matches && backdrop.animate) backdrop.animate([{ opacity:0 }, { opacity:1 }], { duration:285, easing:"ease-out" });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (sidebar.classList.contains("is-open")) $(".sidebar-close", sidebar)?.focus({ preventScroll:true });
+  }));
 }
+sidebar.inert = mobileMenuQuery.matches;
+mobileMenuQuery.addEventListener("change", () => {
+  if (!mobileMenuQuery.matches && sidebar.classList.contains("is-open")) closeMenu();
+  sidebar.inert = mobileMenuQuery.matches && !sidebar.classList.contains("is-open");
+});
 function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
 function rotateMapPoint(point, rotation = state.mapRotation) {
   const rx=rotation.x*Math.PI/180, ry=rotation.y*Math.PI/180, rz=rotation.z*Math.PI/180;
@@ -3736,7 +3752,10 @@ document.addEventListener("click", event => {
     return;
   }
 
-  if (action === "open-sources") openSources();
+  if (action === "open-sources") {
+    if (sidebar.classList.contains("is-open")) closeMenu();
+    openSources();
+  }
   if (action === "open-profile-note") openProfileNote();
   if (action === "meeting-template") openMeetingTemplate();
   if (action === "close-dialog") closeDialog();
@@ -3955,6 +3974,18 @@ document.addEventListener("click", event => {
   state.selectedMapNode=node.dataset.mapNode; updateMapSelection();
 });
 document.addEventListener("keydown", event => {
+  if (event.key === "Tab" && sidebar.classList.contains("is-open")) {
+    const focusable = $$('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])', sidebar)
+      .filter(element => element.getClientRects().length);
+    if (focusable.length) {
+      const current = focusable.indexOf(document.activeElement);
+      const next = current < 0 ? (event.shiftKey ? focusable.length - 1 : 0)
+        : (current + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length;
+      event.preventDefault();
+      focusable[next].focus();
+    }
+    return;
+  }
   const pageTheme = event.target.closest(".page-theme-tab");
   if (pageTheme && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
     event.preventDefault();
@@ -4425,6 +4456,7 @@ function applyAuthState({ user, premium }) {
   document.documentElement.classList.toggle("is-premium-user", premium === true);
   syncMicroAdVisibility();
   if (!user && wasAuthenticated) {
+    if (sidebar.classList.contains("is-open")) closeMenu();
     if (dialog.open) {
       dialogAnimation?.cancel();
       dialogAnimation = null;

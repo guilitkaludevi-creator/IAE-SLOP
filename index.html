@@ -28,7 +28,7 @@
       window.MOSAQUE_STRIPE_CHECKOUT_URL = "";
     </script>
     <title>Mosaïque Santé — boîte à outils du management</title>
-    <link rel="stylesheet" href="./app.css?v=20261122-access-motion">
+    <link rel="stylesheet" href="./app.css?v=20261122-glass-menu">
   </head>
   <body>
     <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -87,12 +87,15 @@
     </main>
     <div class="app-shell">
       <aside class="sidebar" id="sidebar" aria-label="Navigation principale">
-        <a class="brand" href="#accueil" data-nav="accueil" aria-label="Mosaïque Santé, accueil">
-          <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 40 40" fill="none"><path d="M20 3.5 36.5 13v14L20 36.5 3.5 27V13L20 3.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m20 10 8.5 5v10L20 30l-8.5-5V15l8.5-5Z" fill="currentColor" opacity=".88"/><path d="M20 10v20m8.5-15L11.5 25m17 0-17-10" stroke="#0b1420" stroke-width="1.2" opacity=".7"/></svg>
-          </span>
-          <span class="brand-copy"><strong>Mosaïque</strong><small>SANTÉ · MANAGER</small></span>
-        </a>
+        <div class="sidebar-header">
+          <a class="brand" href="#accueil" data-nav="accueil" aria-label="Mosaïque Santé, accueil">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 40 40" fill="none"><path d="M20 3.5 36.5 13v14L20 36.5 3.5 27V13L20 3.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m20 10 8.5 5v10L20 30l-8.5-5V15l8.5-5Z" fill="currentColor" opacity=".88"/><path d="M20 10v20m8.5-15L11.5 25m17 0-17-10" stroke="#0b1420" stroke-width="1.2" opacity=".7"/></svg>
+            </span>
+            <span class="brand-copy"><strong>Mosaïque</strong><small>SANTÉ · MANAGER</small></span>
+          </a>
+          <button class="icon-button sidebar-close" type="button" data-action="toggle-menu" aria-label="Fermer le menu"><span data-icon="close"></span></button>
+        </div>
         <div class="sidebar-scroll">
           <div id="desktop-nav"></div>
           <div class="sidebar-note glass-panel">
@@ -111,7 +114,7 @@
       <div class="main-column">
         <header class="topbar">
           <div class="mobile-brand">
-            <button class="icon-button menu-toggle" aria-label="Ouvrir le menu" data-action="toggle-menu"><span data-icon="menu"></span></button>
+            <button class="icon-button menu-toggle" aria-label="Ouvrir le menu" aria-controls="sidebar" aria-expanded="false" data-action="toggle-menu"><span data-icon="menu"></span></button>
             <a class="brand compact" href="#accueil" data-nav="accueil"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M20 3.5 36.5 13v14L20 36.5 3.5 27V13L20 3.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m20 10 8.5 5v10L20 30l-8.5-5V15l8.5-5Z" fill="currentColor" opacity=".88"/></svg></span><span class="brand-copy"><strong>Mosaïque</strong><small>SANTÉ</small></span></a>
           </div>
           <div class="breadcrumb"><span>ESPACE MANAGER</span><span class="crumb-slash">/</span><strong id="page-label">Accueil</strong></div>
@@ -167,6 +170,6 @@
     <noscript><div class="noscript-card">Cette boîte à outils interactive nécessite JavaScript dans le navigateur.</div></noscript>
     <script type="module" src="./firebase-init.js?v=20261121-lock-motion"></script>
     <script defer src="./data.js?v=20261121-lock-motion"></script>
-    <script defer src="./app.js?v=20261122-access-motion"></script>
+    <script defer src="./app.js?v=20261122-glass-menu"></script>
   </body>
 </html>
