@@ -35,7 +35,7 @@ Avant d’utiliser la connexion ou l’inscription, initialisez Authentication d
 
 Pour tester le mode complet, connectez-vous avec une adresse vérifiée, puis saisissez `TEST-MOSAIQUE-COMPLET` dans « Abonnement & accès » → « Utiliser un code d’accès ». Ce code est public : tout utilisateur connecté avec un email vérifié peut l’utiliser. L’accès est enregistré dans le navigateur, sans paiement ni abonnement Stripe ; retirez ce mode avant une commercialisation. Le contenu Premium reste accessible dans les fichiers publics et n’est pas protégé côté serveur.
 
-Le projet ne nécessite pas de compilation. Les transitions de navigation privilégient un fondu et respectent le réglage de réduction des animations. Une mise à jour du service worker ne recharge pas automatiquement une page en cours de saisie ; elle prend effet au prochain chargement.
+Le projet ne nécessite pas de compilation. Jusqu’à six éléments visibles apparaissent progressivement par glissement latéral lors de la navigation et de la pagination, dans le sens inverse au retour ; les onglets glissent aussi selon leur ordre. Les mouvements respectent le réglage de réduction des animations et la navigation au clavier reste immédiate. Une mise à jour du service worker ne recharge pas automatiquement une page en cours de saisie ; elle prend effet au prochain chargement.
 
 Le paiement en ligne et la gestion des abonnements de groupe ne sont pas opérationnels. La création de comptes de groupe nécessite au préalable un statut d’abonnement vérifié côté serveur.
 

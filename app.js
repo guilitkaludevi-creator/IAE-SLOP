@@ -16,11 +16,10 @@ const ONBOARDING_KEY = "mosaique-onboarding-uid";
 let authFlowPending = false;
 let pendingAuthState = null;
 let pendingOnboardingUid = null;
-let pageTransitionToken = 0;
-let pageViewTransition = null;
-let pendingPageUpdate = null;
 const selectedPageThemes = {};
 const resultPages = {};
+const contentAnimations = new Set();
+let navigationIndex = Number.isInteger(history.state?.navigationIndex) ? history.state.navigationIndex : 0;
 let mapRuntime = null;
 let mapClickSuppressionUntil = 0;
 let mapAdjustmentTimer = 0;
@@ -267,8 +266,38 @@ function initPageThemes(page) {
   });
   panels[0].before(tabs);
 }
-function selectPageTheme(tab) {
+function animateContent(elements, direction = 1) {
+  contentAnimations.forEach(animation => animation.cancel());
+  contentAnimations.clear();
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const delays = [0, 45, 80, 110, 135, 150];
+  const visible = elements.filter(element => {
+    if (element.matches(".timeline-post")) {
+      if (typeof element.getAnimations !== "function") return false;
+      element.getAnimations({ subtree:true }).filter(animation => animation.animationName === "post-in").forEach(animation => animation.cancel());
+    }
+    const rect = element.getBoundingClientRect();
+    return rect.width && rect.height && rect.bottom > 0 && rect.top < innerHeight * 1.35
+      && getComputedStyle(element).transform === "none"
+      && !element.matches(".map-frame, .multiselect-wrap")
+      && !element.querySelector(".map-frame, .multiselect-wrap")
+      && ![element, ...element.querySelectorAll("*")].some(child => getComputedStyle(child).position === "fixed");
+  }).slice(0, delays.length);
+  visible.forEach((element, index) => {
+    if (typeof element.animate !== "function") return;
+    const animation = element.animate(
+      [{ opacity:.65, transform:`translateX(${direction * -14}px)` }, { opacity:1, transform:"none" }],
+      { duration:420, delay:delays[index], easing:"cubic-bezier(.18,.72,.23,1)", fill:"backwards" }
+    );
+    contentAnimations.add(animation);
+    animation.onfinish = animation.oncancel = () => contentAnimations.delete(animation);
+  });
+}
+function selectPageTheme(tab, animate = true) {
   const tabs = $$('[role="tab"]', tab.parentElement);
+  const previous = tabs.findIndex(item => item.getAttribute("aria-selected") === "true");
+  const next = tabs.indexOf(tab);
+  if (previous === next) return;
   tabs.forEach(item => {
     const active = item === tab;
     item.setAttribute("aria-selected", String(active));
@@ -276,33 +305,26 @@ function selectPageTheme(tab) {
     document.getElementById(item.getAttribute("aria-controls")).hidden = !active;
   });
   selectedPageThemes[state.page] = tab.textContent;
+  if (animate) animateContent([document.getElementById(tab.getAttribute("aria-controls"))], next > previous ? 1 : -1);
 }
-function renderPage(page, { immediate = false, fromHistory = false, restoreScrollY = null } = {}) {
-  if (pageViewTransition) {
-    pageViewTransition.skipTransition();
-    pageViewTransition = null;
-    stage.style.viewTransitionName = "";
-    pendingPageUpdate?.();
-  }
+function renderPage(page, { immediate = false, fromHistory = false, restoreScrollY = null, direction = 1 } = {}) {
   if (page === undefined) page = state.page;
   if (state.onboarding) page = "inscription-annuaire";
   if (!NAV.some(item => item.id === page)) page = "accueil";
   const isNavigation = page !== state.page;
-  const transitionToken = ++pageTransitionToken;
   if (!fromHistory && page !== state.page) {
     pageScrollPositions.set(state.page, window.scrollY || 0);
     try {
-      window.history?.replaceState({ ...(window.history.state || {}), page:state.page, scrollY:window.scrollY || 0 }, "", window.location.href);
-      window.history?.pushState({ page, scrollY:0 }, "", `#${page}`);
+      window.history?.replaceState({ ...(window.history.state || {}), page:state.page, scrollY:window.scrollY || 0, navigationIndex }, "", window.location.href);
+      window.history?.pushState({ page, scrollY:0, navigationIndex:navigationIndex + 1 }, "", `#${page}`);
+      navigationIndex++;
       routedHash = window.location.hash;
     } catch {
       try { window.location.hash = `#${page}`; routedHash = window.location.hash; }
       catch { /* La page reste navigable même sans historique du navigateur. */ }
     }
   }
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const replacePage = () => {
-    if (transitionToken !== pageTransitionToken) return;
     destroyMapScene();
     state.page = page;
     syncNavigation();
@@ -361,35 +383,18 @@ function renderPage(page, { immediate = false, fromHistory = false, restoreScrol
     }
   };
 
-  if (isNavigation && !immediate && !reduceMotion && document.startViewTransition) {
-    stage.style.viewTransitionName = "page-content";
-    const updatePage = () => {
-      if (pendingPageUpdate === updatePage) pendingPageUpdate = null;
-      replacePage();
-    };
-    pendingPageUpdate = updatePage;
-    const transition = document.startViewTransition(updatePage);
-    pageViewTransition = transition;
-    transition.ready.catch(error => {
-      if (error.name !== "AbortError") console.error("La transition de page ne peut pas démarrer.", error);
-    });
-    transition.finished.then(() => {
-      if (pageViewTransition === transition) {
-        stage.style.viewTransitionName = "";
-        pageViewTransition = null;
-      }
-    }, error => {
-      if (pageViewTransition === transition) {
-        stage.style.viewTransitionName = "";
-        pageViewTransition = null;
-      }
-      console.error("La transition de page a échoué.", error);
-    });
-    return;
-  }
+  contentAnimations.forEach(animation => animation.cancel());
+  contentAnimations.clear();
   replacePage();
-  if (isNavigation && !immediate && !reduceMotion) {
-    $(".page", stage)?.animate?.([{ opacity:0 }, { opacity:1 }], { duration:240, easing:"cubic-bezier(.18,.72,.23,1)" });
+  if (isNavigation && !immediate) {
+    const elements = [...$(".page", stage).children].flatMap(element => {
+      const feed = element.querySelector(":scope > #timeline-feed");
+      if (feed) return [...element.children].flatMap(child => child === feed ? [...feed.children] : [child]);
+      const results = element.matches("[id$='-results']") ? element
+        : element.children.length === 1 && element.firstElementChild.matches("[id$='-results']") ? element.firstElementChild : null;
+      return results ? [...results.children].filter(child => !child.matches(".result-pagination")) : [element];
+    });
+    animateContent(elements, direction);
   }
 }
 
@@ -1529,7 +1534,7 @@ function openDialog(kicker, content, { fromHistory = false } = {}) {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || typeof dialog.animate !== "function") return;
   dialogAnimation = dialog.animate(
     [{ opacity:0, transform:"translate3d(0,12px,0) scale(.985)" }, { opacity:1, transform:"translate3d(0,0,0) scale(1)" }],
-    { duration:230, easing:"cubic-bezier(.18,.72,.23,1)" }
+    { duration:288, easing:"cubic-bezier(.18,.72,.23,1)" }
   );
   const opening = dialogAnimation;
   opening.onfinish = () => { if (dialogAnimation === opening) { opening.cancel(); dialogAnimation = null; } };
@@ -1545,7 +1550,7 @@ function closeDialog({ fromHistory = false } = {}) {
   }
   const closing = dialog.animate(
     [{ opacity:1, transform:"translate3d(0,0,0) scale(1)" }, { opacity:0, transform:"translate3d(0,8px,0) scale(.99)" }],
-    { duration:175, easing:"cubic-bezier(.4,0,1,1)", fill:"forwards" }
+    { duration:219, easing:"cubic-bezier(.4,0,1,1)", fill:"forwards" }
   );
   dialogAnimation = closing;
   closing.onfinish = () => {
@@ -2093,7 +2098,7 @@ function deletePost(postId) {
   const el = document.getElementById(`post-${postId}`);
   const finish = () => { refreshFeed(); showToast("Publication supprimée."); };
   if (el && typeof el.animate === "function" && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.97) translateY(-6px)" }], { duration: 180, easing: "ease-out", fill: "forwards" }).onfinish = finish;
+    el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.97) translateY(-6px)" }], { duration: 225, easing: "ease-out", fill: "forwards" }).onfinish = finish;
   } else finish();
   if (post.isRemote && typeof window.deletePostFromFirestore === "function") {
     window.deletePostFromFirestore(postId).catch(() => showToast("Suppression locale effectuée ; la suppression distante a été refusée."));
@@ -2411,7 +2416,7 @@ function closeMenu() {
   if (backdrop) {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches || typeof backdrop.animate !== "function") backdrop.remove();
     else {
-      const exit = backdrop.animate([{ opacity:1 }, { opacity:0 }], { duration:155, easing:"ease-in", fill:"forwards" });
+      const exit = backdrop.animate([{ opacity:1 }, { opacity:0 }], { duration:194, easing:"ease-in", fill:"forwards" });
       exit.onfinish = () => backdrop.remove();
     }
   }
@@ -2426,7 +2431,7 @@ function toggleMenu() {
   sidebar.classList.add("is-open");
   $(".menu-toggle")?.setAttribute("aria-expanded","true");
   const backdrop = document.createElement("button"); backdrop.className="sidebar-backdrop"; backdrop.type="button"; backdrop.setAttribute("aria-label","Fermer le menu"); backdrop.addEventListener("click",closeMenu); document.body.append(backdrop);
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches && backdrop.animate) backdrop.animate([{ opacity:0 }, { opacity:1 }], { duration:180, easing:"ease-out" });
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches && backdrop.animate) backdrop.animate([{ opacity:0 }, { opacity:1 }], { duration:225, easing:"ease-out" });
 }
 function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
 function rotateMapPoint(point, rotation = state.mapRotation) {
@@ -2441,8 +2446,8 @@ function inverseRotateMapPoint(point, rotation = state.mapRotation) {
 }
 function projectMapPoint(point, width, height, time = 0, index = 0, drift = true) {
   const floating=drift && !mapRuntime?.reduced;
-  const bob=floating ? Math.sin(time*.0012 + index*1.47)*4 : 0;
-  const rotated=rotateMapPoint({x:point.x,y:point.y+bob,z:point.z+state.mapSceneDepth+(floating?Math.sin(time*.001+index)*3:0)});
+  const bob=floating ? Math.sin(time*.00096 + index*1.47)*4 : 0;
+  const rotated=rotateMapPoint({x:point.x,y:point.y+bob,z:point.z+state.mapSceneDepth+(floating?Math.sin(time*.0008+index)*3:0)});
   const distance = Math.max(260,state.mapPerspective-rotated.z);
   const perspectiveScale = state.mapPerspective/distance;
   const zoom=state.mapZoom;
@@ -2613,7 +2618,7 @@ function updateMapSelection() {
     const z=Math.round(state.mapPositions[selected]?.z || 0);
     box.innerHTML=`<div class="map-details-head"><div><span class="tag ${tagColor(node.type)}">${esc(detail.type)}</span><h3>${esc(detail.title)}</h3></div><button type="button" class="map-details-toggle" data-action="map-details-toggle" aria-expanded="${!box.classList.contains("is-collapsed")}" aria-label="Afficher ou masquer le détail">${icon("chevron-down",16)}</button></div><div class="map-details-body"><p>${esc(detail.copy)}</p><span class="meta-label">LIENS DIRECTS</span><div class="map-detail-related">${detail.related.map(item=>`<span>${esc(item)}</span>`).join("")}</div><label class="map-node-depth"><span>Profondeur de cette bulle <output id="map-node-depth-output">${z}</output></span><input id="map-node-depth" type="range" min="-260" max="260" value="${z}" aria-label="Déplacer ${esc(detail.title)} en profondeur sur l’axe Z"></label><div class="source-links">${sourceLinks(selected === "duerp" ? ["duerp"] : selected === "eprd" ? ["cnsaData"] : selected === "has" ? ["hasEsms","hasHealth"] : selected === "anap" ? ["anap"] : selected === "cnsa" ? ["cnsa"] : selected === "cvscse" ? ["cvs","cse"] : ["casfRights"])}</div></div>`;
     hydrateIcons(box);
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches && box.animate) box.animate([{opacity:.55,transform:"translate3d(0,5px,0)"},{opacity:1,transform:"translate3d(0,0,0)"}],{duration:190,easing:"cubic-bezier(.18,.72,.23,1)"});
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches && box.animate) box.animate([{opacity:.55,transform:"translate3d(0,5px,0)"},{opacity:1,transform:"translate3d(0,0,0)"}],{duration:238,easing:"cubic-bezier(.18,.72,.23,1)"});
   }
   requestMapFrame();
 }
@@ -2838,13 +2843,13 @@ function toggleAccordion(trigger) {
   if (opening) {
     panel.hidden = false;
     if (!matchMedia("(prefers-reduced-motion: reduce)").matches && panel.animate) {
-      const animation = panel.animate([{ opacity:0, transform:"translate3d(0,-4px,0)" }, { opacity:1, transform:"translate3d(0,0,0)" }], { duration:190, easing:"cubic-bezier(.18,.72,.23,1)" });
+      const animation = panel.animate([{ opacity:0, transform:"translate3d(0,-4px,0)" }, { opacity:1, transform:"translate3d(0,0,0)" }], { duration:238, easing:"cubic-bezier(.18,.72,.23,1)" });
       accordionAnimations.set(panel,animation);
     }
     return;
   }
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || !panel.animate) { panel.hidden = true; return; }
-  const animation = panel.animate([{ opacity:1, transform:"translate3d(0,0,0)" }, { opacity:0, transform:"translate3d(0,-3px,0)" }], { duration:145, easing:"ease-in" });
+  const animation = panel.animate([{ opacity:1, transform:"translate3d(0,0,0)" }, { opacity:0, transform:"translate3d(0,-3px,0)" }], { duration:181, easing:"ease-in" });
   accordionAnimations.set(panel,animation);
   animation.onfinish = () => { if (trigger.getAttribute("aria-expanded") !== "true") panel.hidden = true; };
 }
@@ -3436,15 +3441,19 @@ document.addEventListener("click", event => {
   const resultPage = event.target.closest("[data-result-page]");
   if (resultPage) {
     const results = resultPage.closest("[id$='-results']");
-    resultPages[resultPage.dataset.resultGroup] = Number(resultPage.dataset.resultPage);
+    const group = resultPage.dataset.resultGroup;
+    const next = Number(resultPage.dataset.resultPage);
+    const direction = next > (resultPages[group] || 0) ? 1 : -1;
+    resultPages[group] = next;
     applyFilter(resultPage.dataset.resultGroup, true);
     results?.querySelector("button, a")?.focus({ preventScroll:true });
     results?.scrollIntoView({ block:"start", behavior:"auto" });
+    if (results && event.detail !== 0) animateContent([...results.children].filter(child => !child.matches(".result-pagination")), direction);
     return;
   }
   const pageTheme = event.target.closest(".page-theme-tab");
   if (pageTheme) {
-    selectPageTheme(pageTheme);
+    selectPageTheme(pageTheme, event.detail !== 0);
     return;
   }
   const authMode = event.target.closest("[data-auth-mode]");
@@ -3511,6 +3520,9 @@ document.addEventListener("click", event => {
   if (rhTab) {
     event.preventDefault();
     const tabId = rhTab.dataset.rhTab;
+    const tabs = $$(".rh-tab");
+    const previous = tabs.findIndex(t => t.classList.contains("is-active"));
+    const next = tabs.indexOf(rhTab);
     $$(".rh-tab").forEach(t => {
       const active = t.dataset.rhTab === tabId;
       t.classList.toggle("is-active", active);
@@ -3520,6 +3532,7 @@ document.addEventListener("click", event => {
     // Re-init calculators when switching to calculateurs tab
     if (tabId === "calculateurs") { renumberEtptRows(); calculateEtp(); syncForfaitCalendar(); }
     if (tabId === "questions") { const input = $("#faq-query"); if (input) { input.value = state.queries.faq; applyFilter("faq"); } }
+    if (event.detail !== 0 && previous !== next) animateContent([$(".rh-tab-panel.is-active")], next > previous ? 1 : -1);
     return;
   }
 
@@ -3905,7 +3918,7 @@ document.addEventListener("keydown", event => {
     const tabs = $$(".page-theme-tab", pageTheme.parentElement);
     const index = tabs.indexOf(pageTheme);
     const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
-    selectPageTheme(tabs[next]);
+    selectPageTheme(tabs[next], false);
     tabs[next].focus();
     return;
   }
@@ -4173,7 +4186,10 @@ function syncPageFromLocation() {
   if (dialog.open) closeDialog({ fromHistory:true });
   if (window.location.hash === routedHash) return;
   routedHash = window.location.hash;
-  renderPage(pageFromHash(), { fromHistory:true, restoreScrollY:window.history?.state?.scrollY ?? null });
+  const nextIndex = historyState?.navigationIndex;
+  const direction = Number.isInteger(nextIndex) && nextIndex > navigationIndex ? 1 : -1;
+  if (Number.isInteger(nextIndex)) navigationIndex = nextIndex;
+  renderPage(pageFromHash(), { fromHistory:true, restoreScrollY:historyState?.scrollY ?? null, direction });
 }
 function initNavigation() {
   window.addEventListener("popstate", syncPageFromLocation);
