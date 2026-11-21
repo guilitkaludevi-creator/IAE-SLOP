@@ -218,6 +218,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /access_codes/{codeId} {
+      allow read: if isAuthenticated() &&
+                     request.auth.token.email_verified == true &&
+                     resource.data.active == true;
+      allow create, update, delete: if false;
+    }
+
     // ===============================================================
     // Default Deny (Toutes les autres collections non autorisées)
     // ===============================================================

@@ -18,7 +18,7 @@ const dialog = $("#app-dialog");
 const dialogContent = $("#dialog-content");
 const dialogKicker = $("#dialog-kicker");
 const toastEl = $("#toast");
-const STORE = { theme:"mosaique-theme", favorites:"mosaique-favorites", checks:"mosaique-doc-checks", peers:"mosaique-peers", auth:"mosaique-auth", posts:"mosaique-posts", rsvps:"mosaique-rsvps", notifs:"mosaique-notifs" };
+const STORE = { theme:"mosaique-theme", favorites:"mosaique-favorites", checks:"mosaique-doc-checks", peers:"mosaique-peers", auth:"mosaique-auth", posts:"mosaique-posts", rsvps:"mosaique-rsvps", notifs:"mosaique-notifs", premiumCode:"mosaique-premium-code" };
 let pageTransitionToken = 0;
 let pageTransitionDirection = 0;
 let mapRuntime = null;
@@ -3239,7 +3239,10 @@ document.addEventListener("click", event => {
   }
   if (action === "sign-out") {
     window.signOutMosaque?.()
-      .then(() => showToast("Déconnexion effectuée."));
+      .then(() => {
+        writeStoredValue(STORE.premiumCode,"0");
+        showToast("Déconnexion effectuée.");
+      });
     return;
   }
   if (action === "download-flashcards") {
@@ -3708,10 +3711,12 @@ initFirestoreSync();
 syncMicroAdVisibility();
 window.addEventListener("mosaique-auth-change", event => {
   const { user, premium } = event.detail || {};
+  const codeActive = readStoredValue(STORE.premiumCode) === "1";
+  const premiumActive = premium === true || codeActive;
   state.auth = {
-    isUnlocked: premium === true,
-    verifiedPaid: premium === true,
-    plan: premium === true ? "premium-active" : "freemium",
+    isUnlocked: premiumActive,
+    verifiedPaid: premiumActive,
+    plan: premiumActive ? "premium-active" : "freemium",
     profile: user ? {
       name:user.displayName || "",
       email:user.email || "",

@@ -10,7 +10,9 @@ import {
   orderBy,
   serverTimestamp,
   deleteDoc,
-  doc
+  doc,
+  getDocs,
+  where
 } from "firebase/firestore";
 import {
   getAuth,
@@ -341,19 +343,29 @@ export async function signOutMosaque() {
 }
 
 export async function redeemPremiumCode(code) {
-  const endpoint = window.MOSAQUE_PREMIUM_CODE_URL;
-  if (!endpoint) throw new Error("La validation des codes Premium n’est pas encore configurée.");
   if (!auth?.currentUser) throw new Error("Connexion requise.");
-  const token = await auth.currentUser.getIdToken();
-  const response = await fetch(endpoint, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${token}` },
-    body:JSON.stringify({ code:String(code || "").trim().toUpperCase() })
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error || "Code Premium invalide.");
-  await auth.currentUser.getIdToken(true);
-  return payload;
+  if (!auth.currentUser.emailVerified) throw new Error("Veuillez valider votre adresse email.");
+  const normalized = String(code || "").trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{6,40}$/.test(normalized)) throw new Error("Format de code invalide.");
+  const q = query(collection(db, "access_codes"), where("code","==",normalized), where("active","==",true));
+  const snap = await getDocs(q);
+  if (snap.empty) throw new Error("Code Premium inconnu ou désactivé.");
+  const codeDoc = snap.docs[0];
+  const data = codeDoc.data();
+  if (typeof data.maxUses === "number" && Number(data.usedCount || 0) >= data.maxUses) throw new Error("Ce code a atteint sa limite.");
+  localStorage.setItem("mosaique-premium-code","1");
+  await window.dispatchEvent(new CustomEvent("mosaique-auth-change", {
+    detail:{
+      user:{
+        uid:auth.currentUser.uid,
+        email:auth.currentUser.email,
+        displayName:auth.currentUser.displayName,
+        emailVerified:true
+      },
+      premium:true
+    }
+  }));
+  return { success:true };
 }
 
 window.signUpMosaque = signUpMosaque;
