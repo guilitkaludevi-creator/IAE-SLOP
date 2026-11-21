@@ -1,9 +1,9 @@
-const CACHE = "mosaique-sante-v2026-11-21-v40-lock-motion";
+const CACHE = "mosaique-sante-v2026-11-22-v41-access-motion";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261121-lock-motion",
-  "./app.js?v=20261121-lock-motion",
+  "./app.css?v=20261122-access-motion",
+  "./app.js?v=20261122-access-motion",
   "./data.js?v=20261121-lock-motion",
   "./firebase-init.js?v=20261121-lock-motion",
   "./manifest.webmanifest",

@@ -19,6 +19,7 @@ let pendingOnboardingUid = null;
 let authMessage = "";
 let unlockRequested = false;
 let unlockTimer = 0;
+let unlockState = null;
 const selectedPageThemes = {};
 const resultPages = {};
 const contentAnimations = new Set();
@@ -222,7 +223,6 @@ function navMarkup() {
 }
 function syncNavigation() {
   $("#desktop-nav").innerHTML = navMarkup();
-  document.body.classList.toggle("show-home-lock", state.page === "accueil");
   $$('.bottom-link').forEach(link => {
     const toolsPage = ["reunions","documents","rh","droit-sante","logiciels","qualite","rex","audit","politique","timeline"].includes(state.page);
     const active = link.dataset.nav === state.page || (toolsPage && link.dataset.nav === "documents");
@@ -314,7 +314,7 @@ function animateContent(elements, direction = 1) {
   contentAnimations.forEach(animation => animation.cancel());
   contentAnimations.clear();
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const delays = [0, 51, 90, 124, 152, 169];
+  const delays = [0, 65, 115, 158, 194, 216];
   const visible = elements.filter(element => {
     if (element.matches(".timeline-post")) {
       if (typeof element.getAnimations !== "function") return false;
@@ -331,7 +331,7 @@ function animateContent(elements, direction = 1) {
     if (typeof element.animate !== "function") return;
     const animation = element.animate(
       [{ opacity:.65, transform:`translateX(${direction * -14}px)` }, { opacity:1, transform:"none" }],
-      { duration:473, delay:delays[index], easing:"cubic-bezier(.18,.72,.23,1)", fill:"backwards" }
+      { duration:600, delay:delays[index], easing:"cubic-bezier(.18,.72,.23,1)", fill:"backwards" }
     );
     contentAnimations.add(animation);
     animation.onfinish = animation.oncancel = () => contentAnimations.delete(animation);
@@ -1578,7 +1578,7 @@ function openDialog(kicker, content, { fromHistory = false } = {}) {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || typeof dialog.animate !== "function") return;
   dialogAnimation = dialog.animate(
     [{ opacity:0, transform:"translate3d(0,12px,0) scale(.985)" }, { opacity:1, transform:"translate3d(0,0,0) scale(1)" }],
-    { duration:324, easing:"cubic-bezier(.18,.72,.23,1)" }
+    { duration:365, easing:"cubic-bezier(.18,.72,.23,1)" }
   );
   const opening = dialogAnimation;
   opening.onfinish = () => { if (dialogAnimation === opening) { opening.cancel(); dialogAnimation = null; } };
@@ -1594,7 +1594,7 @@ function closeDialog({ fromHistory = false } = {}) {
   }
   const closing = dialog.animate(
     [{ opacity:1, transform:"translate3d(0,0,0) scale(1)" }, { opacity:0, transform:"translate3d(0,8px,0) scale(.99)" }],
-    { duration:246, easing:"cubic-bezier(.4,0,1,1)", fill:"forwards" }
+    { duration:277, easing:"cubic-bezier(.4,0,1,1)", fill:"forwards" }
   );
   dialogAnimation = closing;
   closing.onfinish = () => {
@@ -2142,7 +2142,7 @@ function deletePost(postId) {
   const el = document.getElementById(`post-${postId}`);
   const finish = () => { refreshFeed(); showToast("Publication supprimée."); };
   if (el && typeof el.animate === "function" && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.97) translateY(-6px)" }], { duration: 253, easing: "ease-out", fill: "forwards" }).onfinish = finish;
+    el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.97) translateY(-6px)" }], { duration: 285, easing: "ease-out", fill: "forwards" }).onfinish = finish;
   } else finish();
   if (post.isRemote && typeof window.deletePostFromFirestore === "function") {
     window.deletePostFromFirestore(postId).catch(() => showToast("Suppression locale effectuée ; la suppression distante a été refusée."));
@@ -2460,7 +2460,7 @@ function closeMenu() {
   if (backdrop) {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches || typeof backdrop.animate !== "function") backdrop.remove();
     else {
-      const exit = backdrop.animate([{ opacity:1 }, { opacity:0 }], { duration:218, easing:"ease-in", fill:"forwards" });
+      const exit = backdrop.animate([{ opacity:1 }, { opacity:0 }], { duration:245, easing:"ease-in", fill:"forwards" });
       exit.onfinish = () => backdrop.remove();
     }
   }
@@ -2475,7 +2475,7 @@ function toggleMenu() {
   sidebar.classList.add("is-open");
   $(".menu-toggle")?.setAttribute("aria-expanded","true");
   const backdrop = document.createElement("button"); backdrop.className="sidebar-backdrop"; backdrop.type="button"; backdrop.setAttribute("aria-label","Fermer le menu"); backdrop.addEventListener("click",closeMenu); document.body.append(backdrop);
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches && backdrop.animate) backdrop.animate([{ opacity:0 }, { opacity:1 }], { duration:253, easing:"ease-out" });
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches && backdrop.animate) backdrop.animate([{ opacity:0 }, { opacity:1 }], { duration:285, easing:"ease-out" });
 }
 function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
 function rotateMapPoint(point, rotation = state.mapRotation) {
@@ -2662,7 +2662,7 @@ function updateMapSelection() {
     const z=Math.round(state.mapPositions[selected]?.z || 0);
     box.innerHTML=`<div class="map-details-head"><div><span class="tag ${tagColor(node.type)}">${esc(detail.type)}</span><h3>${esc(detail.title)}</h3></div><button type="button" class="map-details-toggle" data-action="map-details-toggle" aria-expanded="${!box.classList.contains("is-collapsed")}" aria-label="Afficher ou masquer le détail">${icon("chevron-down",16)}</button></div><div class="map-details-body"><p>${esc(detail.copy)}</p><span class="meta-label">LIENS DIRECTS</span><div class="map-detail-related">${detail.related.map(item=>`<span>${esc(item)}</span>`).join("")}</div><label class="map-node-depth"><span>Profondeur de cette bulle <output id="map-node-depth-output">${z}</output></span><input id="map-node-depth" type="range" min="-260" max="260" value="${z}" aria-label="Déplacer ${esc(detail.title)} en profondeur sur l’axe Z"></label><div class="source-links">${sourceLinks(selected === "duerp" ? ["duerp"] : selected === "eprd" ? ["cnsaData"] : selected === "has" ? ["hasEsms","hasHealth"] : selected === "anap" ? ["anap"] : selected === "cnsa" ? ["cnsa"] : selected === "cvscse" ? ["cvs","cse"] : ["casfRights"])}</div></div>`;
     hydrateIcons(box);
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches && box.animate) box.animate([{opacity:.55,transform:"translate3d(0,5px,0)"},{opacity:1,transform:"translate3d(0,0,0)"}],{duration:268,easing:"cubic-bezier(.18,.72,.23,1)"});
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches && box.animate) box.animate([{opacity:.55,transform:"translate3d(0,5px,0)"},{opacity:1,transform:"translate3d(0,0,0)"}],{duration:302,easing:"cubic-bezier(.18,.72,.23,1)"});
   }
   requestMapFrame();
 }
@@ -2887,13 +2887,13 @@ function toggleAccordion(trigger) {
   if (opening) {
     panel.hidden = false;
     if (!matchMedia("(prefers-reduced-motion: reduce)").matches && panel.animate) {
-      const animation = panel.animate([{ opacity:0, transform:"translate3d(0,-4px,0)" }, { opacity:1, transform:"translate3d(0,0,0)" }], { duration:268, easing:"cubic-bezier(.18,.72,.23,1)" });
+      const animation = panel.animate([{ opacity:0, transform:"translate3d(0,-4px,0)" }, { opacity:1, transform:"translate3d(0,0,0)" }], { duration:302, easing:"cubic-bezier(.18,.72,.23,1)" });
       accordionAnimations.set(panel,animation);
     }
     return;
   }
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || !panel.animate) { panel.hidden = true; return; }
-  const animation = panel.animate([{ opacity:1, transform:"translate3d(0,0,0)" }, { opacity:0, transform:"translate3d(0,-3px,0)" }], { duration:204, easing:"ease-in" });
+  const animation = panel.animate([{ opacity:1, transform:"translate3d(0,0,0)" }, { opacity:0, transform:"translate3d(0,-3px,0)" }], { duration:230, easing:"ease-in" });
   accordionAnimations.set(panel,animation);
   animation.onfinish = () => { if (trigger.getAttribute("aria-expanded") !== "true") panel.hidden = true; };
 }
@@ -4367,21 +4367,39 @@ function applyAuthState({ user, premium }) {
     return;
   }
   clearTimeout(authStatusTimer);
+  if (!user && unlockTimer) {
+    clearTimeout(unlockTimer);
+    unlockTimer = 0;
+    unlockState = null;
+    unlockRequested = false;
+    $("#auth-lock").classList.remove("is-unlocked");
+    setAuthBusy(false);
+  }
+  if (user && unlockRequested && !document.body.classList.contains("is-authenticated") && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    unlockState = { user, premium };
+    if (!unlockTimer) {
+      $("#auth-lock").classList.add("is-unlocked");
+      $("#auth-status").textContent = "Connexion réussie…";
+      setAuthBusy(true);
+      unlockTimer = setTimeout(() => {
+        unlockTimer = 0;
+        const detail = unlockState;
+        unlockState = null;
+        unlockRequested = false;
+        setAuthBusy(false);
+        if (window.firebaseAuth?.currentUser?.uid === detail.user.uid) applyAuthState(detail);
+        else {
+          $("#auth-lock").classList.remove("is-unlocked");
+          $("#auth-status").textContent = "Connexion interrompue. Veuillez réessayer.";
+        }
+      }, 1400);
+    }
+    return;
+  }
+  unlockRequested = false;
+  if (!user) $("#auth-lock").classList.remove("is-unlocked");
   $("#auth-status").textContent = user ? "" : authMessage;
   const wasAuthenticated = document.body.classList.contains("is-authenticated");
-  if (user && !wasAuthenticated && unlockRequested && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    clearTimeout(unlockTimer);
-    document.body.classList.add("auth-unlocking");
-    $("#auth-lock").classList.add("is-unlocked");
-    unlockTimer = setTimeout(() => document.body.classList.remove("auth-unlocking"), 1400);
-  }
-  if (user) $("#auth-lock").classList.add("is-unlocked");
-  if (!user) {
-    clearTimeout(unlockTimer);
-    document.body.classList.remove("auth-unlocking");
-    $("#auth-lock").classList.remove("is-unlocked");
-  }
-  if (user || wasAuthenticated) unlockRequested = false;
   document.body.classList.toggle("is-authenticated", Boolean(user));
   if (user && !wasAuthenticated) {
     $("#welcome-signin-form").reset();
