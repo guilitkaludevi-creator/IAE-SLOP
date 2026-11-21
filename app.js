@@ -3243,6 +3243,18 @@ document.addEventListener("click", event => {
       .catch(err => showToast(err.message || "Impossible d’envoyer l’email."));
     return;
   }
+  if (action === "sign-in-google") {
+    if (typeof window.signInWithGoogleMosaque !== "function") {
+      showToast("Authentification indisponible. Vérifiez votre connexion et rechargez la page.");
+      return;
+    }
+    actionEl.disabled = true;
+    window.signInWithGoogleMosaque()
+      .then(() => showToast("Connexion Google réussie."))
+      .catch(err => showToast(authErrorMessage(err, "Impossible de se connecter avec Google.")))
+      .finally(() => { actionEl.disabled = false; });
+    return;
+  }
   if (action === "reset-password") {
     const email = window.prompt("Adresse email utilisée pour votre compte ?");
     if (!email) return;
@@ -3659,7 +3671,12 @@ function authErrorMessage(error, fallback) {
     "auth/network-request-failed": "Connexion réseau impossible. Vérifiez votre accès à Internet.",
     "auth/too-many-requests": "Trop de tentatives. Réessayez plus tard.",
     "auth/configuration-not-found": "L’authentification Firebase n’est pas encore configurée pour cette application.",
-    "auth/operation-not-allowed": "La connexion par email n’est pas activée pour cette application."
+    "auth/operation-not-allowed": "Cette méthode de connexion n’est pas activée pour cette application.",
+    "auth/popup-closed-by-user": "Connexion Google annulée.",
+    "auth/cancelled-popup-request": "Connexion Google annulée. Veuillez réessayer.",
+    "auth/popup-blocked": "La fenêtre Google a été bloquée. Autorisez les fenêtres pop-up et réessayez.",
+    "auth/unauthorized-domain": "Ce domaine n’est pas autorisé pour la connexion Firebase.",
+    "auth/account-exists-with-different-credential": "Un compte existe déjà avec cette adresse. Connectez-vous avec votre méthode habituelle."
   };
   return messages[error?.code] || (error?.code ? fallback : error?.message || fallback);
 }

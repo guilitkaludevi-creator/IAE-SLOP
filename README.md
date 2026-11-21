@@ -19,7 +19,7 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 - Raccourcis cliquables depuis l’accueil vers les métiers, la qualité, les outils, la politique de santé et les partenaires.
 - Navigation précédent/suivant avec conservation de la page, du scroll et des filtres.
 - Annuaire de promotion volontaire enrichi d'exemples réalistes (MAS, EHPAD, IME, HAD, CHU), avec filtres par rôle, région et domaine d’expérience.
-- Connexion et inscription par email via Firebase Authentication dès l’ouverture ; une session existante est restaurée automatiquement. La déconnexion est disponible dans le menu et dans « Abonnement & accès » et ramène à l’écran de connexion.
+- Connexion et inscription par email ou connexion avec Google via Firebase Authentication dès l’ouverture ; une session existante est restaurée automatiquement. La déconnexion est disponible dans le menu et dans « Abonnement & accès » et ramène à l’écran de connexion.
 - Affichage mobile, thème sombre/clair, panneaux de détails en feuille iOS, fermeture par glissement, animations Motion/Web Animations API, mode hors-ligne de base et ajout à l’écran d’accueil.
 - Document de pitch commercial complet pour les écoles (abonnements Découverte, Partenaire, Campus Santé) et tarification individuelle dans `pitch-mosaique-sante-ecoles.md`.
 
@@ -27,7 +27,7 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 
 Servez ce dossier avec l’extension Live Server de VS Code ou `npx serve .`. Firebase Authentication utilise des modules chargés depuis le CDN Google et nécessite une connexion réseau ainsi qu’un domaine autorisé dans Firebase. Le service worker et l’installation PWA nécessitent HTTPS ou `localhost`.
 
-Avant d’utiliser la connexion ou l’inscription, initialisez Authentication dans la console Firebase du projet et activez le fournisseur « Adresse e-mail/Mot de passe ». Vérifiez aussi que le domaine de l’application figure dans les domaines autorisés.
+Avant d’utiliser la connexion ou l’inscription, initialisez Authentication dans la console Firebase du projet et activez les fournisseurs « Adresse e-mail/Mot de passe » et « Google ». Vérifiez aussi que le domaine de l’application figure dans les domaines autorisés. La connexion Google utilise une fenêtre pop-up, qui doit être autorisée dans le navigateur.
 
 Le projet ne nécessite pas de compilation. Motion est chargé de façon facultative après le premier affichage depuis jsDelivr ; si le CDN est inaccessible, les animations intégrées au navigateur prennent le relais. Les transitions courtes utilisent principalement `transform` et `opacity` et respectent le réglage de réduction des animations.
 

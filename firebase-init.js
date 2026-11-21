@@ -16,8 +16,10 @@ import {
 } from "firebase/firestore";
 import {
   getAuth,
+  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
   sendEmailVerification,
   sendPasswordResetEmail,
   updateProfile,
@@ -341,6 +343,13 @@ export async function signInMosaque(email, password) {
   return signInWithEmailAndPassword(auth, email, password);
 }
 
+export async function signInWithGoogleMosaque() {
+  if (!auth) throw new Error("Authentification non disponible.");
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt:"select_account" });
+  return signInWithPopup(auth, provider);
+}
+
 export async function sendMosaqueReset(email) {
   if (!auth) throw new Error("Authentification non disponible.");
   await sendPasswordResetEmail(auth, email);
@@ -389,6 +398,7 @@ export async function redeemPremiumCode(code) {
 
 window.signUpMosaque = signUpMosaque;
 window.signInMosaque = signInMosaque;
+window.signInWithGoogleMosaque = signInWithGoogleMosaque;
 window.sendMosaqueReset = sendMosaqueReset;
 window.updateMosaquePassword = updateMosaquePassword;
 window.resendMosaqueEmail = resendMosaqueEmail;

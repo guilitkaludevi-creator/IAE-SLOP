@@ -97,6 +97,9 @@
   .auth-panel { padding: clamp(22px, 4vw, 36px); }
   .auth-panel h2 { margin: 20px 0 0; font-size: 22px; }
   .auth-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .auth-google { width: 100%; margin-top: 20px; }
+  .auth-divider { display: flex; align-items: center; gap: 10px; margin-top: 16px; color: var(--muted); font-size: 12px; }
+  .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--stroke); }
   .auth-status, .auth-hint { color: var(--muted); font-size: 12px; }
   .auth-status:empty { display: none; }
   .auth-reset { margin-top: 16px; }
