@@ -406,7 +406,11 @@ function renderPills(group, values, selected) {
   return `<div class="pills" role="group" aria-label="Filtrer les résultats">${values.map(value => `<button class="pill${selected === value ? " is-selected" : ""}" data-filter-group="${group}" data-filter-value="${esc(value)}" aria-pressed="${selected === value}">${esc(value)}</button>`).join("")}</div>`;
 }
 function renderFilterSelect(group, values, selected, label, allLabel) {
-  return `<select class="form-control filter-select" data-select-filter="${group}" aria-label="${esc(label)}">${values.map(value => `<option value="${esc(value)}"${value === selected ? " selected" : ""}>${esc(value === "Tout" ? allLabel : value)}</option>`).join("")}</select>`;
+  const display = value => value === "Tout" ? allLabel : value;
+  return `<details class="filter-select" data-select-filter="${group}" data-filter-label="${esc(label)}">
+    <summary class="filter-select-trigger" aria-label="${esc(`${label} : ${display(selected)}`)}"><span class="filter-select-value">${esc(display(selected))}</span>${icon("chevron-down",16)}</summary>
+    <div class="filter-select-menu" role="group" aria-label="${esc(label)}">${values.map(value => `<button type="button" class="filter-select-option" data-filter-choice="${esc(value)}" aria-pressed="${value === selected}"><span>${esc(display(value))}</span><span class="filter-select-check" aria-hidden="true">${icon("check",15)}</span></button>`).join("")}</div>
+  </details>`;
 }
 function renderFavorite(id) {
   const saved = state.favorites.includes(id);
@@ -3742,11 +3746,6 @@ document.addEventListener("input", event => {
 
 document.addEventListener("change", event => {
   const el = event.target;
-  if (el.matches("[data-select-filter]")) {
-    const group = el.dataset.selectFilter;
-    state.filters[group] = el.value;
-    applyFilter(group);
-  }
   if (el.matches("[data-check]")) {
     state.docChecks[el.dataset.check]=el.checked; writeJSON(STORE.checks,state.docChecks); updateChecklistProgress();
   }
@@ -3762,6 +3761,26 @@ document.addEventListener("change", event => {
   }
 });
 
+document.addEventListener("click", event => {
+  const dropdown = event.target.closest(".filter-select");
+  $$(".filter-select[open]").forEach(open => { if (open !== dropdown) open.open = false; });
+  const option = event.target.closest("[data-filter-choice]");
+  if (!dropdown || !option) return;
+  const group = dropdown.dataset.selectFilter;
+  state.filters[group] = option.dataset.filterChoice;
+  const label = $("span", option).textContent;
+  const trigger = $("summary", dropdown);
+  $(".filter-select-value", trigger).textContent = label;
+  trigger.setAttribute("aria-label", `${dropdown.dataset.filterLabel} : ${label}`);
+  $$("[data-filter-choice]", dropdown).forEach(item => item.setAttribute("aria-pressed", String(item === option)));
+  dropdown.open = false;
+  trigger.focus({ preventScroll:true });
+  applyFilter(group);
+});
+document.addEventListener("focusout", event => {
+  const dropdown = event.target.closest(".filter-select");
+  if (dropdown) requestAnimationFrame(() => { if (!dropdown.contains(document.activeElement)) dropdown.open = false; });
+});
 document.addEventListener("click", event => {
   const filter = event.target.closest("[data-filter-group]");
   if (!filter) return;
@@ -3782,6 +3801,29 @@ document.addEventListener("click", event => {
   state.selectedMapNode=node.dataset.mapNode; updateMapSelection();
 });
 document.addEventListener("keydown", event => {
+  const dropdown = event.target.closest(".filter-select");
+  if (dropdown) {
+    const options = $$("[data-filter-choice]", dropdown);
+    if (event.key === "Escape" && dropdown.open) {
+      event.preventDefault();
+      dropdown.open = false;
+      $("summary", dropdown).focus();
+      return;
+    }
+    if (event.target.matches("summary") && event.key === "ArrowDown") {
+      event.preventDefault();
+      dropdown.open = true;
+      (options.find(option => option.getAttribute("aria-pressed") === "true") || options[0])?.focus();
+      return;
+    }
+    const index = options.indexOf(event.target);
+    if (index >= 0 && ["ArrowDown","ArrowUp","Home","End"].includes(event.key)) {
+      event.preventDefault();
+      const next = event.key === "Home" ? 0 : event.key === "End" ? options.length - 1 : (index + (event.key === "ArrowDown" ? 1 : -1) + options.length) % options.length;
+      options[next].focus();
+      return;
+    }
+  }
   if (event.key === "Escape" && document.body.classList.contains("map-expanded")) { setMapExpanded(false); return; }
   if (event.key === "Escape" && peerMultiSelect.isOpen) { peerMultiSelect.close(); return; }
   if (event.key === "Escape" && sidebar.classList.contains("is-open")) { closeMenu(); return; }

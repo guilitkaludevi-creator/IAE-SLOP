@@ -438,7 +438,20 @@
 
   .filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 20px 0 17px; }
   .filter-bar .search-box { flex: 1 1 250px; }
-  .filter-bar .filter-select { width: min(100%, 260px); flex: 0 1 260px; cursor: pointer; }
+  .filter-bar .filter-select { position: relative; width: min(100%, 260px); flex: 0 1 260px; min-width: 0; }
+  .filter-select[open] { z-index: 15; }
+  .filter-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; padding: 10px 13px; border: 1px solid var(--glass-border); border-radius: 14px; color: var(--text); background: var(--glass-bg), var(--surface); box-shadow: var(--glass-highlight); backdrop-filter: blur(20px) saturate(1.35); -webkit-backdrop-filter: blur(20px) saturate(1.35); cursor: pointer; font-size: 13px; list-style: none; }
+  .filter-select-trigger::-webkit-details-marker { display: none; }
+  .filter-select-trigger:hover, .filter-select[open] .filter-select-trigger { border-color: rgba(117,224,194,.5); }
+  .filter-select-trigger svg { flex: 0 0 auto; color: var(--mint); transition: transform .2s var(--ease-out); }
+  .filter-select[open] .filter-select-trigger svg { transform: rotate(180deg); }
+  .filter-select-value { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .filter-select-menu { position: absolute; top: calc(100% + 7px); left: 0; right: 0; max-height: min(320px, 45dvh); overflow-y: auto; overscroll-behavior: contain; padding: 7px; border: 1px solid var(--glass-border); border-radius: 17px; background: var(--glass-bg), var(--surface); box-shadow: 0 18px 48px rgba(0,0,0,.28), var(--glass-highlight); backdrop-filter: blur(28px) saturate(1.4); -webkit-backdrop-filter: blur(28px) saturate(1.4); scrollbar-width: thin; }
+  .filter-select-option { display: flex; align-items: center; justify-content: space-between; gap: 9px; width: 100%; min-height: 44px; padding: 9px 10px; border: 1px solid transparent; border-radius: 11px; color: var(--text); background: transparent; text-align: left; font-size: 12.5px; line-height: 1.35; }
+  .filter-select-option:hover, .filter-select-option:focus-visible { background: var(--surface-soft); }
+  .filter-select-option[aria-pressed="true"] { border-color: rgba(117,224,194,.25); background: rgba(117,224,194,.13); font-weight: 700; }
+  .filter-select-check { flex: 0 0 auto; color: var(--mint); visibility: hidden; }
+  .filter-select-option[aria-pressed="true"] .filter-select-check { visibility: visible; }
   .filter-count { margin-left: auto; color: var(--muted); font-size: 11px; }
   .result-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 13px; }
   .est-card { position: relative; min-height: 230px; }
