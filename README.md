@@ -19,10 +19,10 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 - Carte 3D animée en temps réel : bulles mobiles dans l’espace, liens directionnels et libellés projetés à chaque mouvement ; rotation libre, translation, profondeur, zoom et perspective.
 - Raccourcis cliquables depuis l’accueil vers les métiers, la qualité, les outils, la politique de santé et les partenaires.
 - Navigation précédent/suivant avec conservation de la page, du scroll et des filtres.
-- Annuaire de promotion volontaire en deux onglets distincts : « Annuaire » (recherche, filtres par rôle, région et domaine d’expérience) et « Inscription à l’annuaire » (création / modification de sa fiche, liste déroulante multi-domaines qui se referme à la validation).
+- Réseau de promotion volontaire en deux onglets distincts : « Réseau » (consultation Premium, recherche et filtres) et « Inscription au réseau » (formulaire accessible aussi en Freemium).
 - Fil d’actualités : publication d’offres, événements et annonces ; commentaires via une boîte de dialogue permettant d’indiquer sa venue ou l’envoi d’un salarié, d’un alternant, de résidents / patients ou d’une autre délégation ; suppression de ses propres publications après confirmation (règles Firestore : auteur ou administrateur).
-- Connexion et inscription par email ou connexion avec Google via Firebase Authentication dès l’ouverture ; une session existante est restaurée automatiquement. La déconnexion est disponible dans le menu et dans « Abonnement & accès » et ramène à l’écran de connexion.
-- Affichage mobile, thème sombre/clair, panneaux de détails en feuille iOS, fermeture par glissement, animations Motion/Web Animations API, mode hors-ligne de base et ajout à l’écran d’accueil.
+- Connexion et inscription par email ou Google via Firebase Authentication ; après création d’un compte, inscription facultative au réseau avant l’accueil, ou possibilité de passer et de s’inscrire plus tard. Une étape inachevée est reprise sur le même navigateur. La page « Mon compte » permet de modifier le nom affiché, gérer son mot de passe si la connexion utilise un mot de passe, et se déconnecter.
+- Affichage mobile, thème sombre/clair, panneaux de détails en feuille iOS, fermeture par glissement, transitions fluides, mode hors-ligne de base et ajout à l’écran d’accueil.
 - Document de pitch commercial complet pour les écoles (abonnements Découverte, Partenaire, Campus Santé) et tarification individuelle dans `pitch-mosaique-sante-ecoles.md`.
 
 ## Lancer en local
@@ -33,7 +33,9 @@ Avant d’utiliser la connexion ou l’inscription, initialisez Authentication d
 
 Pour tester le mode complet, connectez-vous avec une adresse vérifiée, puis saisissez `TEST-MOSAIQUE-COMPLET` dans « Abonnement & accès » → « Utiliser un code d’accès ». Ce code est public : tout utilisateur connecté avec un email vérifié peut l’utiliser. L’accès est enregistré dans le navigateur, sans paiement ni abonnement Stripe ; retirez ce mode avant une commercialisation. Le contenu Premium reste accessible dans les fichiers publics et n’est pas protégé côté serveur.
 
-Le projet ne nécessite pas de compilation. Motion est chargé de façon facultative après le premier affichage depuis jsDelivr ; si le CDN est inaccessible, les animations intégrées au navigateur prennent le relais. Les transitions courtes utilisent principalement `transform` et `opacity` et respectent le réglage de réduction des animations.
+Le projet ne nécessite pas de compilation. Les transitions de navigation privilégient un fondu et respectent le réglage de réduction des animations. Une mise à jour du service worker ne recharge pas automatiquement une page en cours de saisie ; elle prend effet au prochain chargement.
+
+Le paiement en ligne et la gestion des abonnements de groupe ne sont pas opérationnels. La création de comptes de groupe nécessite au préalable un statut d’abonnement vérifié côté serveur.
 
 ## Publier avec GitHub Pages
 
@@ -41,7 +43,7 @@ Copiez le contenu de ce dossier à la racine d’un dépôt GitHub, activez GitH
 
 ## Données de l’annuaire
 
-Les fiches ajoutées au formulaire sont enregistrées dans `localStorage` et leur synchronisation avec Firestore est également tentée. Le bouton d’export produit un fichier JSON local. « Tout supprimer » efface les données locales de ce navigateur ; la suppression distante dépend des droits Firestore.
+La création d’une fiche attend la confirmation de Firestore avant de continuer et en conserve aussi une copie dans `localStorage`. Les fiches synchronisées, y compris les adresses de contact, sont accessibles publiquement selon les règles actuelles ; le lien LinkedIn n’est conservé que sur l’appareil. Le bouton d’export produit un fichier JSON local. « Tout supprimer » efface les données locales de ce navigateur ; la suppression distante dépend des droits Firestore.
 
 Avant une collecte collective, définir une information de confidentialité, une finalité, les accès, une durée de conservation et une procédure de suppression. Firebase Authentication et Firestore sont configurés ; les accès aux données partagées doivent être encadrés par les règles Firestore et une validation côté serveur. L’écran de connexion ne protège pas à lui seul les fichiers publics de l’application.
 

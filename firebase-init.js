@@ -21,6 +21,7 @@ import {
 import {
   getAuth,
   GoogleAuthProvider,
+  getAdditionalUserInfo,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -389,7 +390,8 @@ export async function signInWithGoogleMosaque() {
   if (!auth) throw new Error("Authentification non disponible.");
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt:"select_account" });
-  return signInWithPopup(auth, provider);
+  const result = await signInWithPopup(auth, provider);
+  return { user:result.user, isNewUser:getAdditionalUserInfo(result)?.isNewUser === true };
 }
 
 export async function sendMosaqueReset(email) {
@@ -400,6 +402,16 @@ export async function sendMosaqueReset(email) {
 export async function updateMosaquePassword(newPassword) {
   if (!auth?.currentUser) throw new Error("Connexion requise.");
   await updatePassword(auth.currentUser, newPassword);
+}
+
+export async function updateMosaqueName(name) {
+  if (!auth?.currentUser) throw new Error("Connexion requise.");
+  await updateProfile(auth.currentUser, { displayName:name });
+  if (window.mosaiqueAuthState?.user?.uid === auth.currentUser.uid) {
+    const detail = { ...window.mosaiqueAuthState, user:{ ...window.mosaiqueAuthState.user, displayName:auth.currentUser.displayName } };
+    window.mosaiqueAuthState = detail;
+    window.dispatchEvent(new CustomEvent("mosaique-auth-change", { detail }));
+  }
 }
 
 export async function resendMosaqueEmail() {
@@ -445,6 +457,7 @@ window.signInMosaque = signInMosaque;
 window.signInWithGoogleMosaque = signInWithGoogleMosaque;
 window.sendMosaqueReset = sendMosaqueReset;
 window.updateMosaquePassword = updateMosaquePassword;
+window.updateMosaqueName = updateMosaqueName;
 window.resendMosaqueEmail = resendMosaqueEmail;
 window.signOutMosaque = signOutMosaque;
 window.redeemPremiumCode = redeemPremiumCode;

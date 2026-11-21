@@ -3,13 +3,6 @@
 
 const { ACTORS, CONVENTIONS, DOCUMENTS, ESTABLISHMENTS, FAQ, JOBS, MAP_EDGES, MAP_NODES, MEETINGS, NAV, RESEARCH_AREAS, SOFTWARES, SOURCES, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS } = window.MOSAQUE_DATA;
 
-let motionApi = null;
-const loadMotionEnhancement = () => import("https://cdn.jsdelivr.net/npm/motion@14.14.0/+esm")
-  .then(api => { motionApi = api; })
-  .catch(() => { /* Les animations Web Animations API prennent le relais hors ligne. */ });
-if ("requestIdleCallback" in window) window.requestIdleCallback(loadMotionEnhancement, { timeout:1800 });
-else window.setTimeout(loadMotionEnhancement, 700);
-
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const stage = $("#page-stage");
@@ -19,8 +12,11 @@ const dialogContent = $("#dialog-content");
 const dialogKicker = $("#dialog-kicker");
 const toastEl = $("#toast");
 const STORE = { theme:"mosaique-theme", favorites:"mosaique-favorites", checks:"mosaique-doc-checks", peers:"mosaique-peers", auth:"mosaique-auth", posts:"mosaique-posts", rsvps:"mosaique-rsvps", notifs:"mosaique-notifs", premiumCode:"mosaique-premium-code" };
+const ONBOARDING_KEY = "mosaique-onboarding-uid";
+let authFlowPending = false;
+let pendingAuthState = null;
+let pendingOnboardingUid = null;
 let pageTransitionToken = 0;
-let pageTransitionDirection = 0;
 let mapRuntime = null;
 let mapClickSuppressionUntil = 0;
 let mapAdjustmentTimer = 0;
@@ -53,6 +49,7 @@ const state = {
   rsvps: readJSON(STORE.rsvps, {}),
   notifs: readJSON(STORE.notifs, []),
   editingPeerId: null,
+  onboarding: false,
   highlightPeerId: null,
   openComments: new Set(),  notifsOpen: false,
   timelineComposeType: "job_offer",
@@ -237,6 +234,7 @@ function navButton(page, label, iconName = "arrow") {
   return `<button class="button primary" data-nav="${page}">${icon(iconName,16)}${esc(label)}</button>`;
 }
 function renderPage(page = state.page, { immediate = false, fromHistory = false, restoreScrollY = null } = {}) {
+  if (state.onboarding) page = "inscription-annuaire";
   if (!NAV.some(item => item.id === page)) page = "accueil";
   if (!fromHistory && page !== state.page) {
     pageScrollPositions.set(state.page, window.scrollY || 0);
@@ -249,7 +247,6 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
       catch { /* La page reste navigable même sans historique du navigateur. */ }
     }
   }
-  pageTransitionDirection = immediate ? 0 : fromHistory ? -1 : 1;
   const transitionToken = ++pageTransitionToken;
   const currentPage = $(".page", stage);
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -277,12 +274,13 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
       "metiers-support":renderSupportJobs,
       audit:renderAudit,
       secu:renderSecu,
-      abonnement:renderSubscription
+      abonnement:renderSubscription,
+      compte:renderAccount
     };
     stage.innerHTML = (renderers[page] || renderHome)();
     hydrateIcons(stage);
     attachPageHandlers();
-    animateIn();
+    if (!immediate && !document.startViewTransition && !reduceMotion) animateIn();
     if (page === "carte") {
       startMapScene();
       updateMapSelection();
@@ -308,7 +306,7 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
       const savedScroll = restoreScrollY ?? pageScrollPositions.get(page) ?? 0;
       window.scrollTo({ top:savedScroll, behavior:"auto" });
     } else {
-      window.scrollTo({ top:0, behavior:reduceMotion ? "auto" : "smooth" });
+      window.scrollTo({ top:0, behavior:"auto" });
     }
   };
 
@@ -324,28 +322,14 @@ function renderPage(page = state.page, { immediate = false, fromHistory = false,
     return;
   }
   const exit = currentPage.animate(
-    [{ opacity:1, transform:"translate3d(0,0,0) scale(1)" }, { opacity:0, transform:`translate3d(${pageTransitionDirection > 0 ? -8 : 8}px,0,0) scale(.997)` }],
+    [{ opacity:1 }, { opacity:0 }],
     { duration:115, easing:"cubic-bezier(.4,0,1,1)", fill:"forwards" }
   );
   exit.onfinish = replacePage;
 }
 function animateIn() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const page = $(".page", stage);
-  const cards = $$(".content-card, .tool-card, .guide-card, .convention-card, .software-card, .etp-source-card, .peer-card, .actor-card", stage).slice(0,14);
-  if (motionApi?.animate) {
-    if (page) motionApi.animate(page, { opacity:[0,1], x:[pageTransitionDirection * 11,0], y:[pageTransitionDirection === 0 ? 4 : 0,0], scale:[.997,1] }, { duration:.28, ease:"easeOut" });
-    if (cards.length && motionApi.stagger) motionApi.animate(cards, { opacity:[0,1], y:[7,0] }, { duration:.23, delay:motionApi.stagger(.025), ease:"easeOut" });
-    return;
-  }
-  if (page?.animate) page.animate(
-    [{ opacity:0, transform:`translate3d(${pageTransitionDirection * 11}px,${pageTransitionDirection === 0 ? 4 : 0}px,0) scale(.997)` }, { opacity:1, transform:"translate3d(0,0,0) scale(1)" }],
-    { duration:280, easing:"cubic-bezier(.18,.72,.23,1)" }
-  );
-  cards.forEach((card, index) => card.animate?.(
-    [{ opacity:0, transform:"translate3d(0,7px,0)" }, { opacity:1, transform:"translate3d(0,0,0)" }],
-    { duration:230, delay:index * 25, easing:"cubic-bezier(.18,.72,.23,1)" }
-  ));
+  page?.animate?.([{ opacity:0 }, { opacity:1 }], { duration:180, easing:"ease-out" });
 }
 
 function renderHome() {
@@ -769,18 +753,19 @@ const PEER_REGIONS = ["Île-de-France","Auvergne-Rhône-Alpes","Bourgogne-Franch
 const PEER_PLACES = ["Sanitaire", "Médico-social · handicap", "Médico-social · grand âge", "Social · protection de l’enfance", "Social · précarité", "Domicile / parcours", "Autre"];
 const PEER_ROLES = ["Adjoint·e de direction","Directeur·rice","Chef·fe de service / cadre","Responsable qualité / risques","Responsable RH / organisation","Responsable finances / contrôle de gestion","Chef·fe de projet / chargé·e de mission","Cadre de santé","Étudiant·e / alternant·e","Autre"];
 function communityTabs(active) {
-  const tabs = [["reseau", "Annuaire", "users"], ["inscription-annuaire", "Inscription à l’annuaire", "userplus"]];
+  const tabs = [["reseau", "Réseau", "users"], ["inscription-annuaire", "Inscription au réseau", "userplus"]];
   return `<nav class="community-tabs" aria-label="Espace annuaire alumni">${tabs.map(([id, label, name]) => `<button type="button" class="community-tab${id === active ? " is-active" : ""}" data-nav="${id}"${id === active ? ' aria-current="page"' : ""}>${icon(name, 15)}<span>${label}</span></button>`).join("")}<button type="button" class="community-tab community-tab-link" data-nav="timeline">${icon("message", 15)}<span>Fil d’actualités</span></button></nav>`;
 }
 function renderNetwork() {
   if (!isPremiumUnlocked()) {
     return `<section class="page" aria-labelledby="network-title">
       ${sectionHead("COMMUNAUTÉ ALUMNI · RÉSEAU", "L’annuaire de promotion, <span class=\"text-gradient\">réservé aux membres</span>", "Retrouvez des expériences, ajoutez votre fiche, filtrez les profils et accédez au fil d’actualité après activation du Premium.", ``)}
+      ${communityTabs("reseau")}
       ${paywallGate("Annuaire Alumni Premium", "Accès réservé aux abonnés Premium : fiches, filtres, coordonnées autorisées, export et connexion au fil d’actualité.", `<div class="empty-state"><strong>Annuaire masqué</strong>Aucune fiche réseau n’est chargée en mode Freemium.</div>`)}
     </section>`;
   }
   const regionOptions = PEER_REGIONS;
-  return `<section class="page" aria-labelledby="network-title">${sectionHead("COMMUNAUTÉ · ANNUAIRE DE PROMOTION", "L’annuaire alumni, <span class=\"text-gradient\">à portée de main.</span>", "Retrouvez une expérience, un secteur ou un interlocuteur de votre promotion. Pour apparaître dans l’annuaire, utilisez l’onglet « Inscription à l’annuaire ».", `<button class="button subtle" data-action="export-peers">${icon("download",15)}Exporter mes fiches</button>`)}
+  return `<section class="page" aria-labelledby="network-title">${sectionHead("COMMUNAUTÉ · RÉSEAU DE PROMOTION", "Le réseau alumni, <span class=\"text-gradient\">à portée de main.</span>", "Retrouvez une expérience, un secteur ou un interlocuteur de votre promotion. Pour apparaître dans le réseau, utilisez l’onglet « Inscription au réseau ».", `<button class="button subtle" data-action="export-peers">${icon("download",15)}Exporter mes fiches</button>`)}
     ${communityTabs("reseau")}
     <section class="network-results glass-panel"><div class="section-title-row"><div><span class="eyebrow">ANNUAIRE VOLONTAIRE</span><h2 style="margin-top:10px">Trouver une expérience</h2><p id="peer-count">Chargement des fiches…</p></div><div class="section-title-actions"><button class="button primary" data-nav="inscription-annuaire">${icon("userplus",14)}Ajouter ma fiche</button><button class="button subtle" data-action="clear-peers">${icon("trash",14)}Tout supprimer</button></div></div>
       <div class="network-tools"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="peer-query" type="search" placeholder="Nom, rôle, mot-clé…" aria-label="Rechercher une personne"></label><select class="form-control" id="peer-experience-filter" aria-label="Filtrer par expérience"><option value="Tout">Toutes les expériences</option>${RESEARCH_AREAS.map(item => `<option>${esc(item)}</option>`).join("")}</select><select class="form-control" id="peer-region-filter" aria-label="Filtrer par région"><option value="Tout">Toutes les régions</option>${regionOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div>
@@ -790,18 +775,13 @@ function renderNetwork() {
 }
 
 function renderPeerRegistration() {
-  if (!isPremiumUnlocked()) {
-    return `<section class="page" aria-labelledby="network-title">
-      ${sectionHead("COMMUNAUTÉ ALUMNI · INSCRIPTION", "L’inscription à l’annuaire, <span class=\"text-gradient\">réservée aux membres</span>", "Ajoutez votre fiche, vos expériences et vos coordonnées après activation du Premium.", ``)}
-      ${communityTabs("inscription-annuaire")}
-      ${paywallGate("Inscription à l’annuaire Premium", "Accès réservé aux abonnés Premium : création et modification de votre fiche alumni.", `<div class="empty-state"><strong>Formulaire masqué</strong>Aucune donnée n’est collectée en mode Freemium.</div>`)}
-    </section>`;
-  }
   const regionOptions = PEER_REGIONS;
   const placeOptions = PEER_PLACES;
   const roles = PEER_ROLES;
-  return `<section class="page" aria-labelledby="network-title">${sectionHead("COMMUNAUTÉ · PARTAGE D’EXPÉRIENCE", "Rejoindre l’annuaire, <span class=\"text-gradient\">en une minute.</span>", "Créez ou mettez à jour votre fiche volontaire pour que votre promotion retrouve votre expérience, votre secteur et vos coordonnées de contact.", `<button class="button subtle" data-nav="reseau">${icon("users",15)}Voir l’annuaire</button>`)}
-    ${communityTabs("inscription-annuaire")}
+  return `<section class="page${state.onboarding ? " onboarding-step" : ""}">${state.onboarding
+    ? sectionHead("BIENVENUE · ÉTAPE FACULTATIVE", "Rejoindre le <span class=\"text-gradient\">réseau</span>", "Créez votre fiche maintenant ou passez cette étape : vous pourrez vous inscrire plus tard depuis « Inscription au réseau ». La consultation du réseau nécessite un accès Premium.")
+    : sectionHead("COMMUNAUTÉ · PARTAGE D’EXPÉRIENCE", "Rejoindre le réseau, <span class=\"text-gradient\">en une minute.</span>", "Créez ou mettez à jour votre fiche volontaire pour partager votre expérience et vos coordonnées.", `<button class="button subtle" data-nav="reseau">${icon("users",15)}Voir le réseau</button>`)}
+    ${state.onboarding ? "" : communityTabs("inscription-annuaire")}
     <div class="network-layout is-single"><section class="network-form-card glass-panel"><span class="eyebrow" id="peer-form-eyebrow">${state.editingPeerId ? "MODIFICATION" : "AJOUTER UNE FICHE"}</span><h2 id="peer-form-title" style="margin-top:12px;font-size:22px">${state.editingPeerId ? "Modifier ma fiche alumni" : "Partager son expérience"}</h2><p class="muted" style="font-size:10px;line-height:1.6;margin-bottom:0">Les champs marqués d’un astérisque sont requis. Mettez à jour vos coordonnées, lieu d'exercice et expériences.</p>
       <form class="network-form" id="peer-form" novalidate>
         <input type="hidden" id="peer-edit-id" name="editId" value="${state.editingPeerId || ''}">
@@ -809,7 +789,7 @@ function renderPeerRegistration() {
         <div class="form-grid"><div><label class="field-label" for="peer-region">Région *</label><select class="form-control" id="peer-region" name="region" required><option value="">Choisir une région</option>${regionOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div><div><label class="field-label" for="peer-place">Lieu d’exercice / secteur *</label><select class="form-control" id="peer-place" name="sector" required><option value="">Choisir un secteur</option>${placeOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div></div>
         <div class="form-grid">
           <div><label class="field-label" for="peer-role">Rôle actuel *</label><select class="form-control" id="peer-role" name="role" required><option value="">Choisir un rôle</option>${roles.map(item => `<option>${esc(item)}</option>`).join("")}</select></div>
-          <div><label class="field-label" for="peer-linkedin">Profil LinkedIn (optionnel)</label><input class="form-control" id="peer-linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/prenom-nom" maxlength="180"></div>
+          <div><label class="field-label" for="peer-linkedin">Profil LinkedIn (optionnel, conservé sur cet appareil)</label><input class="form-control" id="peer-linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/prenom-nom" maxlength="180"></div>
         </div>
         <div style="margin-bottom:14px">
           <div>
@@ -843,10 +823,11 @@ function renderPeerRegistration() {
           </div>
         </div>
         <div><label class="field-label" for="peer-summary">Résumé de l’expérience *</label><textarea class="form-control" id="peer-summary" name="summary" maxlength="420" required placeholder="Ex. pilotage de l’évaluation HAS, organisation du service, résultats ou apprentissages…"></textarea><p class="field-hint">420 caractères maximum · pas de données personnelles ou de santé.</p></div>
-        <label class="consent-row"><input type="checkbox" name="consent" required><span>J’autorise l’affichage de ces coordonnées aux personnes qui utiliseront cet annuaire. Je peux modifier ou supprimer ma fiche à tout moment. *</span></label>
-        <div class="privacy-box"><strong>Vos données.</strong> Votre fiche est conservée sur cet appareil et partagée avec l’annuaire de la promotion lorsque la connexion le permet. Seules les informations saisies ici sont diffusées : pas de données de santé ni de données personnelles de tiers.</div>
+        <label class="consent-row"><input type="checkbox" name="consent" required><span>J’autorise la publication de ma fiche et de mes coordonnées dans le réseau. Les fiches synchronisées sont accessibles publiquement. *</span></label>
+        <div class="privacy-box"><strong>Vos données.</strong> Les fiches synchronisées, y compris votre courriel de contact, sont accessibles publiquement. Ne saisissez pas de données de santé ni de données personnelles de tiers.</div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <button class="button primary" id="peer-submit-btn" type="submit">${icon(state.editingPeerId ? "check" : "userplus",15)} ${state.editingPeerId ? "Mettre à jour ma fiche alumni" : "Enregistrer la fiche"}</button>
+      ${state.onboarding ? `<button class="button subtle" type="button" data-action="skip-onboarding">Passer cette étape</button>` : ""}
       <button class="button subtle" id="peer-cancel-edit-btn" type="button" data-action="cancel-edit-peer" ${state.editingPeerId ? '' : 'hidden'}>${icon("close",14)} Annuler la modification</button>
       <p class="field-error" id="peer-form-error" role="alert" hidden></p>
     </div>
@@ -862,7 +843,7 @@ function renderTimeline() {
       ${paywallGate("Fil Alumni Premium", "Accès réservé aux abonnés Premium : offres, événements, commentaires, délégations et notifications de participation.", `<div class="empty-state"><strong>Aucune publication affichée avant activation</strong>Les données du fil restent verrouillées.</div>`)}
     </section>`;
   }
-  return `<section class="page" aria-labelledby="timeline-title">${sectionHead("COMMUNAUTÉ ALUMNI · ANNONCES & ÉVÉNEMENTS", "Le fil d'actualité, <span class=\"text-gradient\">en temps réel.</span>", "Publiez des offres d'alternance, invitez aux job datings et événements inter-établissements avec confirmation de participation.", `<button class="button subtle" data-nav="reseau">${icon("userplus", 15)} Annuaire Alumni</button>`)}
+  return `<section class="page" aria-labelledby="timeline-title">${sectionHead("COMMUNAUTÉ ALUMNI · ANNONCES & ÉVÉNEMENTS", "Le fil d'actualité, <span class=\"text-gradient\">en temps réel.</span>", "Publiez des offres d'alternance, invitez aux job datings et événements inter-établissements avec confirmation de participation.", `<button class="button subtle" data-nav="reseau">${icon("userplus", 15)} Réseau</button>`)}
 
     <div class="section-block">
       <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
@@ -2152,7 +2133,7 @@ function markAllNotifsRead() {
   showToast("Toutes les notifications sont marquées comme lues.");
 }
 
-function addPeer(form) {
+async function addPeer(form) {
   const formData = new FormData(form);
   const error = $("#peer-form-error");
   const required = ["name","email","region","sector","role","experience","summary"];
@@ -2218,10 +2199,45 @@ function addPeer(form) {
       consent: true,
       createdAt: new Date().toISOString()
     };
+    {
+      const button = $("#peer-submit-btn");
+      const skip = $("[data-action='skip-onboarding']");
+      if (typeof window.saveAlumniToFirestore !== "function") {
+        showToast("Synchronisation indisponible. Réessayez ou passez cette étape.");
+        return;
+      }
+      button.disabled = true;
+      if (skip) skip.disabled = true;
+      try {
+        peer.id = await window.saveAlumniToFirestore(peer);
+        peer.isRemote = true;
+      } catch (err) {
+        console.warn("[Firestore] Inscription au réseau impossible :", err);
+        if (error) { error.hidden = false; error.textContent = "La fiche n’a pas pu être publiée. Réessayez ou passez cette étape."; }
+        showToast("La fiche n’a pas pu être publiée.");
+        return;
+      } finally {
+        button.disabled = false;
+        if (skip) skip.disabled = false;
+      }
+    }
     state.peers = [peer, ...state.peers];
   }
 
   writeJSON(STORE.peers, state.peers);
+  if (state.onboarding) {
+    finishOnboarding();
+    showToast("Votre fiche a été publiée dans le réseau.");
+    return;
+  }
+  if (!isEditing) {
+    state.queries.peers = "";
+    state.highlightPeerId = peer.id;
+    peerMultiSelect.selected.clear();
+    renderPage("reseau");
+    showToast("Votre fiche a été publiée dans le réseau.");
+    return;
+  }
   state.editingPeerId = null;
   state.queries.peers = "";
   state.highlightPeerId = peer?.id;
@@ -3098,7 +3114,6 @@ function renderSubscription() {
   const isUnlocked = isPremiumUnlocked();
   const pricing = PRICING_DATA;
   const currentPlan = state.auth?.plan || (isUnlocked ? "universal" : "freemium");
-  const profile = state.auth?.profile || {};
 
   return `<section class="page" aria-labelledby="sub-title">
     ${renderAccessStatusBar()}
@@ -3132,7 +3147,7 @@ function renderSubscription() {
         <span class="icon-bubble" style="background:rgba(248,211,136,0.15);color:var(--gold);padding:8px">${icon("spark", 18)}</span>
         <div>
           <h3 style="font-size:15px;color:var(--gold);margin:0">Souscription sécurisée</h3>
-          <span style="font-size:12px;color:var(--text-2)">Le paiement Stripe n’est pas encore opérationnel. Un code public permet de tester l’accès complet sans paiement.</span>
+          <span style="font-size:12px;color:var(--text-2)">Le paiement n’est pas encore opérationnel. La création de comptes pour un groupe sera disponible après mise en place et vérification des abonnements de groupe. Un code public permet de tester l’accès complet sans paiement.</span>
         </div>
       </div>
       <button class="button primary" data-action="request-partnership">${icon("lock",14)}Se connecter puis souscrire</button>
@@ -3232,45 +3247,11 @@ function renderSubscription() {
     <div class="section-block">
       <div class="section-title-row">
         <div>
-          <h2>Compte & accès Premium</h2>
-          <p>Créez votre compte, validez votre email et utilisez un code d’accès ou votre abonnement.</p>
+          <h2>Accès Premium</h2>
+          <p>Validez votre email puis utilisez un code d’accès. Vous pouvez gérer votre profil dans « Mon compte ».</p>
         </div>
       </div>
       <div class="account-grid">
-        <section class="glass-panel account-card">
-          <span class="eyebrow">${profile.email ? "SESSION ACTIVE" : "CONNEXION"}</span>
-          ${profile.email ? `
-            <h3>${esc(profile.name || "Utilisateur")}</h3>
-            <p class="muted">${esc(profile.email)}</p>
-            <span class="tag ${profile.emailVerified ? "mint" : "gold"}">${profile.emailVerified ? "Email vérifié" : "Email à vérifier"}</span>
-            ${profile.emailVerified ? "" : `<button class="button subtle" type="button" data-action="resend-verification">${icon("send",14)}Renvoyer la validation</button>`}
-            <form id="password-update-form" class="account-form">
-              <label><span class="field-label">Nouveau mot de passe</span><input class="form-control" name="password" type="password" minlength="8" autocomplete="new-password" required></label>
-              <label><span class="field-label">Confirmer le mot de passe</span><input class="form-control" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required></label>
-              <button class="button primary" type="submit">${icon("lock",14)}Modifier le mot de passe</button>
-            </form>
-            <button class="button subtle danger" type="button" data-action="sign-out">${icon("close",14)}Se déconnecter</button>
-          ` : `
-            <h3>Se connecter</h3>
-            <form id="auth-signin-form" class="account-form">
-              <label><span class="field-label">Adresse email</span><input class="form-control" name="email" type="email" autocomplete="email" required></label>
-              <label><span class="field-label">Mot de passe</span><input class="form-control" name="password" type="password" autocomplete="current-password" required></label>
-              <button class="button primary" type="submit">${icon("arrow",14)}Se connecter</button>
-            </form>
-            <button class="quiet-link" type="button" data-action="reset-password">${icon("reset",14)}Mot de passe oublié</button>
-          `}
-        </section>
-        <section class="glass-panel account-card">
-          <span class="eyebrow">NOUVEAU COMPTE</span>
-          <h3>Créer un compte</h3>
-          <form id="auth-signup-form" class="account-form">
-            <label><span class="field-label">Nom complet</span><input class="form-control" name="name" minlength="2" maxlength="80" autocomplete="name" required></label>
-            <label><span class="field-label">Adresse email</span><input class="form-control" name="email" type="email" autocomplete="email" required></label>
-            <label><span class="field-label">Mot de passe</span><input class="form-control" name="password" type="password" minlength="8" autocomplete="new-password" required></label>
-            <label><span class="field-label">Confirmer le mot de passe</span><input class="form-control" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required></label>
-            <button class="button primary" type="submit">${icon("userplus",14)}Créer mon compte</button>
-          </form>
-        </section>
         <section class="glass-panel account-card premium-code-card">
           <span class="eyebrow">ACCÈS PREMIUM</span>
           <h3>Utiliser un code d’accès</h3>
@@ -3285,6 +3266,35 @@ function renderSubscription() {
     </div>
 
     ${sourceLinks(["iae", "ehesp", "d3s", "cafdes"])}
+  </section>`;
+}
+
+function renderAccount() {
+  const profile = state.auth?.profile || {};
+  const passwordProvider = window.firebaseAuth?.currentUser?.providerData?.some(provider => provider.providerId === "password");
+  return `<section class="page">
+    ${sectionHead("PROFIL & SÉCURITÉ", "Mon <span class=\"text-gradient\">compte</span>", "Modifiez votre nom affiché et gérez la sécurité de votre connexion.")}
+    <div class="account-grid">
+      <section class="glass-panel account-card">
+        <span class="eyebrow">MON PROFIL</span><h2>Informations du compte</h2>
+        <p class="muted">${esc(profile.email || "")}</p>
+        <span class="tag ${profile.emailVerified ? "mint" : "gold"}">${profile.emailVerified ? "Email vérifié" : "Email à vérifier"}</span>
+        ${profile.emailVerified ? "" : `<button class="button subtle" type="button" data-action="resend-verification">${icon("send",14)}Renvoyer la validation</button>`}
+        <form id="profile-update-form" class="account-form">
+          <label><span class="field-label">Pseudo / nom affiché</span><input class="form-control" name="name" value="${esc(profile.name || "")}" minlength="2" maxlength="80" autocomplete="nickname" required></label>
+          <button class="button primary" type="submit">${icon("check",14)}Enregistrer le pseudo</button>
+        </form>
+        <button class="button subtle danger" type="button" data-action="sign-out">${icon("logout",14)}Se déconnecter</button>
+      </section>
+      <section class="glass-panel account-card">
+        <span class="eyebrow">SÉCURITÉ</span><h2>Mot de passe</h2>
+        ${passwordProvider ? `<form id="password-update-form" class="account-form">
+          <label><span class="field-label">Nouveau mot de passe</span><input class="form-control" name="password" type="password" minlength="8" autocomplete="new-password" required></label>
+          <label><span class="field-label">Confirmer le mot de passe</span><input class="form-control" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required></label>
+          <button class="button primary" type="submit">${icon("lock",14)}Modifier le mot de passe</button>
+        </form>` : `<p class="muted">Votre connexion utilise Google. Gérez votre mot de passe auprès de Google.</p>`}
+      </section>
+    </div>
   </section>`;
 }
 
@@ -3346,7 +3356,12 @@ document.addEventListener("click", event => {
     return;
   }
   const nav = event.target.closest("[data-nav]");
-  if (nav) { event.preventDefault(); renderPage(nav.dataset.nav); return; }
+  if (nav) {
+    event.preventDefault();
+    if (state.onboarding) showToast("Enregistrez votre fiche ou passez cette étape pour continuer.");
+    else renderPage(nav.dataset.nav);
+    return;
+  }
 
   // Fermeture du popover notifications au clic extérieur
   if (state.notifsOpen && !event.target.closest("#notif-popover") && !event.target.closest("[data-action=\"toggle-notifications\"]")) {
@@ -3406,6 +3421,7 @@ document.addEventListener("click", event => {
   const actionEl = event.target.closest("[data-action]");
   if (!actionEl) return;
   const action = actionEl.dataset.action;
+  if (action === "skip-onboarding") { finishOnboarding(); return; }
   if (action === "toggle-menu") toggleMenu();
   if (action === "open-search") openSearch();
   if (action === "toggle-post-form") {
@@ -3513,10 +3529,14 @@ document.addEventListener("click", event => {
       return;
     }
     actionEl.disabled = true;
+    authFlowPending = true;
     window.signInWithGoogleMosaque()
-      .then(() => showToast("Connexion Google réussie."))
+      .then(result => {
+        if (result.isNewUser) queueOnboarding(result.user.uid);
+        showToast("Connexion Google réussie.");
+      })
       .catch(err => showToast(authErrorMessage(err, "Impossible de se connecter avec Google.")))
-      .finally(() => { actionEl.disabled = false; });
+      .finally(() => { actionEl.disabled = false; finishAuthFlow(); });
     return;
   }
   if (action === "reset-password") {
@@ -3859,7 +3879,7 @@ document.addEventListener("submit", event => {
     return;
   }
   if (event.target.id === "peer-form") { event.preventDefault(); addPeer(event.target); }
-  if (["auth-signup-form", "welcome-signup-form"].includes(event.target.id)) {
+  if (event.target.id === "welcome-signup-form") {
     event.preventDefault();
     const fd = new FormData(event.target);
     const name = String(fd.get("name") || "").trim();
@@ -3874,10 +3894,14 @@ document.addEventListener("submit", event => {
     }
     const button = $("button[type='submit']", event.target);
     button.disabled = true;
+    authFlowPending = true;
     window.signUpMosaque({ name,email,password })
-      .then(() => showToast("Compte créé. Un email de validation a été envoyé."))
-      .catch(err => showToast(authErrorMessage(err, "Impossible de créer le compte.")))
-      .finally(() => { button.disabled = false; });
+      .then(user => { queueOnboarding(user.uid); showToast("Compte créé. Un email de validation a été envoyé."); })
+      .catch(err => {
+        if (window.firebaseAuth?.currentUser) queueOnboarding(window.firebaseAuth.currentUser.uid);
+        showToast(authErrorMessage(err, "Impossible de créer le compte."));
+      })
+      .finally(() => { button.disabled = false; finishAuthFlow(); });
     return;
   }
   if (["auth-signin-form", "welcome-signin-form"].includes(event.target.id)) {
@@ -3902,9 +3926,27 @@ document.addEventListener("submit", event => {
     const confirm = String(fd.get("passwordConfirm") || "");
     if (password !== confirm) { showToast("Les deux mots de passe doivent être identiques."); return; }
     if (password.length < 8) { showToast("Le mot de passe doit contenir au moins 8 caractères."); return; }
-    window.updateMosaquePassword?.(password)
-      .then(() => showToast("Mot de passe modifié avec succès."))
-      .catch(err => showToast(err.message || "Impossible de modifier le mot de passe."));
+    if (typeof window.updateMosaquePassword !== "function") { showToast("Authentification indisponible."); return; }
+    const form = event.target;
+    const button = $("button[type='submit']", form);
+    button.disabled = true;
+    window.updateMosaquePassword(password)
+      .then(() => { form.reset(); showToast("Mot de passe modifié avec succès."); })
+      .catch(err => showToast(authErrorMessage(err, "Impossible de modifier le mot de passe.")))
+      .finally(() => { button.disabled = false; });
+    return;
+  }
+  if (event.target.id === "profile-update-form") {
+    event.preventDefault();
+    const name = String(new FormData(event.target).get("name") || "").trim();
+    if (name.length < 2) { showToast("Le pseudo doit contenir au moins deux caractères."); return; }
+    if (typeof window.updateMosaqueName !== "function") { showToast("Authentification indisponible."); return; }
+    const button = $("button[type='submit']", event.target);
+    button.disabled = true;
+    window.updateMosaqueName(name)
+      .then(() => showToast("Pseudo mis à jour."))
+      .catch(err => showToast(authErrorMessage(err, "Impossible de modifier le pseudo.")))
+      .finally(() => { button.disabled = false; });
     return;
   }
   if (event.target.id === "premium-code-form") {
@@ -3959,6 +4001,7 @@ function authErrorMessage(error, fallback) {
     "auth/weak-password": "Le mot de passe est trop faible.",
     "auth/network-request-failed": "Connexion réseau impossible. Vérifiez votre accès à Internet.",
     "auth/too-many-requests": "Trop de tentatives. Réessayez plus tard.",
+    "auth/requires-recent-login": "Pour des raisons de sécurité, déconnectez-vous puis reconnectez-vous avant de modifier votre mot de passe.",
     "auth/configuration-not-found": "L’authentification Firebase n’est pas encore configurée pour cette application.",
     "auth/operation-not-allowed": "Cette méthode de connexion n’est pas activée pour cette application.",
     "auth/popup-closed-by-user": "Connexion Google annulée.",
@@ -4054,7 +4097,7 @@ function initPlatformHints() {
 }
 function initServiceWorker() {
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
+    navigator.serviceWorker.register("./sw.js").catch(error => console.warn("Service worker indisponible :", error));
   }
 }
 
@@ -4068,7 +4111,32 @@ syncMicroAdVisibility();
 const authStatusTimer = setTimeout(() => {
   $("#auth-status").textContent = "Authentification indisponible ou trop lente. Vérifiez votre connexion et rechargez la page.";
 }, 12000);
+function queueOnboarding(uid) {
+  pendingOnboardingUid = uid;
+  if (!writeStoredValue(ONBOARDING_KEY, uid)) showToast("Cette étape ne pourra pas être reprise après rechargement sur cet appareil.");
+}
+function finishAuthFlow() {
+  authFlowPending = false;
+  if (pendingAuthState) {
+    const detail = pendingAuthState;
+    pendingAuthState = null;
+    applyAuthState(detail);
+  }
+}
+function finishOnboarding() {
+  try { localStorage.removeItem(ONBOARDING_KEY); }
+  catch { showToast("Impossible de mémoriser la fin de cette étape sur cet appareil."); }
+  pendingOnboardingUid = null;
+  state.onboarding = false;
+  peerMultiSelect.selected.clear();
+  peerMultiSelect.isOpen = false;
+  renderPage("accueil", { immediate:true });
+}
 function applyAuthState({ user, premium }) {
+  if (authFlowPending) {
+    pendingAuthState = { user, premium };
+    return;
+  }
   clearTimeout(authStatusTimer);
   $("#auth-status").textContent = "";
   const wasAuthenticated = document.body.classList.contains("is-authenticated");
@@ -4089,10 +4157,21 @@ function applyAuthState({ user, premium }) {
       emailVerified:user.emailVerified === true
     } : {}
   };
+  const wasOnboarding = state.onboarding;
+  state.onboarding = Boolean(user?.uid && (pendingOnboardingUid === user.uid || readStoredValue(ONBOARDING_KEY) === user.uid));
   writeJSON(STORE.auth, state.auth);
+  const avatar = $(".avatar-button");
+  if (avatar) avatar.textContent = (user?.displayName || user?.email || "M").trim().charAt(0).toUpperCase();
   document.documentElement.classList.toggle("is-premium-user", premium === true);
   syncMicroAdVisibility();
   if (!user && wasAuthenticated) {
+    if (dialog.open) {
+      dialogAnimation?.cancel();
+      dialogAnimation = null;
+      dialog.close();
+      dialogHistoryActive = false;
+      activeDialog = null;
+    }
     try {
       window.history.replaceState({ page:"accueil", scrollY:0 }, "", "#accueil");
       routedHash = window.location.hash;
@@ -4100,7 +4179,9 @@ function applyAuthState({ user, premium }) {
       console.warn("Impossible de mettre à jour l’adresse après la déconnexion :", error);
     }
     renderPage("accueil", { immediate:true, fromHistory:true, restoreScrollY:0 });
-  } else if (["abonnement","metiers","rh","secu","carte","reseau","inscription-annuaire","timeline","audit"].includes(state.page)) {
+  } else if (state.onboarding && !wasOnboarding) {
+    renderPage("inscription-annuaire", { immediate:true });
+  } else if (!state.onboarding && ["compte","abonnement","metiers","rh","secu","carte","reseau","inscription-annuaire","timeline","audit"].includes(state.page)) {
     renderPage(state.page, { immediate:true });
   }
   if (!user && wasAuthenticated) {

@@ -1873,6 +1873,7 @@
   const NAV = [
     { id: "accueil", label: "Accueil", icon: "home", group: "Espace de travail" },
     { id: "abonnement", label: "Abonnement & Accès", icon: "star", group: "Espace de travail" },
+    { id: "compte", label: "Mon compte", icon: "users", group: "Espace de travail" },
 
     { id: "etablissements", label: "Établissements (28)", icon: "building", group: "Panorama & Métiers" },
     { id: "metiers", label: "Métiers de direction", icon: "briefcase", group: "Panorama & Métiers" },
@@ -1892,8 +1893,8 @@
     { id: "politique", label: "Politique de santé & Lois", icon: "clipboard", group: "Stratégie & Réseau" },
     { id: "acteurs", label: "Acteurs institutionnels", icon: "network", group: "Stratégie & Réseau" },
     { id: "carte", label: "Carte des interactions", icon: "map", group: "Stratégie & Réseau" },
-    { id: "reseau", label: "Annuaire Alumni", icon: "users", group: "Stratégie & Réseau" },
-    { id: "inscription-annuaire", label: "Inscription à l'annuaire", icon: "userplus", group: "Stratégie & Réseau" },
+    { id: "reseau", label: "Réseau", icon: "users", group: "Stratégie & Réseau" },
+    { id: "inscription-annuaire", label: "Inscription au réseau", icon: "userplus", group: "Stratégie & Réseau" },
     { id: "timeline", label: "Fil d'actualités", icon: "message", group: "Stratégie & Réseau" }
   ];
 

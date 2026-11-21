@@ -1192,11 +1192,11 @@
     animation: 220ms cubic-bezier(0, 0, 0.2, 1) both vt-fade-in;
   }
   @keyframes vt-fade-out {
-    to { opacity: 0; transform: translateY(-4px) scale(0.995); }
+    to { opacity: 0; }
   }
   @keyframes vt-fade-in {
-    from { opacity: 0; transform: translateY(8px) scale(0.995); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   .bottom-link.is-active svg {
     animation: nav-bounce 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -2042,9 +2042,11 @@
   /* Boîtes de dialogue translucides */
   .app-dialog { background: var(--dialog-bg); border-color: var(--glass-border); box-shadow: 0 34px 110px rgba(0,0,0,.5), var(--glass-highlight); backdrop-filter: blur(34px) saturate(1.5); -webkit-backdrop-filter: blur(34px) saturate(1.5); }
   .app-dialog::backdrop { background: radial-gradient(circle at 50% 30%, rgba(40,90,110,.35), rgba(3,8,14,.66)); backdrop-filter: blur(10px) saturate(1.2); -webkit-backdrop-filter: blur(10px) saturate(1.2); }
-  .dialog-head { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .dialog-head { position: static; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .dialog-shell { padding: 24px clamp(20px, 4vw, 36px) 32px; }
   .dialog-title { letter-spacing: -.02em; }
+  .page, .page-boot, .hero-copy, .hero-art, .peer-card, .content-card { animation: none; }
+  .onboarding-step { max-width: 860px; margin-inline: auto; }
   .toast { background: var(--dialog-bg); backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); }
   .notif-popover { background: var(--dialog-bg); backdrop-filter: blur(28px) saturate(1.4); -webkit-backdrop-filter: blur(28px) saturate(1.4); }
 
