@@ -678,6 +678,12 @@ function renderMap() {
     </div>
   </section>`;
 }function renderNetwork() {
+  if (!isPremiumUnlocked()) {
+    return `<section class="page" aria-labelledby="network-title">
+      ${sectionHead("COMMUNAUTÉ ALUMNI · RÉSEAU", "L’annuaire de promotion, <span class=\"text-gradient\">réservé aux membres</span>", "Retrouvez des expériences, ajoutez votre fiche, filtrez les profils et accédez au fil d’actualité après activation du Premium.", ``)}
+      ${paywallGate("Annuaire Alumni Premium", "Accès réservé aux abonnés Premium : fiches, filtres, coordonnées autorisées, export et connexion au fil d’actualité.", `<div class="empty-state"><strong>Annuaire masqué</strong>Aucune fiche réseau n’est chargée en mode Freemium.</div>`)}
+    </section>`;
+  }
   const regionOptions = ["Île-de-France","Auvergne-Rhône-Alpes","Bourgogne-Franche-Comté","Bretagne","Centre-Val de Loire","Corse","Grand Est","Hauts-de-France","Normandie","Nouvelle-Aquitaine","Occitanie","Pays de la Loire","Provence-Alpes-Côte d’Azur","Outre-mer"];
   const placeOptions = ["Sanitaire", "Médico-social · handicap", "Médico-social · grand âge", "Social · protection de l’enfance", "Social · précarité", "Domicile / parcours", "Autre"];
   const roles = ["Adjoint·e de direction","Directeur·rice","Chef·fe de service / cadre","Responsable qualité / risques","Responsable RH / organisation","Responsable finances / contrôle de gestion","Chef·fe de projet / chargé·e de mission","Cadre de santé","Étudiant·e / alternant·e","Autre"];
@@ -740,6 +746,12 @@ function renderMap() {
 }
 
 function renderTimeline() {
+  if (!isPremiumUnlocked()) {
+    return `<section class="page" aria-labelledby="timeline-title">
+      ${sectionHead("COMMUNAUTÉ ALUMNI · FIL D’ACTUALITÉS", "Le fil d’actualité, <span class=\"text-gradient\">réservé aux membres</span>", "Publier, commenter, demander une participation ou envoyer des représentants devient disponible avec un abonnement Premium actif.", ``)}
+      ${paywallGate("Fil Alumni Premium", "Accès réservé aux abonnés Premium : offres, événements, commentaires, délégations et notifications de participation.", `<div class="empty-state"><strong>Aucune publication affichée avant activation</strong>Les données du fil restent verrouillées.</div>`)}
+    </section>`;
+  }
   return `<section class="page" aria-labelledby="timeline-title">${sectionHead("COMMUNAUTÉ ALUMNI · ANNONCES & ÉVÉNEMENTS", "Le fil d'actualité, <span class=\"text-gradient\">en temps réel.</span>", "Publiez des offres d'alternance, invitez aux job datings et événements inter-établissements avec confirmation de participation.", `<button class="button subtle" data-nav="reseau">${icon("userplus", 15)} Annuaire Alumni</button>`)}
 
     <div class="section-block">
@@ -2783,7 +2795,7 @@ function renderSubscription() {
                 ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
               </ul>
             </div>
-            <button class="button ${t.popular ? 'primary' : 'subtle'}" style="margin-top:20px;width:100%" data-action="simulate-subscribe" data-plan="${esc(t.name)}">
+            <button class="button ${t.popular ? 'primary' : 'subtle'}" style="margin-top:20px;width:100%" data-action="simulate-subscribe" data-plan="${esc(t.name)}" data-price-id="${esc(t.priceId || '')}">
               ${icon("briefcase", 15)}Souscrire pour mon école
             </button>
           </article>
@@ -2814,7 +2826,7 @@ function renderSubscription() {
                 ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
               </ul>
             </div>
-            <button class="button ${t.popular ? 'primary' : 'subtle'}" style="margin-top:18px;width:100%" data-action="simulate-subscribe" data-plan="${esc(t.name)}">
+            <button class="button ${t.popular ? 'primary' : 'subtle'}" style="margin-top:18px;width:100%" data-action="simulate-subscribe" data-plan="${esc(t.name)}" data-price-id="${esc(t.priceId || '')}">
               ${icon("star", 14)}Choisir cette formule
             </button>
           </article>
@@ -2841,7 +2853,7 @@ function renderSubscription() {
                 ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
               </ul>
             </div>
-            <button class="button primary" data-action="simulate-subscribe" data-plan="${esc(t.name)}">
+            <button class="button primary" data-action="simulate-subscribe" data-plan="${esc(t.name)}" data-price-id="${esc(t.priceId || '')}">
               ${icon("building", 16)}Souscrire pour l'établissement
             </button>
           </div>
@@ -3064,11 +3076,25 @@ document.addEventListener("click", event => {
   }
   if (action === "simulate-subscribe") {
     const plan = actionEl.dataset.plan || "Pass Annuel Pro";
-    showToast(`La souscription « ${plan} » sera activée après authentification et paiement Stripe confirmé.`);
+    const priceId = actionEl.dataset.priceId || "";
+    if (!priceId) {
+      showToast(`« ${plan} » n’est pas encore associé à un Price ID Stripe.`);
+      return;
+    }
+    if (typeof window.signInAlumni !== "function") {
+      showToast("L’authentification sécurisée n’est pas encore chargée.");
+      return;
+    }
+    const startCheckout = async () => {
+      if (!window.firebaseAuth?.currentUser) await window.signInAlumni();
+      if (typeof window.startPremiumCheckout === "function") await window.startPremiumCheckout(priceId);
+      else showToast("Le point de paiement Stripe n’est pas encore configuré.");
+    };
+    startCheckout().catch(err => showToast(err.message || "Paiement Stripe indisponible."));
     return;
   }
   if (action === "reset-auth-profile") {
-    state.auth = { isUnlocked: false, plan: "freemium", profile: {} };
+    state.auth = { isUnlocked:false, verifiedPaid:false, plan:"freemium", profile:{} };
     writeJSON(STORE.auth, state.auth);
     showToast("Profil réinitialisé en mode freemium.");
     renderPage("abonnement");
