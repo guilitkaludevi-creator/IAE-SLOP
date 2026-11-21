@@ -2881,7 +2881,7 @@ function renderSubscription() {
         <span class="icon-bubble" style="background:rgba(248,211,136,0.15);color:var(--gold);padding:8px">${icon("spark", 18)}</span>
         <div>
           <h3 style="font-size:15px;color:var(--gold);margin:0">Souscription sécurisée</h3>
-          <span style="font-size:12px;color:var(--text-2)">La souscription est activée uniquement après paiement confirmé par le webhook Stripe.</span>
+          <span style="font-size:12px;color:var(--text-2)">Le paiement Stripe n’est pas encore opérationnel. Un code public permet de tester l’accès complet sans paiement.</span>
         </div>
       </div>
       <button class="button primary" data-action="request-partnership">${icon("lock",14)}Se connecter puis souscrire</button>
@@ -3023,7 +3023,7 @@ function renderSubscription() {
         <section class="glass-panel account-card premium-code-card">
           <span class="eyebrow">ACCÈS PREMIUM</span>
           <h3>Utiliser un code d’accès</h3>
-          <p class="muted">Vous devez être connecté et votre email doit être vérifié.</p>
+          <p class="muted">Vous devez être connecté et votre email doit être vérifié. Code de test public, sans paiement : <strong>TEST-MOSAIQUE-COMPLET</strong>.</p>
           <form id="premium-code-form" class="account-form">
             <label><span class="field-label">Code d’accès</span><input class="form-control" name="code" minlength="6" maxlength="40" placeholder="Ex. CAMPUS-XXXX-XXXX" autocomplete="off" required></label>
             <button class="button primary" type="submit">${icon("spark",14)}Activer mon accès</button>
@@ -3621,8 +3621,8 @@ document.addEventListener("submit", event => {
     event.preventDefault();
     const fd = new FormData(event.target);
     window.redeemPremiumCode?.(String(fd.get("code") || "").trim())
-      .then(() => {
-        showToast("Code Premium validé.");
+      .then(result => {
+        showToast(result.testMode ? "Mode complet de test activé, sans paiement." : "Code Premium validé.");
         renderPage("abonnement", { immediate:true });
       })
       .catch(err => showToast(err.message || "Code Premium invalide."));

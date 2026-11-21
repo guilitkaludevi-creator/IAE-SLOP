@@ -1,4 +1,4 @@
-const CACHE = "mosaique-sante-v2026-11-21-v27-audit";
+const CACHE = "mosaique-sante-v2026-11-21-v28-test-code";
 const CORE = [
   "./",
   "./index.html",

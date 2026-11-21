@@ -29,6 +29,8 @@ Servez ce dossier avec l’extension Live Server de VS Code ou `npx serve .`. Fi
 
 Avant d’utiliser la connexion ou l’inscription, initialisez Authentication dans la console Firebase du projet et activez les fournisseurs « Adresse e-mail/Mot de passe » et « Google ». Vérifiez aussi que le domaine de l’application figure dans les domaines autorisés. La connexion Google utilise une fenêtre pop-up, qui doit être autorisée dans le navigateur.
 
+Pour tester le mode complet, connectez-vous avec une adresse vérifiée, puis saisissez `TEST-MOSAIQUE-COMPLET` dans « Abonnement & accès » → « Utiliser un code d’accès ». Ce code est public : tout utilisateur connecté avec un email vérifié peut l’utiliser. L’accès est enregistré dans le navigateur, sans paiement ni abonnement Stripe ; retirez ce mode avant une commercialisation. Le contenu Premium reste accessible dans les fichiers publics et n’est pas protégé côté serveur.
+
 Le projet ne nécessite pas de compilation. Motion est chargé de façon facultative après le premier affichage depuis jsDelivr ; si le CDN est inaccessible, les animations intégrées au navigateur prennent le relais. Les transitions courtes utilisent principalement `transform` et `opacity` et respectent le réglage de réduction des animations.
 
 ## Publier avec GitHub Pages
