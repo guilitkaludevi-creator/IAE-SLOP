@@ -2547,7 +2547,7 @@ body.is-authenticated .auth-lock-scene { display: none; }
   .ambient-b { animation: ambient-drift 34s ease-in-out -7s infinite alternate-reverse; }
   .auth-screen, .auth-lock-scene { transition: opacity .7s var(--ease-out); }
   body.auth-leaving .auth-screen, body.auth-leaving .auth-lock-scene { opacity: 0; pointer-events: none; }
-  .auth-lock { animation: lock-breathe 22s ease-in-out infinite alternate; }
+  .auth-lock { animation: lock-breathe 12s ease-in-out infinite alternate; }
   .orbit-ring { animation: visual-glow 16s ease-in-out infinite alternate; }
   .premium-bubble-orb { animation: visual-orb-glow 16s ease-in-out infinite alternate; }
   .icon-bubble > svg, .nav-icon > svg, .brand-mark > svg, .brand-mark > img, .stat-icon > svg, .note-spark > svg {
@@ -2555,8 +2555,8 @@ body.is-authenticated .auth-lock-scene { display: none; }
     animation: visual-breathe 12s ease-in-out infinite alternate;
   }
   @keyframes lock-breathe {
-    from { transform: translate3d(0, calc(-50% - 6px), 0) rotateX(-11deg) rotateY(-20deg); }
-    to { transform: translate3d(0, calc(-50% + 6px), 0) rotateX(-6deg) rotateY(-10deg); }
+    from { transform: translate3d(-8px, calc(-50% - 12px), 0) rotateX(-14deg) rotateY(-25deg) rotateZ(-3deg); }
+    to { transform: translate3d(8px, calc(-50% + 12px), 0) rotateX(-4deg) rotateY(-7deg) rotateZ(3deg); }
   }
   @keyframes visual-breathe { from { transform: scale(.985); } to { transform: scale(1.015); } }
   @keyframes surface-float { from { translate: 0 0; } to { translate: 0 -2px; } }

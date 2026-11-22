@@ -1,8 +1,8 @@
-const CACHE = "mosaique-sante-v2026-11-22-v48-signin-transition";
+const CACHE = "mosaique-sante-v2026-11-22-v49-lock-drift";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261122-signin-transition",
+  "./app.css?v=20261122-lock-drift",
   "./app.js?v=20261122-signin-transition",
   "./data.js?v=20261121-lock-motion",
   "./firebase-init.js?v=20261121-lock-motion",
