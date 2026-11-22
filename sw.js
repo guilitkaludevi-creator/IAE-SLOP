@@ -1,11 +1,12 @@
-const CACHE = "mosaique-sante-v2026-11-22-v49-lock-drift";
+const CACHE = "mosaique-sante-v2026-11-22-highend";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261122-lock-drift",
-  "./app.js?v=20261122-signin-transition",
-  "./data.js?v=20261121-lock-motion",
-  "./firebase-init.js?v=20261121-lock-motion",
+  "./app.css?v=20261122-highend",
+  "./app.js?v=20261122-highend",
+  "./data.js?v=20261122-highend",
+  "./flashcards.js?v=20261122-highend",
+  "./firebase-init.js?v=20261122-highend",
   "./manifest.webmanifest",
   "./icon.svg"
 ];

@@ -13,6 +13,9 @@
     <link rel="icon" href="./icon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..700;1,400..700&family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..700&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <script type="importmap">
       {
         "imports": {
@@ -27,8 +30,8 @@
       window.MOSAQUE_PREMIUM_CODE_URL = "https://us-central1-iae-slop-3f7be.cloudfunctions.net/redeemPremiumCode";
       window.MOSAQUE_STRIPE_CHECKOUT_URL = "";
     </script>
-    <title>Mosaïque Santé — boîte à outils du management</title>
-    <link rel="stylesheet" href="./app.css?v=20261122-lock-drift">
+    <title>Mosaïque Santé — Executive Health & Care Management</title>
+    <link rel="stylesheet" href="./app.css?v=20261122-highend">
   </head>
   <body>
     <svg class="glass-filter-defs" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
@@ -61,9 +64,9 @@
           <span class="brand-mark" aria-hidden="true"><img src="./icon.svg" alt=""></span>
           <span class="brand-copy"><strong>Mosaïque</strong><small>SANTÉ · MANAGER</small></span>
         </div>
-        <span class="eyebrow">VOTRE ESPACE DE MANAGEMENT EN SANTÉ</span>
-        <h1 id="auth-title" tabindex="-1">Bienvenue sur<br><em>Mosaïque Santé.</em></h1>
-        <p>Connectez-vous ou créez votre compte pour retrouver vos repères et vos outils de management.</p>
+        <span class="eyebrow">DIRECTION · QUALITÉ · RESSOURCES HUMAINES</span>
+        <h1 id="auth-title" tabindex="-1">Le pilotage,<br><em>avant la décision.</em></h1>
+        <p>Repères, outils et réseau pour diriger un établissement sanitaire, social ou médico-social — du Master MES au terrain.</p>
       </div>
       <section class="glass-panel auth-panel" aria-label="Accès à votre compte">
         <div class="auth-switch" aria-label="Choisir un accès">
@@ -129,7 +132,7 @@
           </div>
           <div class="breadcrumb"><span>ESPACE MANAGER</span><span class="crumb-slash">/</span><strong id="page-label">Accueil</strong></div>
           <div class="topbar-actions">
-            <button class="topbar-chip" data-nav="abonnement" aria-label="Abonnement et Campus" title="Abonnement & Offres Campus" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(248,211,136,0.12);color:var(--gold);border:1px solid rgba(248,211,136,0.3);cursor:pointer;white-space:nowrap"><span data-icon="star"></span><span>Campus</span></button>
+            <button class="campus-chip" data-nav="abonnement" aria-label="Abonnement et Campus" title="Abonnement et offres Campus"><span data-icon="star"></span><span>Campus</span></button>
             <button class="search-trigger" data-action="open-search" aria-label="Rechercher dans les repères"><span data-icon="search"></span><span>Rechercher</span><kbd id="search-shortcut">Ctrl K</kbd></button>
             <button class="icon-button notif-toggle" data-action="toggle-notifications" aria-label="Notifications" title="Notifications réseau" style="position:relative"><span data-icon="bell"></span><span class="notif-badge" id="notif-badge" hidden>0</span></button>
             <button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="Changer le thème"><span data-icon="sun"></span></button>
@@ -141,9 +144,9 @@
         <main id="main-content" tabindex="-1">
           <div id="page-stage">
             <section class="page page-boot" aria-labelledby="boot-title">
-              <span class="eyebrow">VOTRE CAMPUS DE MANAGEMENT EN SANTÉ</span>
-              <h1 id="boot-title">Comprendre le système.<br><em>Mieux piloter le quotidien.</em></h1>
-              <p class="lede">Des repères concrets pour les managers du sanitaire, du social et du médico-social, avec un focus sur le Master MES et l’expérience de terrain en MAS.</p>
+              <span class="eyebrow">CAMPUS DE MANAGEMENT EN SANTÉ</span>
+              <h1 id="boot-title">Lire le système.<br><em>Décider sur le terrain.</em></h1>
+              <p class="lede">Des repères pour les managers du sanitaire, du social et du médico-social : structures, métiers, qualité, droits et moyens.</p>
               <div class="hero-actions" style="margin-top:22px">
                 <button class="button primary" data-nav="etablissements">Explorer les établissements</button>
                 <button class="button subtle" data-nav="carte">Voir les interactions</button>
@@ -156,7 +159,7 @@
           <span>Espace partenaire</span>
           <button type="button" data-nav="abonnement">Retirer les publicités avec Premium</button>
         </aside>
-        <footer class="main-footer"><span>Repères mis en forme le 20 novembre 2026 · Version prototype</span><button class="quiet-link" data-action="open-sources">Comprendre les limites <span data-icon="arrow-up-right"></span></button></footer>
+        <footer class="main-footer"><span>Repères relus le 22 novembre 2026 · Prototype de travail</span><button class="quiet-link" data-action="open-sources">Comprendre les limites <span data-icon="arrow-up-right"></span></button></footer>
       </div>
     </div>
 
@@ -178,8 +181,9 @@
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <noscript><div class="noscript-card">Cette boîte à outils interactive nécessite JavaScript dans le navigateur.</div></noscript>
-    <script type="module" src="./firebase-init.js?v=20261121-lock-motion"></script>
-    <script defer src="./data.js?v=20261121-lock-motion"></script>
-    <script defer src="./app.js?v=20261122-signin-transition"></script>
+    <script type="module" src="./firebase-init.js?v=20261122-highend"></script>
+    <script defer src="./data.js?v=20261122-highend"></script>
+    <script defer src="./flashcards.js?v=20261122-highend"></script>
+    <script defer src="./app.js?v=20261122-highend"></script>
   </body>
 </html>

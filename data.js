@@ -1873,6 +1873,7 @@
   const NAV = [
     { id: "accueil", label: "Accueil", icon: "home", group: "Espace de travail" },
     { id: "abonnement", label: "Abonnement & Accès", icon: "star", group: "Espace de travail" },
+    { id: "flashcards", label: "Flashcards", icon: "layers", group: "Espace de travail" },
     { id: "compte", label: "Mon compte", icon: "users", group: "Espace de travail" },
 
     { id: "etablissements", label: "Établissements", icon: "building", group: "Panorama & Métiers" },

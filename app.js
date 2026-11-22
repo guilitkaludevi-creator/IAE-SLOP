@@ -3,6 +3,17 @@
 
 const { ACTORS, CONVENTIONS, DOCUMENTS, ESTABLISHMENTS, FAQ, JOBS, MAP_EDGES, MAP_NODES, MEETINGS, NAV, RESEARCH_AREAS, SOFTWARES, SOURCES, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS } = window.MOSAQUE_DATA;
 
+window.MOSAQUE_FLASHCARDS?.configure({
+  data: window.MOSAQUE_DATA,
+  esc,
+  icon,
+  isPremiumUnlocked,
+  paywallGate,
+  onLocked: () => showToast("Les flashcards PDF sont réservées aux abonnés Premium."),
+  onError: message => showToast(message),
+  onSaved: (cards, pages) => showToast(`${cards} cartes exportées · ${pages} pages.`)
+});
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const stage = $("#page-stage");
@@ -47,7 +58,7 @@ function createInitialMapPositions() {
 const state = {
   page: "accueil",
   filters: { establishments:"Tout", jobs:"Tout", meetings:"Tout", documents:"Tout", actors:"Tout", supportJobs:"Tout", qualityTools:"Tout", laws:"Tout" },
-  queries: { establishments:"", jobs:"", meetings:"", documents:"", actors:"", faq:"", software:"", peers:"", supportJobs:"", qualityTools:"", laws:"" },
+  queries: { establishments:"", jobs:"", meetings:"", documents:"", actors:"", faq:"", software:"", peers:"", supportJobs:"", qualityTools:"", laws:"", flashcards:"" },
   favorites: readJSON(STORE.favorites, []),
   docChecks: readJSON(STORE.checks, {}),
   peers: readJSON(STORE.peers, []),
@@ -71,6 +82,9 @@ const state = {
   mapDetailsOpen: undefined,
   mapPan: { x:0, y:0 },
   mapGesture: "rotate",
+  flashDeck: "etablissements",
+  flashStudyMode: false,
+  flashRevealed: new Set(),
   toastTimer: 0
 };
 
@@ -400,6 +414,7 @@ function renderPage(page, { immediate = false, fromHistory = false, restoreScrol
       audit:renderAudit,
       secu:renderSecu,
       abonnement:renderSubscription,
+      flashcards:renderFlashcards,
       compte:renderAccount
     };
     stage.innerHTML = (renderers[page] || renderHome)();
@@ -455,7 +470,7 @@ function renderHome() {
   return `<section class="page page-home" aria-labelledby="home-title">
     ${renderAccessStatusBar()}
     <div class="hero" data-visual>
-      <div class="hero-copy"><span class="eyebrow">VOTRE CAMPUS DE MANAGEMENT EN SANTÉ</span><h1 id="home-title">Comprendre le système.<br><em>Mieux piloter le quotidien.</em></h1><p class="lede">Des repères concrets pour les managers du sanitaire, du social et du médico-social — avec un focus sur votre parcours Master MES et l’expérience de terrain en MAS.</p><div class="hero-actions">${navButton("etablissements","Explorer les établissements","building")}<button class="button subtle" data-nav="carte">${icon("network",16)}Voir les interactions</button></div></div>
+      <div class="hero-copy"><span class="eyebrow">CAMPUS DE MANAGEMENT EN SANTÉ</span><h1 id="home-title">Lire le système.<br><em>Décider sur le terrain.</em></h1><p class="lede">Structures, métiers, qualité, droits et moyens : ce qu’un directeur, un cadre ou un responsable qualité doit tenir ensemble avant d’arbitrer.</p><div class="hero-actions">${navButton("etablissements","Explorer les établissements","building")}<button class="button subtle" data-nav="carte">${icon("network",16)}Voir les interactions</button></div></div>
       <div class="hero-art"><div class="hero-orbit" role="group" aria-label="Raccourcis vers les équipes, la qualité, les outils et les partenaires"><div class="orbit-ring one"></div><div class="orbit-ring two"></div><div class="orbit-ring three"></div><div class="orbit-center">${icon("layers",26)}<strong>DIRECTION</strong><small>AU CENTRE DU<br>SYSTÈME</small></div><button class="orbit-node n1" data-nav="metiers" aria-label="Ouvrir les métiers et les équipes" title="Métiers et équipes">${icon("users",20)}<small>ÉQUIPES</small></button><button class="orbit-node n2" data-nav="documents" aria-label="Ouvrir les repères qualité" title="Qualité et documents">${icon("shield",20)}<small>QUALITÉ</small></button><button class="orbit-node n3" data-nav="documents" aria-label="Ouvrir les outils et documents" title="Outils et documents">${icon("file",20)}<small>OUTILS</small></button><button class="orbit-node n4" data-nav="acteurs" aria-label="Ouvrir les partenaires" title="Acteurs et partenaires">${icon("network",20)}<small>PARTENAIRES</small></button></div><p class="hero-caption">Une vision reliée aux parcours</p></div>
     </div>
     
@@ -463,30 +478,30 @@ function renderHome() {
       <div class="onboarding-head">
         <span class="icon-bubble" style="background:rgba(98, 222, 184, 0.15);color:var(--mint);padding:8px">${icon("spark", 22)}</span>
         <div>
-          <h2>Bienvenue sur Mosaïque Santé · Votre guide de démarrage rapide</h2>
-          <p>Conçue pour les futurs dirigeants, directeurs adjoints, cadres de santé et responsables qualité du secteur sanitaire et médico-social.</p>
+          <h2>Par où commencer</h2>
+          <p>Trois lectures, dans l’ordre où un directeur adjoint les rencontre vraiment.</p>
         </div>
       </div>
       <div class="onboarding-grid">
         <div class="onboarding-card">
           <span class="onboarding-num">1</span>
           <div>
-            <h3>Comprendre les structures & leurs flux</h3>
-            <p>Explorez les établissements (MAS, EHPAD, CH, IME), le fonctionnement de la Sécurité sociale et les mécanismes de tarification (T2A, forfaits soins, CPOM).</p>
+            <h3>Structures et flux d’argent</h3>
+            <p>MAS, EHPAD, hôpital, IME : qui accueille qui, qui autorise, et comment T2A, forfaits soins et CPOM financent l’activité.</p>
           </div>
         </div>
         <div class="onboarding-card">
           <span class="onboarding-num">2</span>
           <div>
-            <h3>Maîtriser les métiers & leurs coopérations</h3>
-            <p>Consultez les fiches métiers et découvrez les coopérations, les responsabilités et les marges de décision au quotidien.</p>
+            <h3>Métiers et marges de décision</h3>
+            <p>Qui fait quoi, avec qui, et jusqu’où va la délégation — direction, qualité, soins, éducation et fonctions support.</p>
           </div>
         </div>
         <div class="onboarding-card">
           <span class="onboarding-num">3</span>
           <div>
-            <h3>Rejoindre la communauté & les événements</h3>
-            <p>Accédez à l'annuaire des diplômés alumni, publiez ou postulez à des offres de stage/alternance, et confirmez votre participation aux événements et job datings inter-établissements.</p>
+            <h3>Réseau et occasions concrètes</h3>
+            <p>Annuaire des diplômés, offres de stage ou d’alternance, et rendez-vous entre établissements.</p>
           </div>
         </div>
       </div>
@@ -501,9 +516,10 @@ function renderHome() {
     <div class="dashboard-lower">
       <div class="quick-panel glass-panel"><div class="section-title-row"><div><h2>Où voulez-vous aller ?</h2><p>Accès direct aux repères les plus utiles.</p></div></div><div class="quick-grid">
         <button class="quick-tile" data-nav="secu"><span class="icon-bubble">${icon("shield")}</span><span><strong>Sécurité Sociale & Liens</strong><small>Les 5 branches, l'ONDAM, CPAM/CARSAT, tarification et flux financiers.</small></span></button>
-        <button class="quick-tile" data-nav="abonnement"><span class="icon-bubble">${icon("spark")}</span><span><strong>Abonnement & Campus</strong><small>Pass étudiant 19 €, packs école et code d'accès maître universel.</small></span></button>
+        <button class="quick-tile" data-nav="abonnement"><span class="icon-bubble">${icon("spark")}</span><span><strong>Abonnement et Campus</strong><small>Pass étudiant, formules établissement et code d’accès transmis par votre école.</small></span></button>
         <button class="quick-tile" data-nav="logiciels"><span class="icon-bubble">${icon("layers")}</span><span><strong>Logiciels métiers de santé</strong><small>DPI, DUI (NETSoins), AgEval, GMAO, SIRH, planning et MSSanté.</small></span></button>
-        <button class="quick-tile" data-nav="qualite"><span class="icon-bubble">${icon("shield")}</span><span><strong>Qualité & Événements (AgEval)</strong><small>Niveaux d'EI (1 à 4), signalements ARS (e-SIN) et culture juste.</small></span></button>
+        <button class="quick-tile" data-nav="qualite"><span class="icon-bubble">${icon("shield")}</span><span><strong>Qualité & Triage AgEval</strong><small>Simulateur 4 niveaux d'EI, signalements ARS (e-SIN) et culture juste.</small></span></button>
+        <button class="quick-tile" data-nav="flashcards"><span class="icon-bubble">${icon("spark")}</span><span><strong>Flashcards Révisions MES</strong><small>Decks interactifs 3D : AgEval, 10 Lois de santé et gestion de crise.</small></span></button>
         <button class="quick-tile" data-nav="audit"><span class="icon-bubble">${icon("target")}</span><span><strong>Audits qualité & méthodes</strong><small>À quoi ça sert, 6 typologies (traceurs, APC), méthode en 5 étapes.</small></span></button>
         <button class="quick-tile" data-nav="rex"><span class="icon-bubble">${icon("lightbulb")}</span><span><strong>Mener un REX / CREX</strong><small>Méthode en 6 étapes, grille ALARM, sécurité psychologique.</small></span></button>
         <button class="quick-tile" data-nav="metiers-support"><span class="icon-bubble">${icon("people")}</span><span><strong>Corps de métier support</strong><small>Gouvernante, ASH, ASL, maintenance, SI, logistique et guichet unique.</small></span></button>
@@ -511,9 +527,9 @@ function renderHome() {
         <button class="quick-tile" data-nav="metiers"><span class="icon-bubble">${icon("briefcase")}</span><span><strong>Métiers & responsabilités</strong><small>Direction d'établissement, RQGR, CGRAS, D3S, CAFDES et encadrement.</small></span></button>
         <button class="quick-tile" data-nav="documents"><span class="icon-bubble">${icon("file")}</span><span><strong>Documents de pilotage</strong><small>EPRD, CPOM, DUERP, PAAQ : qui le produit et comment le faire vivre.</small></span></button>
         <button class="quick-tile" data-nav="reunions"><span class="icon-bubble">${icon("calendar")}</span><span><strong>Réunions & instances</strong><small>CODIR, COPIL Qualité, CVS, CSE, CREX : qui décide et qui associer.</small></span></button>
-        <button class="quick-tile" data-nav="rh"><span class="icon-bubble">${icon("users")}</span><span><strong>Questions RH & calculateurs</strong><small>35+ FAQ droit du travail, calculs ETP/ETPT et forfait jours.</small></span></button>
+        <button class="quick-tile" data-nav="rh"><span class="icon-bubble">${icon("users")}</span><span><strong>Pilotage RH & Calculateur ETP</strong><small>35+ FAQ droit du travail, calculs ETP/ETPT avec jauges et forfait jours.</small></span></button>
       </div></div>
-      <aside class="profile-card glass-panel"><span class="tag violet">PARCOURS MES</span><h3>Un profil hybride, ancré dans le terrain</h3><p>Les fiches métiers privilégient les passerelles entre direction, qualité, pilotage RH, budget et transformation numérique, avec une expérience de référence en MAS.</p><div class="profile-chip-row"><span class="tag mint">Qualité HAS</span><span class="tag sky">Pilotage RH</span><span class="tag gold">EPRD · CNR</span></div><button class="button subtle" data-nav="metiers">Voir les pistes adaptées ${icon("arrow",15)}</button></aside>
+      <aside class="profile-card glass-panel"><span class="tag violet">PARCOURS MES</span><h3>Un profil qui tient plusieurs métiers</h3><p>Les fiches relient direction, qualité, RH, budget et numérique. Le terrain de référence est la MAS : accueil, équipes et autorisation.</p><div class="profile-chip-row"><span class="tag mint">Qualité HAS</span><span class="tag sky">Pilotage RH</span><span class="tag gold">EPRD · CNR</span></div><button class="button subtle" data-nav="metiers">Voir les pistes adaptées ${icon("arrow",15)}</button></aside>
     </div>
     <div class="section-block"><div class="section-title-row"><div><h2>Trois repères pour décider</h2><p>Une décision solide croise le vécu des personnes, les équipes, les obligations, les moyens et les partenaires.</p></div></div><div class="focus-row"><article class="focus-card glass-panel"><span class="eyebrow">01 · PERSONNES</span><h3>Partir de la personne accompagnée</h3><p>Relier le projet personnalisé, les droits, l’expression et la continuité du parcours.</p></article><article class="focus-card glass-panel"><span class="eyebrow">02 · ÉQUIPES</span><h3>Rendre l’organisation tenable</h3><p>Prévenir les risques, soutenir les collectifs et clarifier les rôles de décision.</p></article><article class="focus-card glass-panel"><span class="eyebrow">03 · PILOTAGE</span><h3>Relier les moyens aux résultats</h3><p>Lire budget, effectifs, qualité et activité ensemble ; demander un arbitrage au bon niveau.</p></article></div></div>
     <div class="section-block notice">${icon("info",18)}<span><strong>Repère de lecture.</strong> Les textes, autorisations, conventions, statuts et compétences territoriales changent le cadre applicable. Chaque fiche indique les vérifications à faire avant une décision de gestion.</span></div>
@@ -648,13 +664,15 @@ function etptLine(index) {
   return `<div class="etpt-row" data-etpt-row><div class="etpt-row-title"><strong>Période / contrat ${number}</strong><button class="icon-button etpt-remove" type="button" data-action="remove-etpt-row" aria-label="Supprimer la ligne ${number}">${icon("trash",15)}</button></div><div class="form-grid"><label><span class="field-label">Heures contractuelles par semaine</span><input class="form-control" type="number" min="0" max="100" step="0.25" value="0" data-etpt-hours aria-label="Heures hebdomadaires, ligne ${number}"></label><label><span class="field-label">Mois de présence dans l’année</span><input class="form-control" type="number" min="0" max="12" step="0.5" value="0" data-etpt-months aria-label="Mois de présence, ligne ${number}"></label></div></div>`;
 }
 function renderEtpCalculator() {
-  return `<article class="tool-card glass-panel calculator-card" id="outil-etp"><div class="tool-card-head"><span class="icon-bubble">${icon("chart",17)}</span><div><span class="eyebrow">CALCULATEUR INTERACTIF</span><h2>ETP & ETPT</h2></div></div><p class="tool-intro">Séparez la quotité des contrats actifs à une date de leur présence annualisée.</p>
+  return `<article class="tool-card glass-panel calculator-card" id="outil-etp"><div class="tool-card-head"><span class="icon-bubble">${icon("chart",17)}</span><div><span class="eyebrow">PILOTAGE RESSOURCES HUMAINES</span><h2>Calculateur ETP & ETPT consolidé</h2></div></div><p class="tool-intro">Séparez la quotité des contrats actifs à une date de leur présence annualisée. Outil indispensable pour les prévisions budgétaires, le dialogue de gestion et les bilans sociaux.</p>
     <div class="form-grid etp-current-grid"><label><span class="field-label">Heures contractuelles hebdomadaires des salariés avec contrat actif à la date</span><input id="etp-active-hours" class="form-control" type="number" min="0" max="100000" step="0.25" value="0"><span class="field-hint">Additionnez les quotités contractualisées à cette date ; absences et présence planifiable se suivent à part.</span></label><label><span class="field-label">Référence hebdomadaire temps plein</span><input id="etp-week-reference" class="form-control" type="number" min="1" max="60" step="0.25" value="35"><span class="field-hint">Remplacez 35 h si l’organisation applique une autre référence.</span></label></div>
+    <div class="rh-calc-visual"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:12px;font-weight:600;color:var(--text-soft)">Niveau d'activité contractuelle instantané</span><span class="tag mint" style="font-size:11px">Instantané</span></div><div class="rh-meter"><div class="rh-meter-fill" id="etp-meter-bar" style="width:0%"></div></div></div>
     <div class="metric-strip"><div><span>ETP contractuels à la date</span><output id="etp-current-output" aria-live="polite">0,00</output></div><small>Heures contractuelles actives ÷ référence temps plein</small></div>
-    <div class="etpt-heading"><div><h3>Calculer l’ETPT annuel</h3><p>Une ligne par quotité stable. Scindez une ligne si les heures changent en cours d’année.</p></div><button class="button subtle" type="button" data-action="add-etpt-row">${icon("userplus",15)}Ajouter une période</button></div>
+    <div class="etpt-heading"><div><h3>Calculer l’ETPT annuel (Équivalent Temps Plein Travaillé)</h3><p>Une ligne par quotité stable. Scindez une ligne si les heures changent en cours d’année.</p></div><button class="button subtle" type="button" data-action="add-etpt-row">${icon("userplus",15)}Ajouter une période</button></div>
     <div class="etpt-lines" id="etpt-lines">${etptLine(0)}${etptLine(1)}</div>
-    <div class="form-grid annual-reference"><label><span class="field-label">Heures annuelles à temps plein (facultatif)</span><input id="etp-annual-reference" class="form-control" type="number" min="1" max="3000" step="1" placeholder="Ex. selon votre accord"><span class="field-hint">Saisissez la référence annuelle de votre structure pour convertir en heures.</span></label><div class="metric-tile"><span>ETPT sur la période</span><output id="etpt-total-output" aria-live="polite">0,00</output><small id="etpt-hours-output">Renseignez une référence annuelle pour obtenir les heures.</small></div></div>
-    <p class="formula-note"><strong>Formules :</strong> ETP = quotité des contrats actifs à la date ; ETPT = somme des (quotités × mois sous contrat ÷ 12). L’effectif physique compte des personnes, l’ETP mesure une quotité contractuelle à une date et l’ETPT pondère la présence sous contrat sur l’année. Les absences et la capacité réellement planifiable se suivent à part.</p>
+    <div class="form-grid annual-reference"><label><span class="field-label">Heures annuelles à temps plein (facultatif)</span><input id="etp-annual-reference" class="form-control" type="number" min="1" max="3000" step="1" placeholder="Ex. 1607 h (durée légale annuelle)"><span class="field-hint">Saisissez la référence annuelle de votre structure pour convertir en heures.</span></label><div class="metric-tile"><span>ETPT sur la période</span><output id="etpt-total-output" aria-live="polite">0,00</output><small id="etpt-hours-output">Renseignez une référence annuelle pour obtenir les heures.</small></div></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px"><button type="button" class="button primary rh-copy-summary-btn" data-action="copy-etp-summary">${icon("clipboard",15)}<span>Copier la synthèse RH pour CODIR / CPOM</span></button></div>
+    <p class="formula-note"><strong>Formules & repères juridiques :</strong> ETP = quotité des contrats actifs à la date ; ETPT = somme des (quotités × mois sous contrat ÷ 12). L’effectif physique compte des personnes, l’ETP mesure une quotité contractuelle à une date et l’ETPT pondère la présence sous contrat sur l’exercice budgétaire (EPRD / ERRD). Les absences et la capacité réellement planifiable se suivent dans le tableau de service.</p>
   </article>`;
 }
 function renderForfaitCalculator() {
@@ -679,20 +697,27 @@ function renderJobDescriptionBuilder() {
   return `<section class="section-block builder-card glass-panel" id="outil-fiche-poste"><div class="section-title-row"><div><span class="eyebrow">TRAME À COMPLÉTER</span><h2>Préparer une fiche de poste</h2><p>Complétez les repères puis générez un brouillon à retravailler avec RH et le manager.</p></div></div><form id="job-description-form" class="job-builder-form"><div class="form-grid"><label><span class="field-label">Intitulé du poste</span><input class="form-control" name="title" placeholder="Ex. responsable de service" required></label><label><span class="field-label">Structure / secteur</span><input class="form-control" name="organization" placeholder="Ex. MAS, EHPAD, service hospitalier"></label><label><span class="field-label">Rattachement hiérarchique</span><input class="form-control" name="reporting" placeholder="Ex. direction d’établissement"></label><label><span class="field-label">Périmètre / équipe</span><input class="form-control" name="team" placeholder="Effectif, unités, sites, métiers"></label></div><label><span class="field-label">Finalité et missions principales</span><textarea class="form-control" name="missions" placeholder="Décrivez les responsabilités et activités avec des verbes d’action."></textarea></label><label><span class="field-label">Autonomie, décisions et délégations</span><textarea class="form-control" name="authority" placeholder="Budget, décisions RH, signature, limites, alertes et escalades."></textarea></label><label><span class="field-label">Compétences / qualifications et conditions</span><textarea class="form-control" name="profile" placeholder="Diplômes requis, expérience, horaires, astreintes, risques, déplacements."></textarea></label><button class="button primary" type="submit">${icon("file",15)}Générer le brouillon</button></form><div class="job-preview-wrap"><label class="field-label" for="job-description-preview">Brouillon modifiable et copiable</label><textarea id="job-description-preview" class="form-control job-preview" placeholder="Votre trame apparaîtra ici."></textarea><button class="button subtle" type="button" data-action="copy-job-description">${icon("clipboard",15)}Copier le brouillon</button></div></section>`;
 }
 function calculateEtp() {
-  const reference=Number($("#etp-week-reference")?.value)||0;
-  const activeHours=Number($("#etp-active-hours")?.value)||0;
-  const etpOutput=$("#etp-current-output");
-  if(etpOutput) etpOutput.value=reference>0?formatNumber(activeHours/reference):"—";
-  let etpt=0;
-  $$("[data-etpt-row]").forEach(row=>{
-    const hours=Number($("[data-etpt-hours]",row)?.value)||0;
-    const months=Math.min(12,Math.max(0,Number($("[data-etpt-months]",row)?.value)||0));
-    if(reference>0) etpt+=(hours/reference)*(months/12);
+  const reference = Number($("#etp-week-reference")?.value) || 0;
+  const activeHours = Number($("#etp-active-hours")?.value) || 0;
+  const etpOutput = $("#etp-current-output");
+  const etpVal = reference > 0 ? activeHours / reference : 0;
+  if (etpOutput) etpOutput.value = reference > 0 ? formatNumber(etpVal) : "—";
+  const meter = $("#etp-meter-bar");
+  if (meter) {
+    const percent = Math.min(100, Math.max(0, (activeHours / (reference || 35)) * 25));
+    meter.style.width = `${percent}%`;
+  }
+  let etpt = 0;
+  $$("[data-etpt-row]").forEach(row => {
+    const hours = Number($("[data-etpt-hours]", row)?.value) || 0;
+    const months = Math.min(12, Math.max(0, Number($("[data-etpt-months]", row)?.value) || 0));
+    if (reference > 0) etpt += (hours / reference) * (months / 12);
   });
-  const total=$("#etpt-total-output"); if(total) total.value=reference>0?formatNumber(etpt):"—";
-  const annual=Number($("#etp-annual-reference")?.value)||0;
-  const annualOut=$("#etpt-hours-output");
-  if(annualOut) annualOut.textContent=annual>0?`${formatNumber(etpt*annual)} heures équivalent temps plein sur la période`:"Renseignez une référence annuelle pour obtenir les heures.";
+  const total = $("#etpt-total-output");
+  if (total) total.value = reference > 0 ? formatNumber(etpt) : "—";
+  const annual = Number($("#etp-annual-reference")?.value) || 0;
+  const annualOut = $("#etpt-hours-output");
+  if (annualOut) annualOut.textContent = annual > 0 ? `${formatNumber(etpt * annual)} heures équivalent temps plein sur la période` : "Renseignez une référence annuelle pour obtenir les heures.";
 }
 function syncForfaitCalendar() {
   const year=Number($("#forfait-year")?.value);
@@ -1083,12 +1108,98 @@ function qualityToolCards(list = QUALITY_TOOLS) {
   </article>`).join("");
 }
 
+function renderEiSimulator(selectedLevel = 4) {
+  const levels = (ADVERSE_EVENTS && ADVERSE_EVENTS.levels) || [];
+  const current = levels.find(l => l.level === Number(selectedLevel)) || levels[3] || levels[0];
+  if (!current) return "";
+  const isEigs = current.level === 4;
+  const badgeColor = current.color === "red" ? "danger" : current.color;
+
+  return `<div class="ei-simulator-card glass-panel" id="ei-simulator" data-sim-level="${current.level}">
+    <div class="ei-simulator-head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="icon-bubble ${current.color}" style="width:42px;height:42px;border-radius:12px">${icon("shield", 20)}</span>
+        <div>
+          <span class="eyebrow" style="color:var(--${badgeColor})">SIMULATEUR DE TRIAGE & DÉCISION AGEVAL</span>
+          <h3 style="margin:2px 0 0;font-size:17px;font-weight:750">Quelle conduite managériale selon la gravité ?</h3>
+        </div>
+      </div>
+      <div>
+        ${isEigs ? `<span class="ei-beacon-alarm" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);font-size:11px;font-weight:700"><span class="live-pulse-dot" style="background:var(--danger)"></span> CELLULE DE CRISE & ARS REQUIS</span>` : `<span class="tag ${current.color}">${esc(current.short)}</span>`}
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text-soft);margin:0 0 16px;line-height:1.55">
+      Sélectionnez le niveau pour prévisualiser instantanément la chaîne de responsabilités managériales, les délais d'alerte, les actions obligatoires et le circuit de déclaration externe (e-SIN / ARS / CD / Procureur).
+    </p>
+    <div class="ei-stepper-grid" role="radiogroup" aria-label="Niveau de gravité de l'événement indésirable">
+      ${levels.map(l => {
+        const active = l.level === current.level;
+        return `<button type="button" class="ei-step-btn level-${l.level} ${active ? "is-active" : ""}" data-action="sim-select-level" data-level="${l.level}" role="radio" aria-checked="${active ? "true" : "false"}">
+          <span class="ei-step-badge">${l.level}</span>
+          <span class="ei-step-name">${esc(l.short.split(" : ")[1] || l.short)}</span>
+        </button>`;
+      }).join("")}
+    </div>
+    <div class="ei-diag-panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div>
+          <h4 style="font-size:16px;font-weight:750;margin:0 0 4px;color:var(--text)">${esc(current.name)}</h4>
+          <p style="font-size:13px;color:var(--text-soft);margin:0">${esc(current.definition)}</p>
+        </div>
+        <button type="button" class="button tiny subtle" data-action="open-adverse-level" data-level="${current.level}" style="flex-shrink:0">
+          ${icon("book", 13)} <span>Fiche détaillée</span>
+        </button>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--stroke);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <strong style="display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--${badgeColor});margin-bottom:4px">
+          ${icon("check", 13)} Quand choisir ce niveau ?
+        </strong>
+        <p style="font-size:13px;color:var(--text);margin:0;line-height:1.5">${esc(current.whenToChoose)}</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px;margin-bottom:14px">
+        <div style="background:var(--surface-soft);border:1px solid var(--stroke);border-radius:12px;padding:12px 14px">
+          <strong style="display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-soft);margin-bottom:6px">
+            ${icon("briefcase", 13)} Qui pilote la gestion ?
+          </strong>
+          <p style="font-size:13px;color:var(--text);margin:0;font-weight:600">${esc(current.leadRole)}</p>
+        </div>
+        <div style="background:var(--surface-soft);border:1px solid var(--stroke);border-radius:12px;padding:12px 14px">
+          <strong style="display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-soft);margin-bottom:6px">
+            ${icon("shield", 13)} Déclaration externe (ARS / CD / Parquet)
+          </strong>
+          <p style="font-size:13px;margin:0;font-weight:600;color:${current.externalDeclaration === true ? 'var(--danger)' : current.externalDeclaration === false ? 'var(--mint)' : 'var(--coral)'}">
+            ${current.externalDeclaration === true ? '🚨 Obligatoire sans délai (Volet 1 e-SIN < 48h)' : current.externalDeclaration === false ? '✅ Interne uniquement (Saisie AgEval)' : esc(current.externalDeclaration)}
+          </p>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <strong style="display:block;font-size:12px;color:var(--text-soft);margin-bottom:8px">
+          ${icon("layers", 13)} Exemples concrets en établissement :
+        </strong>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:8px">
+          ${current.examples.map(ex => `<div style="padding:8px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--stroke);border-radius:8px;font-size:12px;color:var(--text-soft);line-height:1.4">• ${esc(ex)}</div>`).join("")}
+        </div>
+      </div>
+      <div>
+        <strong style="display:block;font-size:12px;color:var(--text-soft);margin-bottom:8px">
+          ${icon("arrow-up-right", 13)} Conduite à tenir immédiate & actions imposées :
+        </strong>
+        <ul class="ei-consequences-list" style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.6;color:var(--text)">
+          ${current.consequences.map(c => `<li>${esc(c)}</li>`).join("")}
+        </ul>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderQuality() {
   const ei = ADVERSE_EVENTS;
   return `<section class="page" aria-labelledby="quality-title">
     ${sectionHead("QUALITÉ & SÉCURITÉ · GESTION DES RISQUES", "AgEval, signalements et <span class=\"text-gradient\">gestion des événements indésirables.</span>", "Recueillir, hiérarchiser et traiter chaque événement indésirable (EI). Comprendre les 4 niveaux d'EI, ce que chaque niveau provoque comme circuit d'actions, et s'approprier les outils institutionnels comme AgEval de l'ANAP.", `<button class="button subtle" data-nav="rex">${icon("lightbulb",16)}Voir la démarche REX</button>`)}
     
     <div class="notice">${icon("info",18)}<span><strong>Culture juste & non punitive.</strong> ${esc(ei.culture)}</span></div>
+
+    ${renderEiSimulator(state.eiSimLevel || 4)}
 
     <div class="section-block" data-page-theme="Niveaux d’EI">
       <div class="section-title-row">
@@ -1632,10 +1743,40 @@ function bindDialogGestures() {
   grabber.addEventListener("pointercancel", () => { startY = null; });
 }
 function openSearch() {
-  const html = `<h2 class="dialog-title" id="dialog-title">Rechercher dans Mosaïque Santé</h2><p class="dialog-lede">Cherchez un établissement, un document, une instance, un métier ou un acteur.</p><label class="search-box" style="display:block;margin-top:16px"><span data-icon="search"></span><input class="form-control" id="global-search" type="search" autofocus placeholder="Ex. DUERP, MAS, CVS, EPRD…" aria-label="Recherche globale"></label><div class="search-results section-block" id="global-results" aria-live="polite"><div class="empty-state"><strong>Votre recherche apparaîtra ici</strong>Les fiches s’ouvrent directement depuis les résultats.</div></div>`;
-  openDialog("RECHERCHE GLOBALE", html);
-  setTimeout(() => $("#global-search")?.focus(), 20);
+  state.cmdFilter = "all";
+  const html = `<div class="cmd-palette">
+    <div class="cmd-header">
+      <div class="cmd-input-wrap">
+        <span class="cmd-search-icon">${icon("search", 18)}</span>
+        <input class="cmd-input" id="global-search" type="search" autofocus placeholder="Rechercher structures, métiers, lois, AgEval, ETP, REX, documents…" aria-label="Recherche globale" autocomplete="off">
+        <span class="cmd-shortcut">ESC</span>
+      </div>
+      <div class="cmd-filters" role="tablist" aria-label="Filtrer la recherche">
+        <button type="button" class="cmd-filter-pill is-active" data-action="cmd-filter" data-category="all" role="tab" aria-selected="true">Tout (13 thèmes)</button>
+        <button type="button" class="cmd-filter-pill" data-action="cmd-filter" data-category="structures" role="tab" aria-selected="false">Établissements</button>
+        <button type="button" class="cmd-filter-pill" data-action="cmd-filter" data-category="metiers" role="tab" aria-selected="false">Métiers</button>
+        <button type="button" class="cmd-filter-pill" data-action="cmd-filter" data-category="qualite" role="tab" aria-selected="false">Qualité & EI</button>
+        <button type="button" class="cmd-filter-pill" data-action="cmd-filter" data-category="lois" role="tab" aria-selected="false">Lois & Droits</button>
+        <button type="button" class="cmd-filter-pill" data-action="cmd-filter" data-category="rh" role="tab" aria-selected="false">RH & Outils</button>
+      </div>
+    </div>
+    <div class="cmd-results" id="global-results" aria-live="polite"></div>
+    <div class="cmd-footer">
+      <div class="cmd-footer-hints">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> Naviguer</span>
+        <span><kbd>↵</kbd> Ouvrir</span>
+        <span><kbd>ESC</kbd> Fermer</span>
+      </div>
+      <div class="cmd-footer-brand">Mosaïque Santé · Executive Command</div>
+    </div>
+  </div>`;
+  openDialog("RECHERCHE EXECUTIVE", html);
+  setTimeout(() => {
+    $("#global-search")?.focus();
+    globalSearchResults("");
+  }, 25);
 }
+
 function openSources() {
   const sorted = Object.values(SOURCES).sort((a,b) => a.label.localeCompare(b.label,"fr"));
   const html = `<h2 class="dialog-title" id="dialog-title">Sources, périmètre et limites</h2><p class="dialog-lede">Le contenu privilégie Légifrance, la HAS, la CNSA, l’ANAP, l’EHESP, le service public et FINESS. Les liens ouvrent les ressources officielles dans un nouvel onglet.</p><div class="notice" style="margin:16px 0">${icon("info",18)}<span>Cette application est une base de travail pédagogique, pas un avis juridique, médical ou financier. La version des textes et le périmètre d’autorisation de chaque site doivent être contrôlés avant action.</span></div><div class="sources-grid">${sorted.map(source => `<a class="source-card" href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${icon("external",15)}<span>${esc(source.label)}<small>${new URL(source.url).hostname}</small></span></a>`).join("")}</div><div class="separator"></div><p class="field-hint">La liste d’établissements présente les grandes familles et des types courants. La nomenclature détaillée dépend de FINESS et des textes applicables. Certains termes d’usage local (CODIREL, DUERME, EAM…) doivent être confirmés dans votre organisation.</p>`;
@@ -1653,23 +1794,87 @@ function openDocument(kind, id) {
   const item = DOCUMENTS.find(doc => doc.id === id);
   if (item) detailModal("document",item);
 }
+
 function globalSearchResults(query) {
-  const needle = query.trim().toLocaleLowerCase("fr");
+  const needle = (query || "").trim().toLocaleLowerCase("fr");
   const resultBox = $("#global-results");
   if (!resultBox) return;
-  if (!needle) { resultBox.innerHTML = `<div class="empty-state"><strong>Votre recherche apparaîtra ici</strong>Les fiches s’ouvrent directement depuis les résultats.</div>`; return; }
+  const currentCategory = state.cmdFilter || "all";
+
   const searchableJobs = isPremiumUnlocked() ? JOBS : JOBS.filter(item => item.isPremium !== true);
-  const collections = [
-    ...ESTABLISHMENTS.map(item => ({kind:"establishment",item,label:item.name,detail:item.family})),
-    ...searchableJobs.map(item => ({kind:"job",item,label:item.name,detail:item.level})),
-    ...MEETINGS.map(item => ({kind:"meeting",item,label:`${item.name} · ${item.full}`,detail:item.kind})),
-    ...DOCUMENTS.map(item => ({kind:"document",item,label:item.name,detail:item.category})),
-    ...ACTORS.map(item => ({kind:"actor",item,label:item.name,detail:item.type})),
-    ...SOFTWARES.map(item => ({kind:"software",item,label:item.name,detail:item.group})),
-    ...FAQ.map(item => ({kind:"faq",item,label:item.q,detail:"Question RH"}))
+  
+  const allCollections = [
+    ...ESTABLISHMENTS.map(item => ({ kind:"establishment", id:item.id, cat:"structures", label:item.name, detail:`${item.short || ""} · ${item.family}`, badge:"Structure", icon:"building", item })),
+    ...searchableJobs.map(item => ({ kind:"job", id:item.id, cat:"metiers", label:item.name, detail:`${item.level} · ${item.sector}`, badge:"Direction", icon:"briefcase", item })),
+    ...(typeof SUPPORT_JOBS !== "undefined" ? SUPPORT_JOBS : []).map(item => ({ kind:"support_job", id:item.id, cat:"metiers", label:item.title, detail:`${item.family} · ${item.level}`, badge:"Support", icon:"people", item })),
+    ...(typeof QUALITY_TOOLS !== "undefined" ? QUALITY_TOOLS : []).map(item => ({ kind:"quality_tool", id:item.id, cat:"qualite", label:item.name, detail:`${item.editor} · ${item.purpose}`, badge:"Outil Qualité", icon:"shield", item })),
+    ...((typeof ADVERSE_EVENTS !== "undefined" && ADVERSE_EVENTS.levels) || []).map(item => ({ kind:"adverse_level", id:String(item.level), cat:"qualite", label:item.name, detail:item.short, badge:"Niveau EI", icon:"alert", item })),
+    ...((typeof AUDIT_GUIDE !== "undefined" && AUDIT_GUIDE.types) || []).map(item => ({ kind:"audit", id:item.id, cat:"qualite", label:item.title, detail:item.desc, badge:"Audit HAS", icon:"target", item })),
+    ...((typeof HEALTH_POLICY !== "undefined" && HEALTH_POLICY.nationalLaws) || []).map(item => ({ kind:"health_law", id:item.id, cat:"lois", label:`${item.year} · ${item.name}`, detail:item.theme, badge:"Loi Santé", icon:"clipboard", item })),
+    ...DOCUMENTS.map(item => ({ kind:"document", id:item.id, cat:"lois", label:item.name, detail:item.category, badge:"Document", icon:"file", item })),
+    ...MEETINGS.map(item => ({ kind:"meeting", id:item.id, cat:"structures", label:`${item.name} (${item.full})`, detail:item.kind, badge:"Instance", icon:"calendar", item })),
+    ...ACTORS.map(item => ({ kind:"actor", id:item.id, cat:"structures", label:item.name, detail:item.type, badge:"Partenaire", icon:"network", item })),
+    ...(typeof CONVENTIONS !== "undefined" ? CONVENTIONS : []).map(item => ({ kind:"convention", id:item.idcc || item.name, cat:"rh", label:item.name, detail:`${item.idcc} · ${item.scope}`, badge:"Convention", icon:"file", item })),
+    ...SOFTWARES.map(item => ({ kind:"software", id:item.name, cat:"rh", label:item.name, detail:`${item.group} · ${item.what}`, badge:"Logiciel", icon:"layers", item })),
+    ...FAQ.map((item, idx) => ({ kind:"faq", id:String(idx), cat:"rh", label:item.q, detail:item.a.slice(0, 90) + "…", badge:"FAQ RH", icon:"help", item }))
   ];
-  const matches = collections.filter(record => JSON.stringify(record.item).toLocaleLowerCase("fr").includes(needle)).slice(0,12);
-  resultBox.innerHTML = matches.length ? matches.map((record,index) => `<button class="quick-tile search-result" style="width:100%;min-height:60px;margin-bottom:7px;align-items:center" data-action="open-search-result" data-kind="${record.kind}" data-id="${record.kind === "faq" ? index : record.item.id}"><span class="icon-bubble">${icon(record.kind === "document" ? "file" : record.kind === "job" ? "briefcase" : record.kind === "meeting" ? "calendar" : record.kind === "actor" ? "network" : record.kind === "software" ? "layers" : "building",15)}</span><span><strong>${esc(record.label)}</strong><small>${esc(record.detail)}</small></span>${icon("arrow-up-right",14)}</button>`).join("") : `<div class="empty-state"><strong>Aucun résultat</strong>Essayez un autre mot-clé.</div>`;
+
+  let list = allCollections;
+  if (currentCategory !== "all") {
+    list = list.filter(record => record.cat === currentCategory);
+  }
+
+  if (!needle) {
+    const quickPicks = [
+      { kind:"establishment", id:"mas", cat:"structures", label:"MAS (Maison d’Accueil Spécialisée)", detail:"Établissement médico-social · Handicap lourd", badge:"Populaire", icon:"building" },
+      { kind:"adverse_level", id:"4", cat:"qualite", label:"Niveau 4 — EIGS & Décès inattendu", detail:"Cellule de crise, signalement ARS e-SIN sous 48h, ALARM", badge:"Urgence", icon:"alert" },
+      { kind:"quality_tool", id:"ageval", cat:"qualite", label:"AgEval (ANAP)", detail:"Plateforme nationale d'évaluation et gestion des EI", badge:"Outil clé", icon:"shield" },
+      { kind:"health_law", id:"loi-2002-2", cat:"lois", label:"Loi 2002-2 du 2 janvier 2002", detail:"Rénovation de l'action sociale et 7 outils usagers", badge:"Fondateur", icon:"clipboard" },
+      { kind:"health_law", id:"bien-vieillir-2024", cat:"lois", label:"Loi Bien Vieillir 2024", detail:"Gouvernance, maltraitance, SPDA et carte professionnelle", badge:"Récent", icon:"spark" },
+      { kind:"convention", id:"ccn51", cat:"rh", label:"Convention FEHAP (CCN 51)", detail:"Établissements privés d'intérêt collectif à but non lucratif", badge:"RH", icon:"file" }
+    ];
+    resultBox.innerHTML = `
+      <div class="cmd-group-label">Accès rapides recommandés</div>
+      ${quickPicks.map((record, index) => `
+        <button class="cmd-item ${index === 0 ? "is-selected" : ""}" data-action="open-search-result" data-kind="${record.kind}" data-id="${record.id}" role="option">
+          <div class="cmd-item-icon">${icon(record.icon, 16)}</div>
+          <div class="cmd-item-body">
+            <div class="cmd-item-title">${esc(record.label)}</div>
+            <div class="cmd-item-sub">${esc(record.detail)}</div>
+          </div>
+          <span class="cmd-item-badge">${esc(record.badge)}</span>
+        </button>
+      `).join("")}
+      <div class="cmd-group-label" style="margin-top:14px">Ou tapez directement un mot-clé ci-dessus</div>
+    `;
+    hydrateIcons(resultBox);
+    return;
+  }
+
+  const matches = list.filter(record => {
+    const hay = (record.label + " " + record.detail + " " + JSON.stringify(record.item)).toLocaleLowerCase("fr");
+    return hay.includes(needle);
+  }).slice(0, 16);
+
+  if (!matches.length) {
+    resultBox.innerHTML = `<div class="empty-state">
+      <strong>Aucun résultat pour « ${esc(query)} »</strong>
+      <span>Vérifiez l'orthographe ou changez d'onglet (${currentCategory === 'all' ? 'Toutes catégories' : currentCategory}).</span>
+    </div>`;
+    return;
+  }
+
+  resultBox.innerHTML = matches.map((record, index) => `
+    <button class="cmd-item ${index === 0 ? "is-selected" : ""}" data-action="open-search-result" data-kind="${record.kind}" data-id="${record.id}" role="option">
+      <div class="cmd-item-icon">${icon(record.icon, 16)}</div>
+      <div class="cmd-item-body">
+        <div class="cmd-item-title">${esc(record.label)}</div>
+        <div class="cmd-item-sub">${esc(record.detail)}</div>
+      </div>
+      <span class="cmd-item-badge">${esc(record.badge)}</span>
+    </button>
+  `).join("");
+  hydrateIcons(resultBox);
 }
 
 function pagedCards(group, list, renderCards) {
@@ -2409,44 +2614,26 @@ function exportPeers() {
   const link = document.createElement("a"); link.href = url; link.download = "annuaire-mosaique-sante.json"; link.click(); URL.revokeObjectURL(url);
   showToast("Export JSON téléchargé.");
 }
-async function downloadFlashcardsPdf() {
-  if (!isPremiumUnlocked()) {
-    showToast("Les flashcards PDF sont réservées aux abonnés Premium.");
+function downloadFlashcardsPdf() {
+  const api = window.MOSAQUE_FLASHCARDS;
+  if (!api) {
+    showToast("Flashcards indisponibles. Rechargez la page.");
     return;
   }
-  let jsPDF;
-  try {
-    ({ jsPDF } = await import("https://cdn.jsdelivr.net/npm/jspdf@2.5.2/+esm"));
-  } catch {
-    showToast("Téléchargement PDF indisponible hors connexion. Réessayez avec une connexion.");
-    return;
+  api.exportPdf({ deckId: state.flashDeck })
+    .catch(() => showToast("L’export PDF a été interrompu. Réessayez."));
+}
+function renderFlashcards() {
+  const api = window.MOSAQUE_FLASHCARDS;
+  if (!api) {
+    return `<section class="page"><div class="empty-state"><strong>Flashcards indisponibles</strong>Rechargez la page pour charger le module de révision.</div></section>`;
   }
-  const pdf = new jsPDF({ unit:"mm", format:"a4" });
-  const cards = [
-    ...ESTABLISHMENTS.slice(0,12).map(item => ({ category:"ÉTABLISSEMENTS", front:item.name, back:`${item.audience}\n${item.manager}` })),
-    ...JOBS.filter(item => item.isPremium).slice(0,12).map(item => ({ category:"MÉTIERS PREMIUM", front:item.name, back:`${item.path}\n${item.boundary}` })),
-    ...FAQ.slice(0,20).map(item => ({ category:"QUESTIONS RH", front:item.q, back:item.a })),
-    ...DOCUMENTS.slice(0,12).map(item => ({ category:"DOCUMENTS", front:item.name, back:`${item.purpose}\n${item.when}` }))
-  ];
-  cards.forEach((card,index) => {
-    if (index > 0) pdf.addPage();
-    pdf.setFillColor(11,20,32); pdf.rect(0,0,210,297,"F");
-    pdf.setFillColor(21,35,52); pdf.roundedRect(14,18,182,238,8,8,"F");
-    pdf.setDrawColor(98,222,184); pdf.setLineWidth(.6); pdf.roundedRect(14,18,182,238,8,8,"S");
-    pdf.setTextColor(98,222,184); pdf.setFont("helvetica","bold"); pdf.setFontSize(10);
-    pdf.text(card.category,22,32);
-    pdf.setTextColor(244,248,251); pdf.setFontSize(20);
-    const front = pdf.splitTextToSize(card.front,160);
-    pdf.text(front,22,58);
-    pdf.setDrawColor(135,199,247); pdf.line(22,78,188,78);
-    pdf.setTextColor(203,221,233); pdf.setFont("helvetica","normal"); pdf.setFontSize(12);
-    const back = pdf.splitTextToSize(card.back,160);
-    pdf.text(back,22,94);
-    pdf.setTextColor(114,135,149); pdf.setFontSize(9);
-    pdf.text(`MOSAÏQUE SANTÉ  •  Flashcard ${index+1}/${cards.length}`,22,270);
+  return api.renderPage({
+    deckId: state.flashDeck,
+    query: state.queries.flashcards,
+    studyMode: state.flashStudyMode,
+    revealed: state.flashRevealed
   });
-  pdf.save("mosaique-sante-flashcards.pdf");
-  showToast("Flashcards PDF téléchargées.");
 }
 function syncMicroAdVisibility() {
   const ad = $("#micro-ad");
@@ -3494,6 +3681,25 @@ function attachPageHandlers() {
   }
   if (state.page === "documents") updateChecklistProgress();
   if (state.page === "carte") syncMapControls();
+  if (state.page === "flashcards") bindFlashcardSearch();
+}
+function bindFlashcardSearch() {
+  const input = $("#flash-query");
+  if (!input) return;
+  input.value = state.queries.flashcards;
+  input.addEventListener("input", () => {
+    state.queries.flashcards = input.value;
+    const query = input.value.trim().toLowerCase();
+    const cards = $$(".flash-card", stage);
+    let shown = 0;
+    cards.forEach(card => {
+      const match = !query || (card.dataset.search || "").includes(query);
+      card.hidden = !match;
+      if (match) shown += 1;
+    });
+    const counter = $(".flash-count", stage);
+    if (counter) counter.textContent = `${shown} / ${cards.length} cartes`;
+  });
 }
 function updateChecklistProgress() {
   const progress = $("#checklist-progress");
@@ -3750,6 +3956,26 @@ document.addEventListener("click", event => {
     downloadFlashcardsPdf();
     return;
   }
+  if (action === "select-flash-deck") {
+    state.flashDeck = actionEl.dataset.deck || state.flashDeck;
+    state.flashRevealed = new Set();
+    renderPage("flashcards", { immediate: true });
+    return;
+  }
+  if (action === "toggle-flash-mode") {
+    state.flashStudyMode = !state.flashStudyMode;
+    state.flashRevealed = new Set();
+    renderPage("flashcards", { immediate: true });
+    return;
+  }
+  if (action === "reveal-card") {
+    const cardId = actionEl.dataset.card;
+    if (!cardId) return;
+    if (state.flashRevealed.has(cardId)) state.flashRevealed.delete(cardId);
+    else state.flashRevealed.add(cardId);
+    renderPage("flashcards", { immediate: true });
+    return;
+  }
   if (action === "reset-auth-profile") {
     state.auth = { isUnlocked:false, verifiedPaid:false, plan:"freemium", profile:{} };
     writeJSON(STORE.auth, state.auth);
@@ -3802,16 +4028,64 @@ document.addEventListener("click", event => {
   if (action === "open-health-law") detailModal("health_law", HEALTH_POLICY.nationalLaws.find(item => item.id === actionEl.dataset.id));
   if (action === "open-adverse-level") detailModal("adverse_level", ADVERSE_EVENTS.levels.find(item => item.level === Number(actionEl.dataset.level)));
 
+  if (action === "sim-select-level") {
+    const lvl = Number(actionEl.dataset.level) || 4;
+    state.eiSimLevel = lvl;
+    const sim = $("#ei-simulator");
+    if (sim) {
+      const parent = sim.parentNode;
+      const temp = document.createElement("div");
+      temp.innerHTML = renderEiSimulator(lvl);
+      const newSim = temp.firstElementChild;
+      if (newSim && parent) {
+        parent.replaceChild(newSim, sim);
+        hydrateIcons(newSim);
+      }
+    }
+    return;
+  }
+
+  if (action === "copy-etp-summary") {
+    const ref = $("#etp-week-reference")?.value || "35";
+    const active = $("#etp-active-hours")?.value || "0";
+    const etp = $("#etp-current-output")?.value || "0,00";
+    const etpt = $("#etpt-total-output")?.value || "0,00";
+    const annualOut = $("#etpt-hours-output")?.textContent || "";
+    const summary = `📊 SYNTHÈSE RESSOURCES HUMAINES & EFFECTIFS (Mosaïque Santé)\n• Heures actives hebdomadaires : ${active} h\n• Référence temps plein : ${ref} h / semaine\n• ETP contractuel à la date : ${etp} ETP\n• ETPT consolidé sur l'année : ${etpt} ETPT\n• Volume d'heures annuelles : ${annualOut}\n—\nGénéré depuis Mosaïque Santé · Module RH & Effectifs`;
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(summary).then(() => {
+        showToast("✅ Synthèse RH copiée dans le presse-papier !");
+      }).catch(() => {
+        showToast("Impossible de copier automatiquement.");
+      });
+    } else {
+      showToast("Presse-papier non disponible sur ce navigateur.");
+    }
+    return;
+  }
+
+  if (action === "cmd-filter") {
+    state.cmdFilter = actionEl.dataset.category || "all";
+    $$(".cmd-filter-pill").forEach(p => {
+      const active = p === actionEl;
+      p.classList.toggle("is-active", active);
+      p.setAttribute("aria-selected", String(active));
+    });
+    const searchInput = $("#global-search");
+    globalSearchResults(searchInput?.value || "");
+    return;
+  }
+
   if (action === "toggle-faq") {
     toggleAccordion(actionEl);
   }
   if (action === "open-search-result") {
     const kind = actionEl.dataset.kind, id = actionEl.dataset.id;
     if (kind === "software") {
-      const item=SOFTWARES.find(entry=>entry.name===actionEl.querySelector("strong")?.textContent);
+      const item = SOFTWARES.find(entry => entry.name === id || entry.name === actionEl.querySelector("strong, .cmd-item-title")?.textContent);
       if(item) openDialog("LOGICIEL MÉTIER",`<h2 class="dialog-title" id="dialog-title">${esc(item.name)}</h2><p class="dialog-lede">${esc(item.what)}</p>${detailCell("Exemple / repère",item.examples)}${sourceLinks(item.sources || [item.source])}`);
     } else if (kind === "faq") {
-      const found = FAQ.find(item => item.q === actionEl.querySelector("strong")?.textContent);
+      const found = FAQ[Number(id)] || FAQ.find(item => item.q === id || item.q === actionEl.querySelector("strong, .cmd-item-title")?.textContent);
       if (found) openDialog("QUESTION RH",`<h2 class="dialog-title" id="dialog-title">${esc(found.q)}</h2><p class="dialog-lede">${esc(found.a)}</p>${sourceLinks(found.sources || [])}`);
     } else if (kind === "quality_tool") {
       const q = QUALITY_TOOLS.find(item => item.id === id);
@@ -3825,6 +4099,12 @@ document.addEventListener("click", event => {
     } else if (kind === "adverse_level") {
       const lvl = ADVERSE_EVENTS.levels.find(item => item.level === Number(id));
       if (lvl) detailModal("adverse_level", lvl);
+    } else if (kind === "convention") {
+      const c = CONVENTIONS.find(item => (item.idcc && item.idcc === id) || item.name === id);
+      if (c) openDialog("CONVENTION COLLECTIVE", `<h2 class="dialog-title" id="dialog-title">${esc(c.name)}</h2><p class="dialog-lede">${esc(c.scope)}</p>${detailCell("IDCC / Statut", c.idcc)}${detailCell("Points de vigilance", c.watch)}${sourceLinks([c.source])}`);
+    } else if (kind === "audit") {
+      renderPage("audit");
+      closeDialog();
     } else {
       const map = { establishment:ESTABLISHMENTS, job:JOBS, meeting:MEETINGS, document:DOCUMENTS, actor:ACTORS };
       const item = map[kind]?.find(entry => entry.id === id);
@@ -4032,6 +4312,31 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape" && peerMultiSelect.isOpen) { peerMultiSelect.close(); return; }
   if (event.key === "Escape" && sidebar.classList.contains("is-open")) { closeMenu(); return; }
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openSearch(); }
+  const cmdPalette = $("#global-results")?.closest(".cmd-palette");
+  if (cmdPalette) {
+    const items = $$(".cmd-item", cmdPalette);
+    const selected = $(".cmd-item.is-selected", cmdPalette);
+    let idx = items.indexOf(selected);
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      const nextIdx = idx < items.length - 1 ? idx + 1 : 0;
+      items.forEach((it, i) => it.classList.toggle("is-selected", i === nextIdx));
+      items[nextIdx]?.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      const prevIdx = idx > 0 ? idx - 1 : items.length - 1;
+      items.forEach((it, i) => it.classList.toggle("is-selected", i === prevIdx));
+      items[prevIdx]?.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    if (event.key === "Enter" && selected) {
+      event.preventDefault();
+      selected.click();
+      return;
+    }
+  }
   if ((event.key === "Enter" || event.key === " ") && event.target.matches?.(".multiselect-option")) {
     event.preventDefault();
     peerMultiSelect.toggleOption(event.target.dataset.value);
