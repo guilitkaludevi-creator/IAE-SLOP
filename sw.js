@@ -1,9 +1,9 @@
-const CACHE = "mosaique-sante-v2026-11-22-dropdown-fix";
+const CACHE = "mosaique-sante-v2026-11-22-zindex-fix";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261122-dropdown-fix",
-  "./app.js?v=20261122-highend",
+  "./app.css?v=20261122-zindex-fix",
+  "./app.js?v=20261122-zindex-fix",
   "./data.js?v=20261122-highend",
   "./flashcards.js?v=20261122-highend",
   "./firebase-init.js?v=20261122-highend",

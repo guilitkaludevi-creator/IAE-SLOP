@@ -3888,6 +3888,7 @@ document.addEventListener("click", event => {
         wrap.classList.add("is-open");
         dropdown.hidden = false;
         customTrigger.setAttribute("aria-expanded", "true");
+        wrap.closest(".filter-bar, .network-tools, .form-grid, #timeline-post-form-wrap")?.classList.add("is-open");
         const searchInput = dropdown.querySelector('input[type="text"]');
         if (searchInput) {
           searchInput.value = "";
@@ -3898,6 +3899,7 @@ document.addEventListener("click", event => {
         wrap.classList.remove("is-open");
         dropdown.hidden = true;
         customTrigger.setAttribute("aria-expanded", "false");
+        wrap.closest(".filter-bar, .network-tools, .form-grid, #timeline-post-form-wrap")?.classList.remove("is-open");
       }
     }
     return;
@@ -3916,7 +3918,10 @@ document.addEventListener("click", event => {
     }
     setCustomSelectValue(id, val);
     const wrap = document.getElementById(`${id}-multiselect`);
-    if (wrap) wrap.classList.remove("is-open");
+    if (wrap) {
+      wrap.classList.remove("is-open");
+      wrap.closest(".filter-bar, .network-tools, .form-grid, #timeline-post-form-wrap")?.classList.remove("is-open");
+    }
     const dropdown = document.getElementById(`${id}-dropdown`);
     if (dropdown) dropdown.hidden = true;
     const trigger = document.getElementById(`${id}-trigger`);
@@ -3944,6 +3949,7 @@ document.addEventListener("click", event => {
       if (d) d.hidden = true;
       const t = w.querySelector(".multiselect-trigger");
       if (t) t.setAttribute("aria-expanded", "false");
+      w.closest(".filter-bar, .network-tools, .form-grid, #timeline-post-form-wrap")?.classList.remove("is-open");
     });
     if (peerMultiSelect.isOpen) peerMultiSelect.close();
     else peerMultiSelect.open();
@@ -3971,6 +3977,7 @@ document.addEventListener("click", event => {
       if (d) d.hidden = true;
       const t = w.querySelector(".multiselect-trigger");
       if (t) t.setAttribute("aria-expanded", "false");
+      w.closest(".filter-bar, .network-tools, .form-grid, #timeline-post-form-wrap")?.classList.remove("is-open");
     });
   }
 
@@ -4426,9 +4433,20 @@ document.addEventListener("change", event => {
 document.addEventListener("mousedown", event => {
   if (event.button === 0 && event.target.closest(".filter-select [data-filter-choice]")) event.preventDefault();
 });
+document.addEventListener("toggle", event => {
+  if (event.target.matches?.(".filter-select")) {
+    const bar = event.target.closest(".filter-bar");
+    if (bar) bar.classList.toggle("is-open", event.target.open);
+  }
+}, true);
 document.addEventListener("click", event => {
   const dropdown = event.target.closest(".filter-select");
-  $$(".filter-select[open]").forEach(open => { if (open !== dropdown) open.open = false; });
+  $$(".filter-select[open]").forEach(open => {
+    if (open !== dropdown) {
+      open.open = false;
+      open.closest(".filter-bar")?.classList.remove("is-open");
+    }
+  });
   const option = event.target.closest("[data-filter-choice]");
   if (!dropdown || !option) return;
   const group = dropdown.dataset.selectFilter;
@@ -4439,12 +4457,18 @@ document.addEventListener("click", event => {
   trigger.setAttribute("aria-label", `${dropdown.dataset.filterLabel} : ${label}`);
   $$("[data-filter-choice]", dropdown).forEach(item => item.setAttribute("aria-pressed", String(item === option)));
   dropdown.open = false;
+  dropdown.closest(".filter-bar")?.classList.remove("is-open");
   trigger.focus({ preventScroll:true });
   applyFilter(group);
 });
 document.addEventListener("focusout", event => {
   const dropdown = event.target.closest(".filter-select");
-  if (dropdown) requestAnimationFrame(() => { if (!dropdown.contains(document.activeElement)) dropdown.open = false; });
+  if (dropdown) requestAnimationFrame(() => {
+    if (!dropdown.contains(document.activeElement)) {
+      dropdown.open = false;
+      dropdown.closest(".filter-bar")?.classList.remove("is-open");
+    }
+  });
 });
 document.addEventListener("click", event => {
   const filter = event.target.closest("[data-filter-group]");
@@ -4494,12 +4518,14 @@ document.addEventListener("keydown", event => {
     if (event.key === "Escape" && dropdown.open) {
       event.preventDefault();
       dropdown.open = false;
+      dropdown.closest(".filter-bar")?.classList.remove("is-open");
       $("summary", dropdown).focus();
       return;
     }
     if (event.target.matches("summary") && event.key === "ArrowDown") {
       event.preventDefault();
       dropdown.open = true;
+      dropdown.closest(".filter-bar")?.classList.add("is-open");
       (options.find(option => option.getAttribute("aria-pressed") === "true") || options[0])?.focus();
       return;
     }
@@ -4515,6 +4541,7 @@ document.addEventListener("keydown", event => {
     const openCustom = $(".custom-select-wrap.is-open");
     if (openCustom) {
       openCustom.classList.remove("is-open");
+      openCustom.closest(".filter-bar, .network-tools, .form-grid, #timeline-post-form-wrap")?.classList.remove("is-open");
       const d = openCustom.querySelector(".multiselect-dropdown");
       if (d) d.hidden = true;
       const t = openCustom.querySelector(".multiselect-trigger");
