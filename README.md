@@ -5,7 +5,7 @@ Prototype web mobile-first pour les futurs managers d’établissements sanitair
 ## Contenu
 
 - Panorama de structures et de dispositifs, avec publics, métiers, partenaires et repères de management.
-- Filtres déroulants translucides par famille, secteur, catégorie ou type dans les pages Établissements, Métiers de direction, Métiers support, Documents de pilotage et Acteurs institutionnels, combinables avec la recherche et utilisables au clavier.
+- Filtres déroulants translucides par famille, secteur, catégorie ou type dans les pages Établissements, Métiers de direction, Métiers support, Réunions et instances, Documents de pilotage et Acteurs institutionnels, combinables avec la recherche et utilisables au clavier.
 - Onglets thématiques sur les pages de repères les plus denses, navigables avec les flèches du clavier. Les grandes listes affichent six résultats par page ; les recherches et filtres portent toujours sur l’ensemble des résultats accessibles.
 - Pistes de métiers adaptées au Master Management des établissements de santé et à une expérience d’adjoint de direction en MAS.
 - **Nouveau : Corps de métier support sous la responsabilité du dirigeant** (gouvernante, ASH/ASR, ASL, maintenance, logistique, SI, qualité, guichet unique) avec rôles, organigramme, défis et matrice d'interactions transversales.

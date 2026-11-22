@@ -316,18 +316,25 @@ function animateContent(elements, direction = 1) {
   contentAnimations.clear();
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const delays = [0, 80, 145, 200, 245, 275];
-  const visible = elements.filter(element => {
+  elements.forEach(element => {
     if (element.matches(".timeline-post")) {
-      if (typeof element.getAnimations !== "function") return false;
+      if (typeof element.getAnimations !== "function") return;
       element.getAnimations({ subtree:true }).filter(animation => animation.animationName === "post-in").forEach(animation => animation.cancel());
     }
+  });
+  const visible = [];
+  for (const element of elements) {
+    if (element.matches(".timeline-post") && typeof element.getAnimations !== "function") continue;
     const rect = element.getBoundingClientRect();
-    return rect.width && rect.height && rect.bottom > 0 && rect.top < innerHeight * 1.35
+    if (rect.width && rect.height && rect.bottom > 0 && rect.top < innerHeight * 1.35
       && getComputedStyle(element).transform === "none"
       && !element.matches(".map-frame, .multiselect-wrap")
       && !element.querySelector(".map-frame, .multiselect-wrap")
-      && ![element, ...element.querySelectorAll("*")].some(child => getComputedStyle(child).position === "fixed");
-  }).slice(0, delays.length);
+      && ![element, ...element.querySelectorAll("*")].some(child => getComputedStyle(child).position === "fixed")) {
+      visible.push(element);
+      if (visible.length === delays.length) break;
+    }
+  }
   visible.forEach((element, index) => {
     if (typeof element.animate !== "function") return;
     const animation = element.animate(
@@ -578,8 +585,8 @@ function renderMeetings() {
   const kinds = ["Tout", ...new Set(MEETINGS.map(item => item.kind))];
   return `<section class="page" aria-labelledby="meeting-title">${sectionHead("BOÎTE À OUTILS · GOUVERNANCE", "Les réunions qui font <span class=\"text-gradient\">avancer.</span>", "Qui doit être autour de la table ? Quel est le niveau de décision ? Une réunion utile laisse un objectif clair, une trace et un responsable pour chaque suite.", `<button class="button subtle" data-action="meeting-template">${icon("clipboard",16)}Trame de réunion</button>`)}
     <div class="notice">${icon("info",18)}<span><strong>CODIR, CODIREL et COPIL sont des appellations d’organisation.</strong> Le CVS, les instances de dialogue social et les commissions hospitalières ont des cadres distincts. Le pouvoir de décision dépend du mandat, des textes et des délégations.</span></div>
-    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="meeting-query" type="search" placeholder="Sigle, objectif, participants…" aria-label="Rechercher une réunion"></label></div>
-    ${renderPills("meetings", kinds, state.filters.meetings)}<div class="section-block meeting-grid" id="meeting-results">${meetingCards()}</div>
+    <div class="filter-bar"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="meeting-query" type="search" placeholder="Sigle, objectif, participants…" aria-label="Rechercher une réunion"></label>${renderFilterSelect("meetings", kinds, state.filters.meetings, "Filtrer les réunions par type", "Tous les types")}</div>
+    <div class="section-block meeting-grid" id="meeting-results">${meetingCards()}</div>
   </section>`;
 }
 function documentCards(list = DOCUMENTS) {
@@ -3933,6 +3940,9 @@ document.addEventListener("change", event => {
   }
 });
 
+document.addEventListener("mousedown", event => {
+  if (event.button === 0 && event.target.closest(".filter-select [data-filter-choice]")) event.preventDefault();
+});
 document.addEventListener("click", event => {
   const dropdown = event.target.closest(".filter-select");
   $$(".filter-select[open]").forEach(open => { if (open !== dropdown) open.open = false; });
