@@ -432,8 +432,14 @@ function renderPage(page, { immediate = false, fromHistory = false, restoreScrol
     if (page === "inscription-annuaire") {
       peerMultiSelect.init();
       const editingPeer = state.peers.find(p => p.id === state.editingPeerId);
-      if (editingPeer) fillPeerForm(editingPeer);
-      else state.editingPeerId = null;
+      if (editingPeer) {
+        fillPeerForm(editingPeer);
+      } else {
+        state.editingPeerId = null;
+        setCustomSelectValue("peer-region", "");
+        setCustomSelectValue("peer-place", "");
+        setCustomSelectValue("peer-role", "");
+      }
     }
     if (page === "timeline") {
       const feed = $("#timeline-feed");
@@ -536,14 +542,98 @@ function renderHome() {
   </section>`;
 }
 
+function renderCustomSelect({ id, name, options, value = "", placeholder = "Choisir une option…", search = true, required = false }) {
+  const selectedOpt = options.find(o => (typeof o === "string" ? o : o.value) === value);
+  const displayLabel = selectedOpt ? (typeof selectedOpt === "string" ? selectedOpt : selectedOpt.label) : placeholder;
+  const hasValue = Boolean(value && value !== "Tout");
+
+  return `
+    <div class="multiselect-wrap custom-select-wrap" id="${esc(id)}-multiselect" data-custom-select="${esc(id)}">
+      <div class="multiselect-trigger" tabindex="0" id="${esc(id)}-trigger" role="combobox" aria-expanded="false" data-action="toggle-custom-select" data-select-target="${esc(id)}">
+        <div class="multiselect-tags">
+          <span class="multiselect-placeholder ${hasValue ? "has-value" : ""}" id="${esc(id)}-display" data-placeholder="${esc(placeholder)}">${esc(displayLabel)}</span>
+        </div>
+        <span class="multiselect-arrow">${icon("chevron-down", 14)}</span>
+      </div>
+      <div class="multiselect-dropdown glass-panel" id="${esc(id)}-dropdown" hidden>
+        ${search && options.length > 5 ? `
+          <div class="multiselect-search">
+            <input type="text" class="form-control" placeholder="Filtrer…" data-custom-search="${esc(id)}" autocomplete="off" style="min-height:36px;padding:6px 10px;font-size:12px">
+          </div>
+        ` : ""}
+        <div class="multiselect-options" id="${esc(id)}-options" role="listbox">
+          ${options.map(opt => {
+            const val = typeof opt === "string" ? opt : opt.value;
+            const lbl = typeof opt === "string" ? opt : opt.label;
+            const isSelected = val === value;
+            return `
+              <div class="multiselect-option ${isSelected ? "is-selected" : ""}" data-value="${esc(val)}" data-select-for="${esc(id)}" role="option" tabindex="0">
+                <span class="multiselect-checkbox" aria-hidden="true"></span>
+                <span>${esc(lbl)}</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+      <input type="hidden" name="${esc(name || id)}" id="${esc(id)}" value="${esc(value)}" ${required ? "required" : ""}>
+    </div>
+  `;
+}
+
+function setCustomSelectValue(id, val) {
+  const input = document.getElementById(id);
+  if (input) input.value = val;
+  const display = document.getElementById(`${id}-display`);
+  const matchingOption = $(`#${id}-options .multiselect-option[data-value="${CSS.escape(val)}"]`);
+  if (display) {
+    if (matchingOption) {
+      display.textContent = matchingOption.querySelector("span:last-child")?.textContent || val;
+      display.classList.add("has-value");
+    } else if (val && val !== "Tout") {
+      display.textContent = val;
+      display.classList.add("has-value");
+    } else {
+      const defaultPlaceholder = display.dataset.placeholder || (val === "Tout" ? "Tout" : "Choisir une option…");
+      display.textContent = defaultPlaceholder;
+      display.classList.toggle("has-value", val === "Tout");
+    }
+  }
+  $$(`#${id}-options .multiselect-option`).forEach(opt => {
+    opt.classList.toggle("is-selected", opt.dataset.value === val);
+  });
+}
+
+function filterCustomOptions(id, query) {
+  const q = (query || "").toLowerCase().trim();
+  $$(`#${id}-options .multiselect-option`).forEach(opt => {
+    const text = (opt.textContent || "").toLowerCase();
+    opt.style.display = text.includes(q) ? "flex" : "none";
+  });
+}
+
 function renderPills(group, values, selected) {
   return `<div class="pills" role="group" aria-label="Filtrer les résultats">${values.map(value => `<button class="pill${selected === value ? " is-selected" : ""}" data-filter-group="${group}" data-filter-value="${esc(value)}" aria-pressed="${selected === value}">${esc(value)}</button>`).join("")}</div>`;
 }
 function renderFilterSelect(group, values, selected, label, allLabel) {
   const display = value => value === "Tout" ? allLabel : value;
   return `<details class="filter-select" data-select-filter="${group}" data-filter-label="${esc(label)}">
-    <summary class="filter-select-trigger" aria-label="${esc(`${label} : ${display(selected)}`)}"><span class="filter-select-value">${esc(display(selected))}</span>${icon("chevron-down",16)}</summary>
-    <div class="filter-select-menu" role="group" aria-label="${esc(label)}">${values.map(value => `<button type="button" class="filter-select-option" data-filter-choice="${esc(value)}" aria-pressed="${value === selected}"><span>${esc(display(value))}</span><span class="filter-select-check" aria-hidden="true">${icon("check",15)}</span></button>`).join("")}</div>
+    <summary class="filter-select-trigger" aria-label="${esc(`${label} : ${display(selected)}`)}">
+      <span class="filter-select-value">${esc(display(selected))}</span>
+      <span class="multiselect-arrow">${icon("chevron-down",14)}</span>
+    </summary>
+    <div class="filter-select-menu" role="group" aria-label="${esc(label)}">
+      ${values.length > 6 ? `
+        <div class="multiselect-search" style="margin-bottom:7px">
+          <input type="text" class="form-control" placeholder="Filtrer…" data-action="filter-select-search" style="min-height:36px;padding:6px 10px;font-size:12px">
+        </div>
+      ` : ""}
+      <div class="filter-select-options-list" style="overflow-y:auto;max-height:220px;display:grid;gap:3px;scrollbar-width:thin">
+        ${values.map(value => `<button type="button" class="filter-select-option ${value === selected ? "is-selected" : ""}" data-filter-choice="${esc(value)}" aria-pressed="${value === selected}">
+          <span class="multiselect-checkbox" aria-hidden="true"></span>
+          <span>${esc(display(value))}</span>
+        </button>`).join("")}
+      </div>
+    </div>
   </details>`;
 }
 function renderFavorite(id) {
@@ -919,7 +1009,11 @@ function renderNetwork() {
   return `<section class="page" aria-labelledby="network-title">${sectionHead("COMMUNAUTÉ · RÉSEAU DE PROMOTION", "Le réseau alumni, <span class=\"text-gradient\">à portée de main.</span>", "Retrouvez une expérience, un secteur ou un interlocuteur de votre promotion. Pour apparaître dans le réseau, utilisez l’onglet « Inscription au réseau ».", `<button class="button subtle" data-action="export-peers">${icon("download",15)}Exporter mes fiches</button>`)}
     ${communityTabs("reseau")}
     <section class="network-results glass-panel"><div class="section-title-row"><div><span class="eyebrow">ANNUAIRE VOLONTAIRE</span><h2 style="margin-top:10px">Trouver une expérience</h2><p id="peer-count">Chargement des fiches…</p></div><div class="section-title-actions"><button class="button primary" data-nav="inscription-annuaire">${icon("userplus",14)}Ajouter ma fiche</button><button class="button subtle" data-action="clear-peers">${icon("trash",14)}Tout supprimer</button></div></div>
-      <div class="network-tools"><label class="search-box"><span data-icon="search"></span><input class="form-control" id="peer-query" type="search" placeholder="Nom, rôle, mot-clé…" aria-label="Rechercher une personne"></label><select class="form-control" id="peer-experience-filter" aria-label="Filtrer par expérience"><option value="Tout">Toutes les expériences</option>${RESEARCH_AREAS.map(item => `<option>${esc(item)}</option>`).join("")}</select><select class="form-control" id="peer-region-filter" aria-label="Filtrer par région"><option value="Tout">Toutes les régions</option>${regionOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div>
+      <div class="network-tools">
+        <label class="search-box"><span data-icon="search"></span><input class="form-control" id="peer-query" type="search" placeholder="Nom, rôle, mot-clé…" aria-label="Rechercher une personne"></label>
+        <div style="flex:1;min-width:180px">${renderCustomSelect({ id: "peer-experience-filter", name: "experienceFilter", options: [{ value: "Tout", label: "Toutes les expériences" }, ...RESEARCH_AREAS.map(item => ({ value: item, label: item }))], value: "Tout", placeholder: "Toutes les expériences", search: true })}</div>
+        <div style="flex:1;min-width:160px">${renderCustomSelect({ id: "peer-region-filter", name: "regionFilter", options: [{ value: "Tout", label: "Toutes les régions" }, ...regionOptions.map(item => ({ value: item, label: item }))], value: "Tout", placeholder: "Toutes les régions", search: true })}</div>
+      </div>
       <div class="peer-list" id="peer-list"></div><p class="field-hint" style="margin-top:12px">Les fiches sont synchronisées avec la promotion quand la connexion le permet, et conservées sur cet appareil.</p>
     </section>
   </section>`;
@@ -937,9 +1031,21 @@ function renderPeerRegistration() {
       <form class="network-form" id="peer-form" novalidate>
         <input type="hidden" id="peer-edit-id" name="editId" value="${state.editingPeerId || ''}">
         <div class="form-grid"><div><label class="field-label" for="peer-name">Nom affiché *</label><input class="form-control" id="peer-name" name="name" maxlength="70" required placeholder="Prénom Nom"></div><div><label class="field-label" for="peer-email">Courriel de contact *</label><input class="form-control" id="peer-email" name="email" type="email" maxlength="120" required placeholder="prenom@exemple.fr"></div></div>
-        <div class="form-grid"><div><label class="field-label" for="peer-region">Région *</label><select class="form-control" id="peer-region" name="region" required><option value="">Choisir une région</option>${regionOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div><div><label class="field-label" for="peer-place">Lieu d’exercice / secteur *</label><select class="form-control" id="peer-place" name="sector" required><option value="">Choisir un secteur</option>${placeOptions.map(item => `<option>${esc(item)}</option>`).join("")}</select></div></div>
         <div class="form-grid">
-          <div><label class="field-label" for="peer-role">Rôle actuel *</label><select class="form-control" id="peer-role" name="role" required><option value="">Choisir un rôle</option>${roles.map(item => `<option>${esc(item)}</option>`).join("")}</select></div>
+          <div>
+            <label class="field-label" id="peer-region-label">Région *</label>
+            ${renderCustomSelect({ id: "peer-region", name: "region", options: regionOptions.map(item => ({ value: item, label: item })), placeholder: "Choisir une région", search: true, required: true })}
+          </div>
+          <div>
+            <label class="field-label" id="peer-place-label">Lieu d’exercice / secteur *</label>
+            ${renderCustomSelect({ id: "peer-place", name: "sector", options: placeOptions.map(item => ({ value: item, label: item })), placeholder: "Choisir un secteur", search: true, required: true })}
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="field-label" id="peer-role-label">Rôle actuel *</label>
+            ${renderCustomSelect({ id: "peer-role", name: "role", options: roles.map(item => ({ value: item, label: item })), placeholder: "Choisir un rôle", search: true, required: true })}
+          </div>
           <div><label class="field-label" for="peer-linkedin">Profil LinkedIn (optionnel, conservé sur cet appareil)</label><input class="form-control" id="peer-linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/prenom-nom" maxlength="180"></div>
         </div>
         <div style="margin-bottom:14px">
@@ -1007,12 +1113,20 @@ function renderTimeline() {
         <form id="timeline-post-form">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px">
             <div>
-              <label class="field-label">Type de publication *</label>
-              <select name="type" class="form-control" required id="timeline-post-type-select">
-                <option value="job_offer">💼 Offre d'emploi / Alternance / Stage</option>
-                <option value="event">📅 Événement / Job Dating / Rencontre</option>
-                <option value="announcement">📢 Annonce générale / Appel à projets</option>
-              </select>
+              <label class="field-label" id="timeline-post-type-label">Type de publication *</label>
+              ${renderCustomSelect({
+                id: "timeline-post-type-select",
+                name: "type",
+                options: [
+                  { value: "job_offer", label: "💼 Offre d'emploi / Alternance / Stage" },
+                  { value: "event", label: "📅 Événement / Job Dating / Rencontre" },
+                  { value: "announcement", label: "📢 Annonce générale / Appel à projets" }
+                ],
+                value: "job_offer",
+                placeholder: "Type de publication…",
+                search: false,
+                required: true
+              })}
             </div>
             <div>
               <label class="field-label">Titre de l'annonce *</label>
@@ -2389,9 +2503,9 @@ function fillPeerForm(peer) {
   
   if ($("#peer-name")) $("#peer-name").value = peer.name || "";
   if ($("#peer-email")) $("#peer-email").value = peer.email || "";
-  if ($("#peer-region")) $("#peer-region").value = peer.region || "";
-  if ($("#peer-place")) $("#peer-place").value = peer.sector || "";
-  if ($("#peer-role")) $("#peer-role").value = peer.role || "";
+  setCustomSelectValue("peer-region", peer.region || "");
+  setCustomSelectValue("peer-place", peer.sector || "");
+  setCustomSelectValue("peer-role", peer.role || "");
   if ($("#peer-linkedin")) $("#peer-linkedin").value = peer.linkedin || "";
   if ($("#peer-summary")) $("#peer-summary").value = peer.summary || "";
   
@@ -3751,6 +3865,68 @@ document.addEventListener("click", event => {
     if (popover) popover.hidden = true;
   }
 
+  // Custom single-select dropdowns
+  const customTrigger = event.target.closest('[data-action="toggle-custom-select"]');
+  if (customTrigger) {
+    event.preventDefault();
+    const targetId = customTrigger.dataset.selectTarget;
+    const wrap = document.getElementById(`${targetId}-multiselect`);
+    const dropdown = document.getElementById(`${targetId}-dropdown`);
+    if (wrap && dropdown) {
+      const willOpen = dropdown.hidden;
+      $$(".custom-select-wrap.is-open").forEach(other => {
+        if (other !== wrap) {
+          other.classList.remove("is-open");
+          const otherDrop = other.querySelector(".multiselect-dropdown");
+          if (otherDrop) otherDrop.hidden = true;
+          const otherTrig = other.querySelector(".multiselect-trigger");
+          if (otherTrig) otherTrig.setAttribute("aria-expanded", "false");
+        }
+      });
+      if (peerMultiSelect.isOpen) peerMultiSelect.close();
+      if (willOpen) {
+        wrap.classList.add("is-open");
+        dropdown.hidden = false;
+        customTrigger.setAttribute("aria-expanded", "true");
+        const searchInput = dropdown.querySelector('input[type="text"]');
+        if (searchInput) {
+          searchInput.value = "";
+          filterCustomOptions(targetId, "");
+          searchInput.focus();
+        }
+      } else {
+        wrap.classList.remove("is-open");
+        dropdown.hidden = true;
+        customTrigger.setAttribute("aria-expanded", "false");
+      }
+    }
+    return;
+  }
+
+  const customOpt = event.target.closest(".multiselect-option[data-select-for]");
+  if (customOpt) {
+    event.preventDefault();
+    const id = customOpt.dataset.selectFor;
+    const val = customOpt.dataset.value;
+    const input = document.getElementById(id);
+    if (input) {
+      input.value = val;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    setCustomSelectValue(id, val);
+    const wrap = document.getElementById(`${id}-multiselect`);
+    if (wrap) wrap.classList.remove("is-open");
+    const dropdown = document.getElementById(`${id}-dropdown`);
+    if (dropdown) dropdown.hidden = true;
+    const trigger = document.getElementById(`${id}-trigger`);
+    if (trigger) {
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.focus();
+    }
+    return;
+  }
+
   // Multi-select expériences alumni
   const removeChip = event.target.closest("[data-remove-exp]");
   if (removeChip) {
@@ -3762,11 +3938,18 @@ document.addEventListener("click", event => {
   const expTrigger = event.target.closest("#peer-exp-trigger");
   if (expTrigger) {
     event.preventDefault();
+    $$(".custom-select-wrap.is-open").forEach(w => {
+      w.classList.remove("is-open");
+      const d = w.querySelector(".multiselect-dropdown");
+      if (d) d.hidden = true;
+      const t = w.querySelector(".multiselect-trigger");
+      if (t) t.setAttribute("aria-expanded", "false");
+    });
     if (peerMultiSelect.isOpen) peerMultiSelect.close();
     else peerMultiSelect.open();
     return;
   }
-  const expOpt = event.target.closest(".multiselect-option");
+  const expOpt = event.target.closest("#peer-exp-options .multiselect-option");
   if (expOpt) {
     event.preventDefault();
     peerMultiSelect.toggleOption(expOpt.dataset.value);
@@ -3780,6 +3963,15 @@ document.addEventListener("click", event => {
   }
   if (peerMultiSelect.isOpen && !event.target.closest("#peer-exp-multiselect")) {
     peerMultiSelect.close();
+  }
+  if (!event.target.closest(".custom-select-wrap")) {
+    $$(".custom-select-wrap.is-open").forEach(w => {
+      w.classList.remove("is-open");
+      const d = w.querySelector(".multiselect-dropdown");
+      if (d) d.hidden = true;
+      const t = w.querySelector(".multiselect-trigger");
+      if (t) t.setAttribute("aria-expanded", "false");
+    });
   }
 
   // RH tabs handler - intercepté avant le check data-action
@@ -4166,6 +4358,17 @@ document.addEventListener("input", event => {
   else if (["forfait-holidays","forfait-cp","forfait-extra-leave","forfait-days"].includes(el.id)) calculateForfait();
   if (el.id === "global-search") globalSearchResults(el.value);
   if (el.id === "peer-exp-search") peerMultiSelect.filterOptions(el.value);
+  if (el.dataset.customSearch) filterCustomOptions(el.dataset.customSearch, el.value);
+  if (el.dataset.action === "filter-select-search") {
+    const menu = el.closest(".filter-select-menu");
+    if (menu) {
+      const q = el.value.toLowerCase().trim();
+      $$(".filter-select-option", menu).forEach(opt => {
+        const text = opt.textContent.toLowerCase();
+        opt.style.display = text.includes(q) ? "flex" : "none";
+      });
+    }
+  }
   if (el.id === "peer-query") { state.queries.peers=el.value; renderPeerList(); }
   if (el.id === "map-zoom") {
     state.mapZoom=Number(el.value)/100;
@@ -4308,6 +4511,20 @@ document.addEventListener("keydown", event => {
       return;
     }
   }
+  if (event.key === "Escape") {
+    const openCustom = $(".custom-select-wrap.is-open");
+    if (openCustom) {
+      openCustom.classList.remove("is-open");
+      const d = openCustom.querySelector(".multiselect-dropdown");
+      if (d) d.hidden = true;
+      const t = openCustom.querySelector(".multiselect-trigger");
+      if (t) {
+        t.setAttribute("aria-expanded", "false");
+        t.focus();
+      }
+      return;
+    }
+  }
   if (event.key === "Escape" && document.body.classList.contains("map-expanded")) { setMapExpanded(false); return; }
   if (event.key === "Escape" && peerMultiSelect.isOpen) { peerMultiSelect.close(); return; }
   if (event.key === "Escape" && sidebar.classList.contains("is-open")) { closeMenu(); return; }
@@ -4337,7 +4554,17 @@ document.addEventListener("keydown", event => {
       return;
     }
   }
-  if ((event.key === "Enter" || event.key === " ") && event.target.matches?.(".multiselect-option")) {
+  if ((event.key === "Enter" || event.key === " ") && event.target.matches?.(".multiselect-option[data-select-for]")) {
+    event.preventDefault();
+    event.target.click();
+    return;
+  }
+  if ((event.key === "Enter" || event.key === " ") && event.target.matches?.('[data-action="toggle-custom-select"]')) {
+    event.preventDefault();
+    event.target.click();
+    return;
+  }
+  if ((event.key === "Enter" || event.key === " ") && event.target.matches?.("#peer-exp-options .multiselect-option")) {
     event.preventDefault();
     peerMultiSelect.toggleOption(event.target.dataset.value);
     return;

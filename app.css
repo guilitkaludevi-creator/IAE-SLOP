@@ -362,6 +362,8 @@
   .multiselect-trigger:hover, .multiselect-trigger:focus-visible { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(117,224,194,.16); }
   .multiselect-tags { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; flex: 1; min-width: 0; }
   .multiselect-placeholder { color: var(--muted); font-size: 13px; }
+  .multiselect-placeholder.has-value { color: var(--text); font-weight: 560; }
+  .custom-select-wrap { width: 100%; }
   .multiselect-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 8px; background: rgba(117,224,194,.14); border: 1px solid rgba(117,224,194,.28); color: var(--text); font-size: 11px; font-weight: 600; animation: chip-pop .253125s cubic-bezier(0.175,0.885,0.32,1.275); }
   @keyframes chip-pop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
   .multiselect-chip-remove { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; border: 0; background: rgba(0,0,0,.22); color: var(--text-soft); font-size: 11px; cursor: pointer; padding: 0; line-height: 1; }
@@ -484,11 +486,13 @@
   .filter-select[open] .filter-select-trigger svg { transform: rotate(180deg); }
   .filter-select-value { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .filter-select-menu { position: absolute; top: calc(100% + 7px); left: 0; right: 0; max-height: min(320px, 45dvh); overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid var(--glass-border); border-radius: 16px; background: var(--dialog-bg); box-shadow: 0 22px 60px rgba(0,0,0,.4), var(--glass-highlight); backdrop-filter: blur(30px) saturate(1.5); -webkit-backdrop-filter: blur(30px) saturate(1.5); scrollbar-width: thin; animation: dropdown-slide-in .28125s cubic-bezier(0.16,1,0.3,1) both; }
-  .filter-select-option { display: flex; align-items: center; justify-content: space-between; gap: 9px; width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid transparent; border-radius: 10px; color: var(--text-soft); background: transparent; text-align: left; font-size: 12.5px; line-height: 1.35; cursor: pointer; transition: background .2109375s, color .2109375s; }
+  .filter-select-option { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 40px; padding: 7px 10px; border: 1px solid transparent; border-radius: 9px; color: var(--text-soft); background: transparent; text-align: left; font-size: 12.5px; line-height: 1.35; cursor: pointer; transition: background .2109375s, color .2109375s; }
   .filter-select-option:hover, .filter-select-option:focus-visible { background: var(--surface-soft); color: var(--text); }
-  .filter-select-option[aria-pressed="true"] { border-color: rgba(117,224,194,.25); background: rgba(117,224,194,.12); color: var(--mint); font-weight: 700; }
-  .filter-select-check { flex: 0 0 auto; color: var(--mint); visibility: hidden; }
-  .filter-select-option[aria-pressed="true"] .filter-select-check { visibility: visible; }
+  .filter-select-option[aria-pressed="true"], .filter-select-option.is-selected { border-color: rgba(117,224,194,.25); background: rgba(117,224,194,.12); color: var(--mint); font-weight: 700; }
+  .filter-select-option .multiselect-checkbox { width: 16px; height: 16px; border-radius: 5px; border: 1px solid var(--stroke-strong); display: grid; place-items: center; flex: 0 0 auto; background: rgba(0,0,0,.2); transition: all .21s ease; font-size: 11px; }
+  .filter-select-option[aria-pressed="true"] .multiselect-checkbox, .filter-select-option.is-selected .multiselect-checkbox { background: var(--mint); border-color: var(--mint); color: #0b1420; }
+  .filter-select-option[aria-pressed="true"] .multiselect-checkbox::after, .filter-select-option.is-selected .multiselect-checkbox::after { content: "✓"; font-weight: 800; line-height: 1; }
+  .filter-select-check { display: none; }
   .filter-count { margin-left: auto; color: var(--muted); font-size: 11px; }
   .result-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 13px; }
   .est-card { position: relative; min-height: 230px; }
