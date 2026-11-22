@@ -269,8 +269,9 @@
   html[data-theme="light"] .form-control { background: rgba(255,255,255,.76); }
   .form-control:focus { border-color: rgba(117,224,194,.7); box-shadow: 0 0 0 3px rgba(117,224,194,.12); }
   .form-control::placeholder { color: var(--faint); }
-  select.form-control { appearance: none; padding-right: 35px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%2391a5b3' stroke-width='1.5'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
-  select option { color: #12222c; }
+  select.form-control { appearance: none; padding-right: 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%232dd4bf' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; background-color: var(--field-bg); color: var(--text); border: 1px solid var(--glass-border); border-radius: 14px; backdrop-filter: blur(20px) saturate(1.35); -webkit-backdrop-filter: blur(20px) saturate(1.35); cursor: pointer; }
+  select option { background-color: #0d1726; color: #f1f5f9; padding: 10px 14px; }
+  html[data-theme="light"] select option { background-color: #ffffff; color: #0f172a; }
   textarea.form-control { min-height: 108px; resize: vertical; }
   .field-label { display: block; margin-bottom: 6px; color: var(--text-soft); font-size: 11px; font-weight: 680; }
   .field-hint { margin: 5px 0 0; color: var(--faint); font-size: 11px; line-height: 1.5; }
@@ -476,16 +477,16 @@
   .filter-bar .search-box { flex: 1 1 250px; }
   .filter-bar .filter-select { position: relative; width: min(100%, 260px); flex: 0 1 260px; min-width: 0; }
   .filter-select[open] { z-index: 15; }
-  .filter-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; padding: 10px 13px; border: 1px solid var(--glass-border); border-radius: 14px; color: var(--text); background: var(--glass-bg), var(--surface); box-shadow: var(--glass-highlight); backdrop-filter: blur(20px) saturate(1.35); -webkit-backdrop-filter: blur(20px) saturate(1.35); cursor: pointer; font-size: 13px; list-style: none; }
+  .filter-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 10px 13px; border: 1px solid var(--glass-border); border-radius: 14px; color: var(--text); background: var(--field-bg); box-shadow: var(--glass-highlight); backdrop-filter: blur(20px) saturate(1.35); -webkit-backdrop-filter: blur(20px) saturate(1.35); cursor: pointer; font-size: 13px; list-style: none; transition: border-color .28125s var(--ease-spring), box-shadow .28125s var(--ease-spring); }
   .filter-select-trigger::-webkit-details-marker { display: none; }
-  .filter-select-trigger:hover, .filter-select[open] .filter-select-trigger { border-color: rgba(117,224,194,.5); }
-  .filter-select-trigger svg { flex: 0 0 auto; color: var(--mint); transition: transform .28125s var(--ease-out); }
+  .filter-select-trigger:hover, .filter-select-trigger:focus-visible, .filter-select[open] .filter-select-trigger { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(117,224,194,.16), var(--glass-highlight); }
+  .filter-select-trigger svg { flex: 0 0 auto; color: var(--mint); transition: transform .28125s var(--ease-spring); }
   .filter-select[open] .filter-select-trigger svg { transform: rotate(180deg); }
   .filter-select-value { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .filter-select-menu { position: absolute; top: calc(100% + 7px); left: 0; right: 0; max-height: min(320px, 45dvh); overflow-y: auto; overscroll-behavior: contain; padding: 7px; border: 1px solid var(--glass-border); border-radius: 17px; background: var(--glass-bg), var(--surface); box-shadow: 0 18px 48px rgba(0,0,0,.28), var(--glass-highlight); backdrop-filter: blur(28px) saturate(1.4); -webkit-backdrop-filter: blur(28px) saturate(1.4); scrollbar-width: thin; }
-  .filter-select-option { display: flex; align-items: center; justify-content: space-between; gap: 9px; width: 100%; min-height: 44px; padding: 9px 10px; border: 1px solid transparent; border-radius: 11px; color: var(--text); background: transparent; text-align: left; font-size: 12.5px; line-height: 1.35; }
-  .filter-select-option:hover, .filter-select-option:focus-visible { background: var(--surface-soft); }
-  .filter-select-option[aria-pressed="true"] { border-color: rgba(117,224,194,.25); background: rgba(117,224,194,.13); font-weight: 700; }
+  .filter-select-menu { position: absolute; top: calc(100% + 7px); left: 0; right: 0; max-height: min(320px, 45dvh); overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid var(--glass-border); border-radius: 16px; background: var(--dialog-bg); box-shadow: 0 22px 60px rgba(0,0,0,.4), var(--glass-highlight); backdrop-filter: blur(30px) saturate(1.5); -webkit-backdrop-filter: blur(30px) saturate(1.5); scrollbar-width: thin; animation: dropdown-slide-in .28125s cubic-bezier(0.16,1,0.3,1) both; }
+  .filter-select-option { display: flex; align-items: center; justify-content: space-between; gap: 9px; width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid transparent; border-radius: 10px; color: var(--text-soft); background: transparent; text-align: left; font-size: 12.5px; line-height: 1.35; cursor: pointer; transition: background .2109375s, color .2109375s; }
+  .filter-select-option:hover, .filter-select-option:focus-visible { background: var(--surface-soft); color: var(--text); }
+  .filter-select-option[aria-pressed="true"] { border-color: rgba(117,224,194,.25); background: rgba(117,224,194,.12); color: var(--mint); font-weight: 700; }
   .filter-select-check { flex: 0 0 auto; color: var(--mint); visibility: hidden; }
   .filter-select-option[aria-pressed="true"] .filter-select-check { visibility: visible; }
   .filter-count { margin-left: auto; color: var(--muted); font-size: 11px; }
@@ -2066,9 +2067,37 @@
   /* Un .page transformé ou "contain" casserait position:fixed (feuilles basses, dropdown mobile) */
   .page { animation-fill-mode: backwards; will-change: auto; contain: none; }
   [hidden] { display: none !important; }
-  .multiselect-dropdown { background: var(--dialog-bg); backdrop-filter: blur(30px) saturate(1.5); -webkit-backdrop-filter: blur(30px) saturate(1.5); border-color: var(--glass-border); box-shadow: 0 22px 60px rgba(0,0,0,.4), var(--glass-highlight); }
-  .multiselect-trigger { background: var(--field-bg); border-color: var(--glass-border); border-radius: 14px; }
-  html[data-theme="light"] .multiselect-trigger { background: var(--field-bg); }
+  /* Unification de toutes les dropdown lists (opacité, verre dépoli et ombrages identiques à la sélection Expériences) */
+  .multiselect-dropdown,
+  .filter-select-menu,
+  .notif-popover {
+    background: var(--dialog-bg) !important;
+    backdrop-filter: blur(30px) saturate(1.5) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(1.5) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 22px 60px rgba(0,0,0,.4), var(--glass-highlight) !important;
+  }
+  .multiselect-trigger,
+  .filter-select-trigger,
+  select.form-control {
+    background: var(--field-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 14px !important;
+    backdrop-filter: blur(20px) saturate(1.35);
+    -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  }
+  html[data-theme="light"] .multiselect-dropdown,
+  html[data-theme="light"] .filter-select-menu,
+  html[data-theme="light"] .notif-popover {
+    background: var(--dialog-bg) !important;
+    box-shadow: 0 16px 40px rgba(0,0,0,.08), var(--glass-highlight) !important;
+  }
+  html[data-theme="light"] .multiselect-trigger,
+  html[data-theme="light"] .filter-select-trigger,
+  html[data-theme="light"] select.form-control {
+    background: var(--field-bg) !important;
+  }
 
   /* Boîtes de dialogue translucides */
   .app-dialog { background: var(--dialog-bg); border-color: var(--glass-border); box-shadow: 0 34px 110px rgba(0,0,0,.5), var(--glass-highlight); backdrop-filter: blur(34px) saturate(1.5); -webkit-backdrop-filter: blur(34px) saturate(1.5); }
