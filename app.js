@@ -125,18 +125,18 @@ function paywallGate(title = "Ressource réservée aux abonnés", description = 
   return `<div class="premium-bubble" role="region" aria-label="Accès Premium">
     <div class="premium-bubble-orb premium-bubble-orb-a" aria-hidden="true"></div>
     <div class="premium-bubble-orb premium-bubble-orb-b" aria-hidden="true"></div>
-    <div class="premium-bubble-icon">${icon("lock",22)}</div>
-    <span class="premium-bubble-kicker">ESPACE PREMIUM CAMPUS</span>
+    <div class="premium-bubble-icon">${icon("lock", 24)}</div>
+    <span class="premium-bubble-kicker">ESPACE PREMIUM CAMPUS · CADRES & DIRECTION</span>
     <h3>${esc(title)}</h3>
     <p>${esc(description)}</p>
     <div class="premium-bubble-benefits">
-      <span>${icon("check",14)} Accès complet</span>
-      <span>${icon("check",14)} Contenu actualisé</span>
-      <span>${icon("check",14)} Outils illimités</span>
+      <span><span class="pricing-check-icon">${icon("check", 12)}</span> Fiches & calculateurs illimités</span>
+      <span><span class="pricing-check-icon">${icon("check", 12)} Textes & HAS 2026 actualisés</span>
+      <span><span class="pricing-check-icon">${icon("check", 12)} Annuaire & réseau complet</span>
     </div>
     <div class="paywall-actions">
-      <button class="button primary" data-nav="abonnement">${icon("star",16)}Voir les abonnements</button>
-      <button class="button subtle" data-nav="accueil">${icon("arrow",15)}Continuer gratuitement</button>
+      <button class="button primary" data-nav="abonnement">${icon("spark", 16)}Débloquer l’accès Campus</button>
+      <button class="button subtle" data-nav="accueil">${icon("arrow", 15)}Explorer les modules gratuits</button>
     </div>
   </div>`;
 }
@@ -485,7 +485,7 @@ function renderHome() {
         <span class="icon-bubble" style="background:rgba(98, 222, 184, 0.15);color:var(--mint);padding:8px">${icon("spark", 22)}</span>
         <div>
           <h2>Par où commencer</h2>
-          <p>Trois lectures, dans l’ordre où un directeur adjoint les rencontre vraiment.</p>
+          <p>Trois lectures fondamentales, dans l’ordre où un cadre dirigeant les rencontre vraiment.</p>
         </div>
       </div>
       <div class="onboarding-grid">
@@ -513,27 +513,73 @@ function renderHome() {
       </div>
     </div>
 
-    <div class="dashboard-stats glass-panel" aria-label="Contenu de la boîte à outils">
-      <div class="dashboard-stat"><div class="stat-icon">${icon("building",17)}</div><div><strong>${ESTABLISHMENTS.length}</strong><span>types de structures</span></div></div>
-      <div class="dashboard-stat"><div class="stat-icon">${icon("briefcase",17)}</div><div><strong>${JOBS.length}</strong><span>pistes métiers</span></div></div>
-      <div class="dashboard-stat"><div class="stat-icon">${icon("file",17)}</div><div><strong>${DOCUMENTS.length}</strong><span>documents repères</span></div></div>
-      <div class="dashboard-stat"><div class="stat-icon">${icon("star",17)}</div><div><strong>${saved}</strong><span>fiches enregistrées</span></div></div>
+    <!-- Apple Executive KPI Widgets -->
+    <div class="dashboard-stats" aria-label="Indicateurs clés du campus">
+      <div class="dashboard-stat-widget" data-nav="etablissements" role="button" tabindex="0">
+        <div class="stat-widget-top">
+          <span class="stat-widget-icon mint">${icon("building", 18)}</span>
+          <span class="stat-widget-badge mint">100% à jour</span>
+        </div>
+        <strong class="stat-widget-value">${ESTABLISHMENTS.length}</strong>
+        <span class="stat-widget-label">Structures sanitaires & médico-sociales</span>
+        <div class="stat-widget-footer">
+          <span>MAS · EHPAD · IME · CH</span>
+          ${icon("arrow", 12)}
+        </div>
+      </div>
+      <div class="dashboard-stat-widget" data-nav="metiers" role="button" tabindex="0">
+        <div class="stat-widget-top">
+          <span class="stat-widget-icon sky">${icon("briefcase", 18)}</span>
+          <span class="stat-widget-badge sky">Cadres & Dir</span>
+        </div>
+        <strong class="stat-widget-value">${JOBS.length}</strong>
+        <span class="stat-widget-label">Pistes métiers & fiches de poste</span>
+        <div class="stat-widget-footer">
+          <span>Délégations & salaires</span>
+          ${icon("arrow", 12)}
+        </div>
+      </div>
+      <div class="dashboard-stat-widget" data-nav="documents" role="button" tabindex="0">
+        <div class="stat-widget-top">
+          <span class="stat-widget-icon gold">${icon("file", 18)}</span>
+          <span class="stat-widget-badge gold">HAS v2026</span>
+        </div>
+        <strong class="stat-widget-value">${DOCUMENTS.length}</strong>
+        <span class="stat-widget-label">Documents & repères opposables</span>
+        <div class="stat-widget-footer">
+          <span>EPRD · CPOM · DUERP</span>
+          ${icon("arrow", 12)}
+        </div>
+      </div>
+      <div class="dashboard-stat-widget" data-nav="favoris" role="button" tabindex="0">
+        <div class="stat-widget-top">
+          <span class="stat-widget-icon lavender">${icon("star", 18)}</span>
+          <span class="stat-widget-badge lavender">${saved ? `${saved} en mémoire` : "Hors-ligne"}</span>
+        </div>
+        <strong class="stat-widget-value">${saved}</strong>
+        <span class="stat-widget-label">Fiches enregistrées hors-ligne</span>
+        <div class="stat-widget-footer">
+          <span>Accès rapide local</span>
+          ${icon("arrow", 12)}
+        </div>
+      </div>
     </div>
+
     <div class="dashboard-lower">
-      <div class="quick-panel glass-panel"><div class="section-title-row"><div><h2>Où voulez-vous aller ?</h2><p>Accès direct aux repères les plus utiles.</p></div></div><div class="quick-grid">
-        <button class="quick-tile" data-nav="secu"><span class="icon-bubble">${icon("shield")}</span><span><strong>Sécurité Sociale & Liens</strong><small>Les 5 branches, l'ONDAM, CPAM/CARSAT, tarification et flux financiers.</small></span></button>
-        <button class="quick-tile" data-nav="abonnement"><span class="icon-bubble">${icon("spark")}</span><span><strong>Abonnement et Campus</strong><small>Pass étudiant, formules établissement et code d’accès transmis par votre école.</small></span></button>
-        <button class="quick-tile" data-nav="logiciels"><span class="icon-bubble">${icon("layers")}</span><span><strong>Logiciels métiers de santé</strong><small>DPI, DUI (NETSoins), AgEval, GMAO, SIRH, planning et MSSanté.</small></span></button>
-        <button class="quick-tile" data-nav="qualite"><span class="icon-bubble">${icon("shield")}</span><span><strong>Qualité & Triage AgEval</strong><small>Simulateur 4 niveaux d'EI, signalements ARS (e-SIN) et culture juste.</small></span></button>
-        <button class="quick-tile" data-nav="flashcards"><span class="icon-bubble">${icon("spark")}</span><span><strong>Flashcards Révisions MES</strong><small>Decks interactifs 3D : AgEval, 10 Lois de santé et gestion de crise.</small></span></button>
-        <button class="quick-tile" data-nav="audit"><span class="icon-bubble">${icon("target")}</span><span><strong>Audits qualité & méthodes</strong><small>À quoi ça sert, 6 typologies (traceurs, APC), méthode en 5 étapes.</small></span></button>
-        <button class="quick-tile" data-nav="rex"><span class="icon-bubble">${icon("lightbulb")}</span><span><strong>Mener un REX / CREX</strong><small>Méthode en 6 étapes, grille ALARM, sécurité psychologique.</small></span></button>
-        <button class="quick-tile" data-nav="metiers-support"><span class="icon-bubble">${icon("people")}</span><span><strong>Corps de métier support</strong><small>Gouvernante, ASH, ASL, maintenance, SI, logistique et guichet unique.</small></span></button>
-        <button class="quick-tile" data-nav="politique"><span class="icon-bubble">${icon("clipboard")}</span><span><strong>Politique de santé & lois</strong><small>Loi 2002-2, 2005, Ségur, Bien Vieillir 2024, PRS 3 ARS et schémas départementaux.</small></span></button>
-        <button class="quick-tile" data-nav="metiers"><span class="icon-bubble">${icon("briefcase")}</span><span><strong>Métiers & responsabilités</strong><small>Direction d'établissement, RQGR, CGRAS, D3S, CAFDES et encadrement.</small></span></button>
-        <button class="quick-tile" data-nav="documents"><span class="icon-bubble">${icon("file")}</span><span><strong>Documents de pilotage</strong><small>EPRD, CPOM, DUERP, PAAQ : qui le produit et comment le faire vivre.</small></span></button>
-        <button class="quick-tile" data-nav="reunions"><span class="icon-bubble">${icon("calendar")}</span><span><strong>Réunions & instances</strong><small>CODIR, COPIL Qualité, CVS, CSE, CREX : qui décide et qui associer.</small></span></button>
-        <button class="quick-tile" data-nav="rh"><span class="icon-bubble">${icon("users")}</span><span><strong>Pilotage RH & Calculateur ETP</strong><small>35+ FAQ droit du travail, calculs ETP/ETPT avec jauges et forfait jours.</small></span></button>
+      <div class="quick-panel glass-panel"><div class="section-title-row"><div><h2>Où voulez-vous aller ?</h2><p>Accès direct aux repères et modules spécialisés.</p></div></div><div class="quick-grid">
+        <button class="quick-tile" data-nav="secu"><div class="quick-tile-content"><span class="icon-bubble mint">${icon("shield")}</span><span><strong>Sécurité Sociale & Liens</strong><small>Les 5 branches, l'ONDAM, CPAM/CARSAT, tarification et flux financiers.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="abonnement"><div class="quick-tile-content"><span class="icon-bubble gold">${icon("spark")}</span><span><strong>Abonnement et Campus</strong><small>Pass étudiant, formules établissement et code d’accès de votre école.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="logiciels"><div class="quick-tile-content"><span class="icon-bubble sky">${icon("layers")}</span><span><strong>Logiciels métiers de santé</strong><small>DPI, DUI (NETSoins), AgEval, GMAO, SIRH, planning et MSSanté.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="qualite"><div class="quick-tile-content"><span class="icon-bubble mint">${icon("shield")}</span><span><strong>Qualité & Triage AgEval</strong><small>Simulateur 4 niveaux d'EI, signalements ARS (e-SIN) et culture juste.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="flashcards"><div class="quick-tile-content"><span class="icon-bubble lavender">${icon("spark")}</span><span><strong>Flashcards Révisions MES</strong><small>Decks interactifs 3D : AgEval, 10 Lois de santé et gestion de crise.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="audit"><div class="quick-tile-content"><span class="icon-bubble sky">${icon("target")}</span><span><strong>Audits qualité & méthodes</strong><small>À quoi ça sert, 6 typologies (traceurs, APC), méthode en 5 étapes.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="rex"><div class="quick-tile-content"><span class="icon-bubble gold">${icon("lightbulb")}</span><span><strong>Mener un REX / CREX</strong><small>Méthode en 6 étapes, grille ALARM, sécurité psychologique.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="metiers-support"><div class="quick-tile-content"><span class="icon-bubble lavender">${icon("people")}</span><span><strong>Corps de métier support</strong><small>Gouvernante, ASH, ASL, maintenance, SI, logistique et guichet unique.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="politique"><div class="quick-tile-content"><span class="icon-bubble mint">${icon("clipboard")}</span><span><strong>Politique de santé & lois</strong><small>Loi 2002-2, 2005, Ségur, Bien Vieillir 2024, PRS 3 ARS et schémas départementaux.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="metiers"><div class="quick-tile-content"><span class="icon-bubble sky">${icon("briefcase")}</span><span><strong>Métiers & responsabilités</strong><small>Direction d'établissement, RQGR, CGRAS, D3S, CAFDES et encadrement.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="documents"><div class="quick-tile-content"><span class="icon-bubble gold">${icon("file")}</span><span><strong>Documents de pilotage</strong><small>EPRD, CPOM, DUERP, PAAQ : qui le produit et comment le faire vivre.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="reunions"><div class="quick-tile-content"><span class="icon-bubble lavender">${icon("calendar")}</span><span><strong>Réunions & instances</strong><small>CODIR, COPIL Qualité, CVS, CSE, CREX : qui décide et qui associer.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="rh"><div class="quick-tile-content"><span class="icon-bubble coral">${icon("users")}</span><span><strong>Pilotage RH & Calculateur ETP</strong><small>35+ FAQ droit du travail, calculs ETP/ETPT avec jauges et forfait jours.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
       </div></div>
       <aside class="profile-card glass-panel"><span class="tag violet">PARCOURS MES</span><h3>Un profil qui tient plusieurs métiers</h3><p>Les fiches relient direction, qualité, RH, budget et numérique. Le terrain de référence est la MAS : accueil, équipes et autorisation.</p><div class="profile-chip-row"><span class="tag mint">Qualité HAS</span><span class="tag sky">Pilotage RH</span><span class="tag gold">EPRD · CNR</span></div><button class="button subtle" data-nav="metiers">Voir les pistes adaptées ${icon("arrow",15)}</button></aside>
     </div>
@@ -1008,11 +1054,15 @@ function renderNetwork() {
   const regionOptions = PEER_REGIONS;
   return `<section class="page" aria-labelledby="network-title">${sectionHead("COMMUNAUTÉ · RÉSEAU DE PROMOTION", "Le réseau alumni, <span class=\"text-gradient\">à portée de main.</span>", "Retrouvez une expérience, un secteur ou un interlocuteur de votre promotion. Pour apparaître dans le réseau, utilisez l’onglet « Inscription au réseau ».", `<button class="button subtle" data-action="export-peers">${icon("download",15)}Exporter mes fiches</button>`)}
     ${communityTabs("reseau")}
-    <section class="network-results glass-panel"><div class="section-title-row"><div><span class="eyebrow">ANNUAIRE VOLONTAIRE</span><h2 style="margin-top:10px">Trouver une expérience</h2><p id="peer-count">Chargement des fiches…</p></div><div class="section-title-actions"><button class="button primary" data-nav="inscription-annuaire">${icon("userplus",14)}Ajouter ma fiche</button><button class="button subtle" data-action="clear-peers">${icon("trash",14)}Tout supprimer</button></div></div>
+    <section class="network-results glass-panel"><div class="section-title-row"><div><span class="eyebrow">ANNUAIRE VOLONTAIRE · PROMOTIONS SANTÉ</span><h2 style="margin-top:10px">Trouver un pair ou une expérience</h2><p id="peer-count">Chargement des fiches…</p></div><div class="section-title-actions"><button class="button primary" data-nav="inscription-annuaire">${icon("userplus",14)}Ajouter ma fiche</button><button class="button subtle" data-action="clear-peers">${icon("trash",14)}Tout supprimer</button></div></div>
       <div class="network-tools">
-        <label class="search-box"><span data-icon="search"></span><input class="form-control" id="peer-query" type="search" placeholder="Nom, rôle, mot-clé…" aria-label="Rechercher une personne"></label>
-        <div style="flex:1;min-width:180px">${renderCustomSelect({ id: "peer-experience-filter", name: "experienceFilter", options: [{ value: "Tout", label: "Toutes les expériences" }, ...RESEARCH_AREAS.map(item => ({ value: item, label: item }))], value: "Tout", placeholder: "Toutes les expériences", search: true })}</div>
-        <div style="flex:1;min-width:160px">${renderCustomSelect({ id: "peer-region-filter", name: "regionFilter", options: [{ value: "Tout", label: "Toutes les régions" }, ...regionOptions.map(item => ({ value: item, label: item }))], value: "Tout", placeholder: "Toutes les régions", search: true })}</div>
+        <div class="network-search-wrap">
+          <span class="search-lens">${icon("search", 16)}</span>
+          <input class="form-control apple-search-input" id="peer-query" type="search" placeholder="Rechercher par nom, rôle, compétence, mot-clé…" aria-label="Rechercher une personne" value="${esc(state.queries.peers || "")}">
+          <button type="button" class="search-clear-btn" id="peer-search-clear" data-action="reset-peer-filters" aria-label="Effacer la recherche" ${state.queries.peers ? "" : "hidden"}>✕</button>
+        </div>
+        <div style="flex:1;min-width:200px">${renderCustomSelect({ id: "peer-experience-filter", name: "experienceFilter", options: [{ value: "Tout", label: "Toutes les compétences" }, ...RESEARCH_AREAS.map(item => ({ value: item, label: item }))], value: "Tout", placeholder: "Toutes les compétences", search: true })}</div>
+        <div style="flex:1;min-width:180px">${renderCustomSelect({ id: "peer-region-filter", name: "regionFilter", options: [{ value: "Tout", label: "Toutes les régions" }, ...regionOptions.map(item => ({ value: item, label: item }))], value: "Tout", placeholder: "Toutes les régions", search: true })}</div>
       </div>
       <div class="peer-list" id="peer-list"></div><p class="field-hint" style="margin-top:12px">Les fiches sont synchronisées avec la promotion quand la connexion le permet, et conservées sur cet appareil.</p>
     </section>
@@ -1843,18 +1893,87 @@ function finishDialogHistory(fromHistory) {
 }
 function bindDialogGestures() {
   const grabber = $("#dialog-grabber");
-  if (!grabber) return;
+  const dialogEl = $("#app-dialog");
+  if (!grabber || !dialogEl) return;
+
   let startY = null;
+  let lastY = null;
+  let lastTime = 0;
+  let velocityY = 0;
+  let isDragging = false;
+
+  function rubberBand(distance, dimension = 320, constant = 0.55) {
+    return (distance * dimension * constant) / (dimension + constant * distance);
+  }
+
   grabber.addEventListener("pointerdown", event => {
     if (event.button !== undefined && event.button !== 0) return;
     startY = event.clientY;
+    lastY = event.clientY;
+    lastTime = performance.now();
+    velocityY = 0;
+    isDragging = true;
+    dialogEl.style.transition = "none";
     grabber.setPointerCapture?.(event.pointerId);
   });
-  grabber.addEventListener("pointerup", event => {
-    if (startY !== null && event.clientY - startY > 76) closeDialog();
-    startY = null;
+
+  grabber.addEventListener("pointermove", event => {
+    if (!isDragging || startY === null) return;
+    const dy = event.clientY - startY;
+    const now = performance.now();
+    const dt = now - lastTime;
+    if (dt > 0) {
+      velocityY = (event.clientY - lastY) / dt;
+    }
+    lastY = event.clientY;
+    lastTime = now;
+
+    if (dy > 0) {
+      // Suivi 1:1 direct du doigt vers le bas
+      dialogEl.style.transform = `translate3d(0, ${dy}px, 0)`;
+      const opacity = Math.max(0.25, 1 - dy / 420);
+      dialogEl.style.opacity = `${opacity}`;
+    } else {
+      // Effet élastique Apple (Rubber-banding) vers le haut
+      const resistance = -rubberBand(Math.abs(dy));
+      dialogEl.style.transform = `translate3d(0, ${resistance}px, 0)`;
+    }
   });
-  grabber.addEventListener("pointercancel", () => { startY = null; });
+
+  const onDragEnd = () => {
+    if (!isDragging || startY === null) return;
+    const dy = lastY - startY;
+    isDragging = false;
+    startY = null;
+
+    // Projection de moment (Velocity handoff Apple)
+    const projected = dy + velocityY * 160;
+
+    if (projected > 110 || dy > 140) {
+      dialogEl.style.transition = "transform .38s var(--ease-out), opacity .35s var(--ease-out)";
+      dialogEl.style.transform = "translate3d(0, 100%, 0)";
+      dialogEl.style.opacity = "0";
+      setTimeout(() => {
+        closeDialog();
+        dialogEl.style.transform = "";
+        dialogEl.style.opacity = "";
+        dialogEl.style.transition = "";
+      }, 360);
+    } else {
+      // Rappel élastique fluide (Spring return) sans à-coups
+      dialogEl.style.transition = "transform .48s var(--ease-spring), opacity .42s var(--ease-out)";
+      dialogEl.style.transform = "translate3d(0, 0, 0)";
+      dialogEl.style.opacity = "1";
+      setTimeout(() => {
+        dialogEl.style.transform = "";
+        dialogEl.style.opacity = "";
+        dialogEl.style.transition = "";
+      }, 480);
+    }
+  };
+
+  grabber.addEventListener("pointerup", onDragEnd);
+  grabber.addEventListener("pointercancel", onDragEnd);
 }
 function openSearch() {
   state.cmdFilter = "all";
@@ -2182,27 +2301,27 @@ function renderPeerList() {
     return `<article class="peer-card" id="peer-card-${esc(peer.id)}">
       <div class="peer-avatar" aria-hidden="true">${esc(initials)}</div>
       <div class="peer-card-body">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div class="peer-card-header">
           <div>
-            <h3 style="margin:0;font-size:15px;color:var(--text)">${esc(peer.name)}</h3>
-            <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">${esc(peer.role)} · ${esc(peer.sector)} · ${esc(peer.region)}</p>
+            <h3 class="peer-card-title">${esc(peer.name)} <span class="peer-verified-badge">Alumni vérifié</span></h3>
+            <p class="peer-card-sub">${esc(peer.role)} · ${esc(peer.sector)} · ${esc(peer.region)}</p>
           </div>
           ${peer.linkedin ? `<a class="linkedin-btn" href="${esc(peer.linkedin)}" target="_blank" rel="noopener noreferrer">${icon("linkedin", 13)}<span>LinkedIn</span></a>` : ''}
         </div>
-        <div class="meta-row" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">
+        <div class="peer-card-meta">
           ${expList.map(exp => `<span class="tag mint">${esc(exp)}</span>`).join("")}
         </div>
-        <p style="margin-top:8px;line-height:1.6;font-size:13px;color:var(--text-soft)">${esc(peer.summary)}</p>
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:8px;border-top:1px solid var(--stroke)">
-          <a class="inline-link" href="mailto:${esc(peer.email)}" style="font-size:12px">${esc(peer.email)}</a>
-          <div style="display:flex;gap:6px">
+        ${peer.summary ? `<p class="peer-card-summary">${esc(peer.summary)}</p>` : ''}
+        <div class="peer-card-actions">
+          <a class="peer-contact-pill" href="mailto:${esc(peer.email)}">${icon("mail", 13)}<span>${esc(peer.email)}</span></a>
+          <div style="display:flex;gap:8px;align-items:center">
             <button class="button tiny subtle" data-action="edit-peer" data-id="${esc(peer.id)}">${icon("edit", 13)} Modifier</button>
             <button class="peer-delete" data-action="delete-peer" data-id="${esc(peer.id)}" aria-label="Supprimer la fiche de ${esc(peer.name)}">${icon("trash",14)}</button>
           </div>
         </div>
       </div>
     </article>`;
-  }).join("") + paywallNotice : `<div class="empty-state"><strong>${state.peers.length ? "Aucune fiche dans ce filtre" : "Votre annuaire commence ici"}</strong>${state.peers.length ? "Essayez un autre domaine, région ou mot-clé." : "Ajoutez une première fiche avec le formulaire ci-contre pour enrichir le réseau de promotion."}</div>`;
+  }).join("") + paywallNotice : `<div class="peer-empty-state"><div class="peer-empty-icon">${icon("search", 24)}</div><h3 style="margin:0 0 6px;font-size:16px">${state.peers.length ? "Aucun profil ne correspond à vos critères" : "Votre réseau alumni commence ici"}</h3><p style="margin:0 0 16px;font-size:12.5px;color:var(--text-soft);max-width:440px;margin-inline:auto">${state.peers.length ? "Essayez d'élargir la recherche ou de réinitialiser les filtres région et compétences." : "Ajoutez votre fiche dès maintenant pour inaugurer l'annuaire de promotion et partager votre expérience."}</p>${state.peers.length ? `<button class="button subtle" data-action="reset-peer-filters">${icon("reset", 14)}Réinitialiser les filtres</button>` : `<button class="button primary" data-nav="inscription-annuaire">${icon("userplus", 14)}Ajouter ma fiche</button>`}</div>`;
   hydrateIcons(box);
 }
 
@@ -3578,38 +3697,47 @@ function renderSubscription() {
     ${renderAccessStatusBar()}
     ${sectionHead("ABONNEMENT & ACCÈS PREMIUM", "Formules disponibles dans l’application", "Chaque abonnement donne accès aux contenus Premium présents dans Mosaïque Santé : métiers institutionnels, RH, droit, Sécurité Sociale, annuaire, timeline, carte 3D et flashcards PDF.", ``)}
 
-    <!-- Bannière Statut Actuel -->
-    <div class="glass-panel" style="padding:22px;margin-bottom:24px;border-left:4px solid ${isUnlocked ? 'var(--mint)' : 'var(--gold)'}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px">
-        <div>
-          <span class="eyebrow">${isUnlocked ? "CAMPUS DÉBLOQUÉ · ACCÈS 100%" : "ESPACE FREEMIUM · 55% DES RESSOURCES LIBRES"}</span>
-          <h2 style="font-size:20px;font-weight:750;margin:4px 0 6px;color:var(--text)">
-            ${isUnlocked ? "👑 Vous disposez de l'accès intégral illimité" : "🔒 Vous utilisez la version découverte de Mosaïque Santé"}
+    <!-- Bannière VIP Statut Actuel -->
+    <div class="subscription-vip-banner glass-panel ${isUnlocked ? 'is-unlocked' : 'is-freemium'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+        <div style="flex:1;min-width:260px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span class="icon-bubble" style="width:28px;height:28px;background:${isUnlocked ? 'rgba(117,224,194,0.18)' : 'rgba(245,207,139,0.18)'};color:${isUnlocked ? 'var(--mint)' : 'var(--gold)'}">${icon("spark", 15)}</span>
+            <span class="eyebrow" style="color:${isUnlocked ? 'var(--mint)' : 'var(--gold)'}">${isUnlocked ? "CAMPUS DÉBLOQUÉ · ACCÈS INTÉGRAL 100%" : "ESPACE FREEMIUM · 55% DES RESSOURCES ACCESSIBLES"}</span>
+          </div>
+          <h2 style="font-size:22px;font-weight:780;margin:4px 0 6px;color:var(--text);letter-spacing:-0.02em">
+            ${isUnlocked ? "👑 Vous disposez de l'accès illimité Campus" : "🔒 Vous utilisez l'accès découverte Mosaïque Santé"}
           </h2>
-          <p style="font-size:13px;color:var(--text-2);margin:0;max-width:650px">
+          <p style="font-size:13px;color:var(--text-soft);margin:0;max-width:680px;line-height:1.6">
             ${isUnlocked 
-              ? `Accès actif : <strong>${esc(currentPlan)}</strong>. Les contenus Premium déjà intégrés à l’application sont ouverts : métiers, RH, droit, Sécurité Sociale, audit, REX, annuaire, timeline, carte 3D et flashcards PDF.`
-              : `Les ressources gratuites restent disponibles. L’abonnement ouvre uniquement les contenus Premium réellement intégrés à Mosaïque Santé.`}
+              ? `Formule active : <strong>${esc(currentPlan)}</strong>. L'intégralité des modules approfondis est ouverte : fiches de direction, grilles RH, droit opposable, Sécurité Sociale, audit HAS, REX, annuaire alumni et flashcards 3D.`
+              : `Les 55% de ressources socles restent en libre accès permanent. L'abonnement ouvre les 45% de modules réservés à la gouvernance, à la qualité HAS et à la communauté.`}
           </p>
+          <div class="vip-banner-meter">
+            <div class="vip-progress-track">
+              <div class="vip-progress-fill ${isUnlocked ? 'unlocked' : 'freemium'}"></div>
+            </div>
+            <span style="font-size:11px;font-weight:750;color:${isUnlocked ? 'var(--mint)' : 'var(--gold)'}">${isUnlocked ? "100% ILLIMITÉ" : "55% DÉCOUVERTE"}</span>
+          </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
           ${isUnlocked 
             ? `<button class="button subtle" data-action="reset-auth-profile">${icon("reset", 14)}Verrouiller (mode test)</button>`
-            : `<button class="button primary" data-nav="abonnement">${icon("spark", 15)}Souscrire en ligne</button>`}
+            : `<button class="button primary" data-action="simulate-subscribe" data-plan="Pass Annuel Pro" data-price-id="price_1UeF8MCn4c8lYjEAcTVuxqSh">${icon("spark", 15)}Débloquer mon accès</button>`}
         </div>
       </div>
     </div>
 
     <!-- Paiement sécurisé Stripe -->
-    <div class="glass-panel" style="padding:22px;margin-bottom:28px;background:rgba(248,211,136,0.04);border:1px dashed rgba(248,211,136,0.3)">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <span class="icon-bubble" style="background:rgba(248,211,136,0.15);color:var(--gold);padding:8px">${icon("spark", 18)}</span>
+    <div class="glass-panel" style="padding:22px;margin-bottom:28px;background:rgba(248,211,136,0.04);border:1px dashed rgba(248,211,136,0.3);border-radius:18px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+        <span class="icon-bubble" style="background:rgba(248,211,136,0.15);color:var(--gold);padding:8px">${icon("lock", 18)}</span>
         <div>
-          <h3 style="font-size:15px;color:var(--gold);margin:0">Souscription sécurisée</h3>
-          <span style="font-size:12px;color:var(--text-2)">Le paiement n’est pas encore opérationnel. La création de comptes pour un groupe sera disponible après mise en place et vérification des abonnements de groupe. Un code public permet de tester l’accès complet sans paiement.</span>
+          <h3 style="font-size:15px;color:var(--gold);margin:0;font-weight:750">Souscription & Déploiement Sécurisés</h3>
+          <span style="font-size:12px;color:var(--text-soft);line-height:1.5;display:block;margin-top:2px">Les paiements et factures sont administrés via infrastructure sécurisée. Les écoles et directions peuvent activer des promotions entières via clé d'établissement.</span>
         </div>
       </div>
-      <button class="button primary" data-action="request-partnership">${icon("lock",14)}Se connecter puis souscrire</button>
+      <button class="button primary" data-action="request-partnership">${icon("lock",14)}Activer un partenariat ou code promo</button>
     </div>
 
     <!-- Formules Écoles & Universités -->
@@ -3617,24 +3745,29 @@ function renderSubscription() {
       <div class="section-title-row">
         <div>
           <h2>Formules pour les écoles et promotions</h2>
-          <p>Accès Premium pour plusieurs comptes à l’ensemble des modules actuellement disponibles dans l’application.</p>
+          <p>Accès Premium groupé pour l'ensemble des étudiants et intervenants d'une promotion.</p>
         </div>
       </div>
-      <div class="pricing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px">
+      <div class="pricing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
         ${pricing.tiers.schools.map(t => `
-          <article class="pricing-card glass-panel${t.popular ? ' is-popular' : ''}" style="position:relative;padding:24px;border-radius:18px;display:flex;flex-direction:column;justify-content:space-between;${t.popular ? 'border:1px solid var(--mint);box-shadow:0 0 25px rgba(98,222,184,0.1)' : ''}">
-            ${t.popular ? `<span style="position:absolute;top:12px;right:14px;font-size:10px;font-weight:700;color:var(--mint);background:rgba(98,222,184,0.15);padding:3px 8px;border-radius:10px">RECOMMANDÉ</span>` : ''}
+          <article class="pricing-card glass-panel${t.popular ? ' is-popular' : ''}">
+            ${t.popular ? `<span class="pricing-popular-pill">RECOMMANDÉ ÉCOLES</span>` : ''}
             <div>
               <span class="eyebrow" style="color:var(--sky)">${esc(t.students)}</span>
               <h3 style="font-size:20px;font-weight:800;margin:6px 0 2px">${esc(t.name)}</h3>
-              <div style="display:flex;align-items:baseline;gap:4px;margin:12px 0 6px">
-                <span style="font-size:32px;font-weight:800;color:var(--text)">${esc(t.price)}</span>
+              <div class="pricing-amount-row">
+                <span class="pricing-amount">${esc(t.price)}</span>
                 <span style="color:var(--text-2);font-size:12px">${esc(t.period)}</span>
               </div>
-              <span style="display:inline-block;font-size:11.5px;color:var(--mint);font-weight:600;margin-bottom:14px">${esc(t.perStudent)}</span>
-              <ul class="bullet-list" style="margin-top:10px;font-size:12.5px">
-                ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
-              </ul>
+              <span style="display:inline-block;font-size:11.5px;color:var(--mint);font-weight:700;margin-bottom:14px">${esc(t.perStudent)}</span>
+              <div class="pricing-feature-list">
+                ${t.features.map(f => `
+                  <div class="pricing-feature-item">
+                    <span class="pricing-check-icon">${icon("check", 12)}</span>
+                    <span>${esc(f)}</span>
+                  </div>
+                `).join("")}
+              </div>
             </div>
             <button class="button ${t.popular ? 'primary' : 'subtle'}" style="margin-top:20px;width:100%" data-action="simulate-subscribe" data-plan="${esc(t.name)}" data-price-id="${esc(t.priceId || '')}">
               ${icon("briefcase", 15)}Souscrire pour mon école
@@ -3648,24 +3781,29 @@ function renderSubscription() {
     <div class="section-block">
       <div class="section-title-row">
         <div>
-          <h2>Formules Individuelles & Pass Étudiant</h2>
-          <p>Accès Premium pour un étudiant ou un professionnel utilisant les modules de Mosaïque Santé.</p>
+          <h2>Formules Individuelles & Pass Pro</h2>
+          <p>Accès personnel complet pour les cadres, directeurs et étudiants en management de la santé.</p>
         </div>
       </div>
-      <div class="pricing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
+      <div class="pricing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px">
         ${pricing.tiers.individuals.map(t => `
-          <article class="pricing-card glass-panel${t.popular ? ' is-popular' : ''}" style="position:relative;padding:22px;border-radius:16px;display:flex;flex-direction:column;justify-content:space-between;${t.popular ? 'border:1px solid var(--gold);box-shadow:0 0 25px rgba(248,211,136,0.1)' : ''}">
-            ${t.badge ? `<span style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;color:var(--gold);background:rgba(248,211,136,0.15);padding:3px 8px;border-radius:10px">${esc(t.badge)}</span>` : ''}
+          <article class="pricing-card glass-panel${t.popular ? ' is-popular' : ''}">
+            ${t.popular ? `<span class="pricing-popular-pill">LE PLUS CHOISI</span>` : (t.badge ? `<span style="position:absolute;top:10px;right:14px;font-size:10px;font-weight:750;color:var(--gold);background:rgba(248,211,136,0.15);padding:3px 8px;border-radius:10px">${esc(t.badge)}</span>` : '')}
             <div>
-              <h3 style="font-size:17px;font-weight:750;margin:0 0 6px">${esc(t.name)}</h3>
-              <div style="display:flex;align-items:baseline;gap:4px;margin:8px 0 4px">
-                <span style="font-size:28px;font-weight:800;color:var(--text)">${esc(t.price)}</span>
+              <h3 style="font-size:18px;font-weight:780;margin:0 0 6px">${esc(t.name)}</h3>
+              <div class="pricing-amount-row">
+                <span class="pricing-amount">${esc(t.price)}</span>
                 <span style="color:var(--text-2);font-size:12px">${esc(t.period)}</span>
               </div>
-              <span style="display:inline-block;font-size:11.5px;color:var(--text-2);margin-bottom:12px">${esc(t.subtitle)}</span>
-              <ul class="bullet-list" style="margin-top:8px;font-size:12px">
-                ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
-              </ul>
+              <span style="display:inline-block;font-size:11.5px;color:var(--text-soft);margin-bottom:12px">${esc(t.subtitle)}</span>
+              <div class="pricing-feature-list">
+                ${t.features.map(f => `
+                  <div class="pricing-feature-item">
+                    <span class="pricing-check-icon">${icon("check", 12)}</span>
+                    <span>${esc(f)}</span>
+                  </div>
+                `).join("")}
+              </div>
             </div>
             <button class="button ${t.popular ? 'primary' : 'subtle'}" style="margin-top:18px;width:100%" data-action="simulate-subscribe" data-plan="${esc(t.name)}" data-price-id="${esc(t.priceId || '')}">
               ${icon("star", 14)}Choisir cette formule
@@ -3680,19 +3818,24 @@ function renderSubscription() {
       <div class="section-title-row">
         <div>
           <h2>Formule pour une équipe de direction</h2>
-          <p>Accès Premium pour cinq comptes aux modules disponibles dans Mosaïque Santé.</p>
+          <p>Accès Premium pour cinq comptes aux modules de gouvernance dans Mosaïque Santé.</p>
         </div>
       </div>
-      <div class="glass-panel" style="padding:24px;border-radius:18px">
+      <div class="glass-panel" style="padding:26px;border-radius:20px">
         ${pricing.tiers.etablissement.map(t => `
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
-            <div>
-              <span class="eyebrow" style="color:var(--mint)">5 LICENCES ÉQUIPE DIRECTION</span>
-              <h3 style="font-size:20px;font-weight:800;margin:4px 0">${esc(t.name)} — ${esc(t.price)} ${esc(t.period)}</h3>
-              <p style="font-size:13px;color:var(--text-2);margin:0 0 10px">${esc(t.subtitle)}</p>
-              <ul class="bullet-list" style="font-size:12.5px">
-                ${t.features.map(f => `<li>${esc(f)}</li>`).join("")}
-              </ul>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px">
+            <div style="flex:1;min-width:280px">
+              <span class="eyebrow" style="color:var(--mint)">5 LICENCES ÉQUIPE DIRECTION (CODIR)</span>
+              <h3 style="font-size:22px;font-weight:800;margin:6px 0 4px">${esc(t.name)} — ${esc(t.price)} ${esc(t.period)}</h3>
+              <p style="font-size:13px;color:var(--text-soft);margin:0 0 14px">${esc(t.subtitle)}</p>
+              <div class="pricing-feature-list">
+                ${t.features.map(f => `
+                  <div class="pricing-feature-item">
+                    <span class="pricing-check-icon">${icon("check", 12)}</span>
+                    <span>${esc(f)}</span>
+                  </div>
+                `).join("")}
+              </div>
             </div>
             <button class="button primary" data-action="simulate-subscribe" data-plan="${esc(t.name)}" data-price-id="${esc(t.priceId || '')}">
               ${icon("building", 16)}Souscrire pour l'établissement
@@ -4340,6 +4483,23 @@ document.addEventListener("click", event => {
   if (action === "delete-peer") {
     state.peers = state.peers.filter(peer => peer.id !== actionEl.dataset.id); writeJSON(STORE.peers,state.peers); renderPeerList(); showToast("Fiche supprimée de cet appareil.");
   }
+  if (action === "reset-peer-filters") {
+    const q = $("#peer-query");
+    if (q) q.value = "";
+    state.queries.peers = "";
+    const clearBtn = $("#peer-search-clear");
+    if (clearBtn) clearBtn.hidden = true;
+    const expFilter = $("#peer-experience-filter");
+    if (expFilter) expFilter.value = "Tout";
+    const regFilter = $("#peer-region-filter");
+    if (regFilter) regFilter.value = "Tout";
+    const expDisplay = $("#peer-experience-filter-display");
+    if (expDisplay) { expDisplay.textContent = "Toutes les compétences"; expDisplay.classList.remove("has-value"); }
+    const regDisplay = $("#peer-region-filter-display");
+    if (regDisplay) { regDisplay.textContent = "Toutes les régions"; regDisplay.classList.remove("has-value"); }
+    renderPeerList();
+    return;
+  }
   if (action === "clear-peers") {
     if (!state.peers.length) { showToast("L’annuaire local est déjà vide."); return; }
     if (window.confirm("Supprimer toutes les fiches enregistrées dans ce navigateur ?")) { state.peers=[]; writeJSON(STORE.peers,state.peers); renderPeerList(); showToast("Les fiches locales ont été supprimées."); }
@@ -4376,7 +4536,12 @@ document.addEventListener("input", event => {
       });
     }
   }
-  if (el.id === "peer-query") { state.queries.peers=el.value; renderPeerList(); }
+  if (el.id === "peer-query") {
+    state.queries.peers = el.value;
+    const clearBtn = $("#peer-search-clear");
+    if (clearBtn) clearBtn.hidden = !el.value;
+    renderPeerList();
+  }
   if (el.id === "map-zoom") {
     state.mapZoom=Number(el.value)/100;
     state.mapZoomAuto=false;
