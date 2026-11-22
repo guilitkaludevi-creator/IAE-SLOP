@@ -1,9 +1,9 @@
-const CACHE = "mosaique-sante-v2026-11-22-v47-liquid-glass";
+const CACHE = "mosaique-sante-v2026-11-22-v48-signin-transition";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261122-liquid-glass",
-  "./app.js?v=20261122-meeting-filter",
+  "./app.css?v=20261122-signin-transition",
+  "./app.js?v=20261122-signin-transition",
   "./data.js?v=20261121-lock-motion",
   "./firebase-init.js?v=20261121-lock-motion",
   "./manifest.webmanifest",

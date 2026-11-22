@@ -4413,6 +4413,7 @@ function applyAuthState({ user, premium }) {
     unlockState = null;
     unlockRequested = false;
     $("#auth-lock").classList.remove("is-unlocked");
+    document.body.classList.remove("auth-leaving");
     setAuthBusy(false);
   }
   if (user && unlockRequested && !document.body.classList.contains("is-authenticated") && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -4422,16 +4423,24 @@ function applyAuthState({ user, premium }) {
       $("#auth-status").textContent = "Connexion réussie…";
       setAuthBusy(true);
       unlockTimer = setTimeout(() => {
-        unlockTimer = 0;
-        const detail = unlockState;
-        unlockState = null;
-        unlockRequested = false;
-        setAuthBusy(false);
-        if (window.firebaseAuth?.currentUser?.uid === detail.user.uid) applyAuthState(detail);
-        else {
-          $("#auth-lock").classList.remove("is-unlocked");
-          $("#auth-status").textContent = "Connexion interrompue. Veuillez réessayer.";
-        }
+        document.body.classList.add("auth-leaving");
+        unlockTimer = setTimeout(() => {
+          unlockTimer = 0;
+          const detail = unlockState;
+          unlockState = null;
+          unlockRequested = false;
+          setAuthBusy(false);
+          if (window.firebaseAuth?.currentUser?.uid === detail.user.uid) {
+            applyAuthState(detail);
+            [$(".main-column"), sidebar, $(".bottom-nav")].forEach(element => {
+              element?.animate?.([{ opacity:.25 }, { opacity:1 }], { duration:1000, easing:"cubic-bezier(.18,.72,.23,1)" });
+            });
+          } else {
+            $("#auth-lock").classList.remove("is-unlocked");
+            $("#auth-status").textContent = "Connexion interrompue. Veuillez réessayer.";
+          }
+          document.body.classList.remove("auth-leaving");
+        }, 700);
       }, 1400);
     }
     return;

@@ -76,6 +76,7 @@
   img { max-width: 100%; }
   ::selection { color: #061710; background: var(--mint); }
   :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  #page-stage h1[tabindex="-1"]:focus-visible { outline: none; }
 }
 
 @layer shell {
@@ -2489,7 +2490,7 @@ body.is-authenticated .auth-lock-scene { display: none; }
   box-shadow: inset 8px 7px 9px rgba(255,255,255,.25), 9px 2px 0 rgba(43,112,105,.65), 14px 5px 22px rgba(0,0,0,.2);
   transform-origin: 12% 90%;
   transform: translateZ(0);
-  transition: transform 1.1s var(--ease-out), opacity .8s var(--ease-out);
+  transition: transform 1.4s var(--ease-out), opacity .8s var(--ease-out);
 }
 .auth-lock-scene.is-unlocked .auth-lock-shackle {
   transform: translate3d(-12%, -5%, 18px) rotateZ(-28deg);
@@ -2544,6 +2545,8 @@ body.is-authenticated .auth-lock-scene { display: none; }
 @media (prefers-reduced-motion: no-preference) {
   .ambient-a { animation: ambient-drift 29s ease-in-out infinite alternate; }
   .ambient-b { animation: ambient-drift 34s ease-in-out -7s infinite alternate-reverse; }
+  .auth-screen, .auth-lock-scene { transition: opacity .7s var(--ease-out); }
+  body.auth-leaving .auth-screen, body.auth-leaving .auth-lock-scene { opacity: 0; pointer-events: none; }
   .auth-lock { animation: lock-breathe 22s ease-in-out infinite alternate; }
   .orbit-ring { animation: visual-glow 16s ease-in-out infinite alternate; }
   .premium-bubble-orb { animation: visual-orb-glow 16s ease-in-out infinite alternate; }
