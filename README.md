@@ -60,4 +60,4 @@ Les calculateurs RH fonctionnent localement dans la page : les valeurs saisies n
 
 ## Repères design
 
-Interface pensée pour une lecture mobile et des contenus denses : navigation courte, zones tactiles confortables, surfaces de verre réservées aux regroupements utiles, contraste, focus clavier, réduction des animations et palette colorée limitée aux repères visuels. Les captures fournies dans `parametrage` et leur transcription ont servi de référence pour les espacements, transitions, hiérarchie et lisibilité.
+Interface pensée pour une lecture mobile et des contenus denses : navigation courte, zones tactiles confortables, surfaces de verre réservées aux regroupements utiles, contraste, focus clavier, réduction des animations et palette colorée limitée aux repères visuels. Les commandes flottantes de la carte utilisent une réfraction des bords lorsque le navigateur la rend correctement et un verre dépoli sur Safari ; elles deviennent opaques en cas de transparence réduite ou de contraste renforcé. Les captures fournies dans `parametrage` et leur transcription ont servi de référence pour les espacements, transitions, hiérarchie et lisibilité.
