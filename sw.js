@@ -1,8 +1,8 @@
-const CACHE = "mosaique-sante-v2026-11-22-v44-meeting-filter";
+const CACHE = "mosaique-sante-v2026-11-22-v45-fixed-ad";
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261122-meeting-filter",
+  "./app.css?v=20261122-fixed-ad",
   "./app.js?v=20261122-meeting-filter",
   "./data.js?v=20261121-lock-motion",
   "./firebase-init.js?v=20261121-lock-motion",

@@ -918,6 +918,7 @@
   }
   @media (max-height: 520px) and (orientation: landscape) {
     .bottom-nav { display: none; }
+    .micro-ad { bottom: max(8px, env(safe-area-inset-bottom)); }
     .sidebar { display: flex; }
     .topbar { min-height: 58px; }
     main { padding-top: 18px; }
