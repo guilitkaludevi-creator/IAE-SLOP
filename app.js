@@ -130,9 +130,9 @@ function paywallGate(title = "Ressource réservée aux abonnés", description = 
     <h3>${esc(title)}</h3>
     <p>${esc(description)}</p>
     <div class="premium-bubble-benefits">
-      <span><span class="pricing-check-icon">${icon("check", 12)}</span> Fiches & calculateurs illimités</span>
-      <span><span class="pricing-check-icon">${icon("check", 12)} Textes & HAS 2026 actualisés</span>
-      <span><span class="pricing-check-icon">${icon("check", 12)} Annuaire & réseau complet</span>
+      <span class="premium-benefit-pill">${icon("check", 14)}<span>Fiches & calculateurs illimités</span></span>
+      <span class="premium-benefit-pill">${icon("check", 14)}<span>Textes & HAS 2026 actualisés</span></span>
+      <span class="premium-benefit-pill">${icon("check", 14)}<span>Annuaire & réseau complet</span></span>
     </div>
     <div class="paywall-actions">
       <button class="button primary" data-nav="abonnement">${icon("spark", 16)}Débloquer l’accès Campus</button>
@@ -175,6 +175,7 @@ function icon(name, size = 18) {
     sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>',
     moon:'<path d="M20.6 15.3A8.5 8.5 0 0 1 8.7 3.4 8.5 8.5 0 1 0 20.6 15.3Z"/>',
     close:'<path d="m18 6-12 12M6 6l12 12"/>',
+    lock:'<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     logout:'<path d="M10 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2m4 10 5-5-5-5m5 5H8"/>',
     menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
     arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
@@ -2555,9 +2556,31 @@ function submitComment(form) {
   refreshPost(post.id);
 
   const summary = participation === "none" ? "Votre commentaire est publié." : `${PARTICIPATION_CHOICES[participation].label} : enregistré.`;
-  state.notifs = [{ id: "notif-" + Date.now(), title: "Réponse enregistrée", text: `${summary} (${post.title})`, date: "À l'instant", icon: "check", unread: true }, ...state.notifs];
-  writeJSON(STORE.notifs, state.notifs);
-  updateNotifBadge();
+  dispatchNotification({
+    id: `notif-comment-sent-${comment.id}`,
+    title: "Réponse enregistrée",
+    text: `${summary} (${post.title})`,
+    icon: "check",
+    targetNav: "timeline",
+    targetPostId: post.id,
+    targetUid: currentUserUid() || "all"
+  }, { silentToast: true });
+
+  const postAuthorUid = post.authorUid || post.author?.uid;
+  if (postAuthorUid && postAuthorUid !== currentUserUid()) {
+    const isRsvp = participation !== "none";
+    dispatchNotification({
+      id: `notif-comment-received-${comment.id}`,
+      title: isRsvp ? "Nouvelle participation à votre événement" : "Nouveau commentaire sur votre publication",
+      text: `${comment.authorName} : ${text ? `« ${text.slice(0, 65)} »` : (PARTICIPATION_CHOICES[participation]?.label || "A répondu")} (« ${post.title} »)`,
+      icon: isRsvp ? "calendar" : "message",
+      targetNav: "timeline",
+      targetPostId: post.id,
+      targetUid: postAuthorUid,
+      authorUid: currentUserUid()
+    }, { silentToast: true });
+  }
+
   showToast(`✅ ${summary}`);
 
   if (post.isRemote && typeof window.addCommentToFirestore === "function") {
@@ -2602,6 +2625,22 @@ function handleLikePost(postId) {
   post.likes = Math.max(0, (post.likes || 0) + delta);
   writeJSON(STORE.posts, state.posts);
   refreshPost(postId);
+  if (post.isLiked) {
+    const postAuthorUid = post.authorUid || post.author?.uid;
+    if (postAuthorUid && postAuthorUid !== currentUserUid()) {
+      const myName = state.auth?.profile?.name || "Un membre alumni";
+      dispatchNotification({
+        id: `notif-like-${post.id}-${post.likes}`,
+        title: "Nouveau j'aime sur votre publication",
+        text: `${myName} a aimé votre annonce « ${post.title} ».`,
+        icon: "heart",
+        targetNav: "timeline",
+        targetPostId: post.id,
+        targetUid: postAuthorUid,
+        authorUid: currentUserUid()
+      }, { silentToast: true });
+    }
+  }
   if (post.isRemote && typeof window.adjustPostLikes === "function") {
     window.adjustPostLikes(postId, delta).catch(err => console.warn("[Firestore] J'aime non synchronisé :", err.message));
   }
@@ -2663,13 +2702,128 @@ function cancelEditPeer() {
   renderPage("reseau");
 }
 
-function updateNotifBadge() {
-  const unreadCount = (state.notifs || []).filter(n => n.unread).length;
+function getAccountNotifs() {
+  const myUid = currentUserUid();
+  const myEmail = (state.auth?.profile?.email || "").toLowerCase();
+  return (state.notifs || []).filter(n => {
+    if (n.targetUid && n.targetUid !== "all") {
+      return Boolean(myUid && n.targetUid === myUid);
+    }
+    if (n.targetEmail) {
+      return Boolean(myEmail && n.targetEmail.toLowerCase() === myEmail);
+    }
+    if (n.authorUid && myUid && n.authorUid === myUid && n.isBroadcast) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function updateNotifBadge(animate = false) {
+  const accountNotifs = getAccountNotifs();
+  const unreadCount = accountNotifs.filter(n => n.unread).length;
   const badge = $("#notif-badge");
   if (badge) {
-    badge.textContent = unreadCount;
+    const prevCount = Number(badge.textContent) || 0;
+    badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
     badge.hidden = unreadCount === 0;
+    if (animate || (unreadCount > prevCount && unreadCount > 0)) {
+      badge.classList.remove("has-bounce");
+      void badge.offsetWidth;
+      badge.classList.add("has-bounce");
+    }
   }
+}
+
+function dispatchNotification(notifData, { silentToast = false, animate = true } = {}) {
+  if (!notifData || !notifData.title) return;
+  if (!Array.isArray(state.notifs)) state.notifs = [];
+  
+  const id = notifData.id || `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const existing = state.notifs.find(n => n.id === id);
+  if (existing) return;
+
+  const newNotif = {
+    id,
+    title: String(notifData.title || "").trim(),
+    text: String(notifData.text || "").trim(),
+    icon: notifData.icon || "bell",
+    date: notifData.date || "À l'instant",
+    timestamp: notifData.timestamp || Date.now(),
+    unread: notifData.unread !== false,
+    targetNav: notifData.targetNav || "",
+    targetPostId: notifData.targetPostId || "",
+    targetPeerId: notifData.targetPeerId || "",
+    targetUid: notifData.targetUid || "all",
+    targetEmail: notifData.targetEmail || "",
+    authorUid: notifData.authorUid || "",
+    isBroadcast: notifData.targetUid === "all" || !notifData.targetUid
+  };
+
+  state.notifs = [newNotif, ...state.notifs].slice(0, 60);
+  writeJSON(STORE.notifs, state.notifs);
+  updateNotifBadge(animate);
+
+  if (state.notifsOpen) {
+    renderNotifPopoverContent();
+  }
+
+  const myUid = currentUserUid();
+  const concernsMe = (!newNotif.targetUid || newNotif.targetUid === "all" || newNotif.targetUid === myUid) &&
+                     (!newNotif.authorUid || newNotif.authorUid !== myUid || !newNotif.isBroadcast);
+
+  if (!silentToast && concernsMe) {
+    showToast(`🔔 ${newNotif.title}`);
+    try { navigator.vibrate?.(35); } catch (_) {}
+  }
+}
+
+function renderNotifPopoverContent() {
+  const popover = $("#notif-popover");
+  if (!popover) return;
+  const notifs = getAccountNotifs();
+  const unreadCount = notifs.filter(n => n.unread).length;
+  popover.innerHTML = `
+    <div class="notif-header">
+      <h3 style="display:flex;align-items:center;gap:6px">
+        ${icon("bell", 16)} <span>Notifications</span>
+        ${notifs.length ? `<span class="tag sky" style="font-size:10px;padding:2px 6px;border-radius:6px">${notifs.length}</span>` : ''}
+      </h3>
+      <div style="display:flex;align-items:center;gap:6px">
+        ${unreadCount > 0 ? `<button class="button tiny subtle" data-action="mark-all-notifs-read" style="min-height:28px;padding:3px 8px;font-size:10.5px">Tout lire</button>` : `<span class="muted" style="font-size:11px">À jour</span>`}
+        ${notifs.length > 0 ? `<button class="icon-button" data-action="clear-all-notifs" aria-label="Effacer les notifications" title="Effacer l'historique" style="min-width:28px;min-height:28px;border-radius:8px">${icon("trash", 13)}</button>` : ''}
+        <button class="icon-button" data-action="toggle-notifications" aria-label="Fermer" style="min-width:28px;min-height:28px;border-radius:8px">${icon("close", 14)}</button>
+      </div>
+    </div>
+    <div class="notif-list" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+      ${notifs.length ? notifs.map(n => `
+        <div class="notif-item ${n.unread ? 'is-unread' : ''}" 
+             role="button" 
+             tabindex="0"
+             data-action="open-notif" 
+             data-notif-id="${esc(n.id)}"
+             data-nav="${esc(n.targetNav || '')}"
+             data-post-id="${esc(n.targetPostId || '')}"
+             data-peer-id="${esc(n.targetPeerId || '')}">
+          <span class="notif-bubble ${n.unread ? 'is-unread-bubble' : ''}">
+            ${icon(n.icon || "bell", 15)}
+          </span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+              <strong style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(n.title)}</strong>
+              ${n.unread ? `<span class="notif-unread-dot" title="Non lu" aria-label="Non lu"></span>` : ''}
+            </div>
+            <p style="margin:3px 0 0;font-size:11.5px;color:var(--text-soft);line-height:1.4">${esc(n.text)}</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+              <span class="notif-time">${esc(n.date || "À l'instant")}</span>
+              ${n.targetNav ? `<span class="notif-action-hint">${n.targetNav === "timeline" ? "Voir la publication →" : n.targetNav === "reseau" ? "Voir la fiche →" : "Consulter →"}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join("") : `<div class="empty-state" style="padding:24px 12px;text-align:center"><span style="font-size:24px;display:block;margin-bottom:6px">🔔</span><strong>Aucune notification</strong>Toutes les annonces et arrivées de promotion apparaîtront ici.</div>`}
+    </div>
+  `;
+  hydrateIcons(popover);
 }
 
 function toggleNotifications() {
@@ -2681,37 +2835,115 @@ function toggleNotifications() {
     return;
   }
   popover.hidden = false;
-  const unreadCount = (state.notifs || []).filter(n => n.unread).length;
-  popover.innerHTML = `
-    <div class="notif-header">
-      <h3 style="display:flex;align-items:center;gap:6px">${icon("bell", 16)} Notifications (${state.notifs.length})</h3>
-      <div style="display:flex;align-items:center;gap:8px">
-        ${unreadCount > 0 ? `<button class="button tiny subtle" data-action="mark-all-notifs-read" style="min-height:30px;padding:4px 10px;font-size:10px">Tout lire</button>` : `<span class="muted" style="font-size:11px">À jour</span>`}
-        <button class="icon-button" data-action="toggle-notifications" aria-label="Fermer les notifications" style="min-width:32px;min-height:32px;border-radius:9px">${icon("close", 15)}</button>
-      </div>
-    </div>
-    <div class="notif-list" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
-      ${state.notifs.length ? state.notifs.map(n => `
-        <div class="notif-item ${n.unread ? 'is-unread' : ''}">
-          <span class="icon-bubble" style="flex-shrink:0;margin-top:2px">${icon(n.icon || "bell", 15)}</span>
-          <div style="flex:1">
-            <strong>${esc(n.title)}</strong>
-            <p style="margin:2px 0 0">${esc(n.text)}</p>
-            <span class="notif-time">${esc(n.date)}</span>
-          </div>
-        </div>
-      `).join("") : `<div class="empty-state" style="padding:16px 0">Aucune notification pour le moment.</div>`}
-    </div>
-  `;
-  hydrateIcons(popover);
+  renderNotifPopoverContent();
+}
+
+function openNotification(notifId, { nav, postId, peerId } = {}) {
+  const notif = (state.notifs || []).find(n => n.id === notifId);
+  if (notif) {
+    notif.unread = false;
+    writeJSON(STORE.notifs, state.notifs);
+    updateNotifBadge();
+  }
+  state.notifsOpen = false;
+  const popover = $("#notif-popover");
+  if (popover) popover.hidden = true;
+
+  const targetNav = nav || notif?.targetNav;
+  const targetPostId = postId || notif?.targetPostId;
+  const targetPeerId = peerId || notif?.targetPeerId;
+
+  if (targetNav) {
+    renderPage(targetNav);
+    if (targetNav === "timeline" && targetPostId) {
+      state.openComments.add(targetPostId);
+      setTimeout(() => {
+        const postEl = document.getElementById(`post-${targetPostId}`);
+        if (postEl) {
+          postEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          postEl.classList.add("is-highlighted");
+          setTimeout(() => postEl.classList.remove("is-highlighted"), 3000);
+        }
+      }, 350);
+    } else if (targetNav === "reseau" && targetPeerId) {
+      state.highlightPeerId = targetPeerId;
+      setTimeout(() => {
+        const peerEl = document.getElementById(`peer-${targetPeerId}`);
+        if (peerEl) {
+          peerEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          peerEl.classList.add("is-highlighted");
+          setTimeout(() => peerEl.classList.remove("is-highlighted"), 3000);
+        }
+      }, 350);
+    }
+  }
 }
 
 function markAllNotifsRead() {
-  state.notifs.forEach(n => { n.unread = false; });
+  const myNotifs = getAccountNotifs();
+  myNotifs.forEach(n => { n.unread = false; });
   writeJSON(STORE.notifs, state.notifs);
   updateNotifBadge();
-  toggleNotifications();
+  renderNotifPopoverContent();
   showToast("Toutes les notifications sont marquées comme lues.");
+}
+
+function clearAllNotifs() {
+  const myUid = currentUserUid();
+  state.notifs = (state.notifs || []).filter(n => {
+    if (n.targetUid && n.targetUid === myUid) return false;
+    if (!n.targetUid || n.targetUid === "all") return false;
+    return true;
+  });
+  writeJSON(STORE.notifs, state.notifs);
+  updateNotifBadge();
+  renderNotifPopoverContent();
+  showToast("Historique des notifications effacé.");
+}
+
+function ensureStarterNotifications() {
+  if (!Array.isArray(state.notifs) || state.notifs.length === 0) {
+    const starter = [
+      {
+        id: "notif-seed-welcome",
+        title: "Bienvenue sur le Campus Mosaïque",
+        text: "Accédez aux repères de direction, fiches sanitaires et médico-sociales.",
+        icon: "spark",
+        date: "Aujourd'hui",
+        timestamp: Date.now() - 3600000,
+        unread: true,
+        targetNav: "accueil",
+        targetUid: "all",
+        isBroadcast: true
+      },
+      {
+        id: "notif-seed-timeline",
+        title: "Fil d'actualité en direct",
+        text: "Publiez vos annonces, recrutements et événements pour la promotion.",
+        icon: "briefcase",
+        date: "Aujourd'hui",
+        timestamp: Date.now() - 1800000,
+        unread: true,
+        targetNav: "timeline",
+        targetUid: "all",
+        isBroadcast: true
+      },
+      {
+        id: "notif-seed-network",
+        title: "Annuaire des pairs & Alumni",
+        text: "Retrouvez les directeurs, cadres et collègues diplômés du secteur.",
+        icon: "users",
+        date: "Aujourd'hui",
+        timestamp: Date.now() - 900000,
+        unread: true,
+        targetNav: "reseau",
+        targetUid: "all",
+        isBroadcast: true
+      }
+    ];
+    state.notifs = starter;
+    writeJSON(STORE.notifs, state.notifs);
+  }
 }
 
 async function addPeer(form) {
@@ -2807,11 +3039,29 @@ async function addPeer(form) {
 
   writeJSON(STORE.peers, state.peers);
   if (state.onboarding) {
+    dispatchNotification({
+      id: `notif-welcome-${peer.id}`,
+      title: "Bienvenue dans l'annuaire Alumni",
+      text: `Votre fiche alumni (${peer.name}) est désormais active et partagée avec la promotion.`,
+      icon: "check",
+      targetNav: "reseau",
+      targetPeerId: peer.id,
+      targetUid: currentUserUid() || "all"
+    }, { silentToast: true });
     finishOnboarding();
     showToast("Votre fiche a été publiée dans le réseau.");
     return;
   }
   if (!isEditing) {
+    dispatchNotification({
+      id: `notif-welcome-${peer.id}`,
+      title: "Bienvenue dans l'annuaire Alumni",
+      text: `Votre fiche alumni (${peer.name}) est désormais active et partagée avec la promotion.`,
+      icon: "check",
+      targetNav: "reseau",
+      targetPeerId: peer.id,
+      targetUid: currentUserUid() || "all"
+    }, { silentToast: true });
     state.queries.peers = "";
     state.highlightPeerId = peer.id;
     peerMultiSelect.selected.clear();
@@ -4171,6 +4421,18 @@ document.addEventListener("click", event => {
     markAllNotifsRead();
     return;
   }
+  if (action === "clear-all-notifs") {
+    clearAllNotifs();
+    return;
+  }
+  if (action === "open-notif") {
+    openNotification(actionEl.dataset.notifId, {
+      nav: actionEl.dataset.nav,
+      postId: actionEl.dataset.postId,
+      peerId: actionEl.dataset.peerId
+    });
+    return;
+  }
   if (action === "edit-peer") {
     editPeer(actionEl.dataset.id);
     return;
@@ -4825,6 +5087,16 @@ document.addEventListener("submit", event => {
     state.posts = [newPost, ...(state.posts || [])];
     writeJSON(STORE.posts, state.posts);
 
+    dispatchNotification({
+      id: `notif-post-created-${newPost.id}`,
+      title: `${typeLabel} publiée sur le fil`,
+      text: `Votre publication « ${newPost.title} » est en ligne pour toute la promo.`,
+      icon: "check",
+      targetNav: "timeline",
+      targetPostId: newPost.id,
+      targetUid: currentUserUid() || "all"
+    }, { silentToast: true });
+
     // Sync to Firestore
     if (typeof window.savePostToFirestore === "function") {
       window.savePostToFirestore(newPost)
@@ -5037,6 +5309,12 @@ function initNavigation() {
   renderPage(initialPage, { immediate:true, fromHistory:true, restoreScrollY:window.history?.state?.scrollY ?? 0 });
 }
 
+let initialAlumniSyncDone = false;
+let initialPostsSyncDone = false;
+const knownPeerKeys = new Set();
+const knownPostIds = new Set();
+const knownCommentIds = new Set();
+
 function initFirestoreSync() {
   let attempts = 0;
   const poll = () => {
@@ -5050,10 +5328,49 @@ function initFirestoreSync() {
           state.peers = Array.from(map.values()).sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
           writeJSON(STORE.peers, state.peers);
           if (state.page === "reseau") renderPeerList();
+
+          // Notifications temps réel pour les alumni
+          if (!initialAlumniSyncDone) {
+            remoteAlumni.forEach(r => knownPeerKeys.add(r.email || r.id));
+            const recentAlumni = remoteAlumni.slice(0, 2);
+            recentAlumni.forEach(r => {
+              dispatchNotification({
+                id: `notif-alumni-join-${r.id}`,
+                title: "Nouveau membre dans le réseau",
+                text: `${r.name} (${r.role || "Alumni"}) a rejoint la promotion${r.region ? ` (${r.region})` : ""}.`,
+                icon: "users",
+                targetNav: "reseau",
+                targetPeerId: r.id,
+                targetUid: "all",
+                authorUid: r.authorUid || r.email || "",
+                date: "Récemment"
+              }, { silentToast: true });
+            });
+            initialAlumniSyncDone = true;
+          } else {
+            remoteAlumni.forEach(r => {
+              const key = r.email || r.id;
+              if (!knownPeerKeys.has(key)) {
+                knownPeerKeys.add(key);
+                dispatchNotification({
+                  id: `notif-alumni-join-${r.id}`,
+                  title: "Nouveau membre dans le réseau",
+                  text: `${r.name} (${r.role || "Alumni"}) a rejoint la promotion${r.region ? ` (${r.region})` : ""}.`,
+                  icon: "users",
+                  targetNav: "reseau",
+                  targetPeerId: r.id,
+                  targetUid: "all",
+                  authorUid: r.authorUid || r.email || "",
+                  date: "À l'instant"
+                }, { silentToast: false, animate: true });
+              }
+            });
+          }
         }
       }, () => {
         // Mode silencieux : règles de sécurité en attente de déploiement
       });
+
       // Subscribe to posts (real-time)
       if (typeof window.subscribeToPostsFirestore === "function") {
         window.subscribeToPostsFirestore((remotePosts) => {
@@ -5065,6 +5382,71 @@ function initFirestoreSync() {
           state.posts = [...merged, ...localOnly].sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
           writeJSON(STORE.posts, state.posts);
           if (state.page === "timeline") refreshFeed();
+
+          // Notifications temps réel pour les publications et commentaires
+          if (!initialPostsSyncDone) {
+            remotePosts.forEach(r => {
+              knownPostIds.add(r.id);
+              (r.comments || []).forEach(c => knownCommentIds.add(c.id));
+            });
+            const recentPosts = remotePosts.slice(0, 2);
+            recentPosts.forEach(r => {
+              const typeLabel = r.type === "event" ? "Nouvel événement" : r.type === "job_offer" ? "Nouvelle offre d'emploi" : "Nouvelle annonce";
+              dispatchNotification({
+                id: `notif-post-${r.id}`,
+                title: `${typeLabel} : ${r.title}`,
+                text: `Publié par ${r.authorName || r.author?.name || "Membre Alumni"} · ${r.organization || "Réseau Santé"}`,
+                icon: r.type === "event" ? "calendar" : r.type === "job_offer" ? "briefcase" : "message",
+                targetNav: "timeline",
+                targetPostId: r.id,
+                targetUid: "all",
+                authorUid: r.authorUid || r.author?.uid || "",
+                date: "Récemment"
+              }, { silentToast: true });
+            });
+            initialPostsSyncDone = true;
+          } else {
+            remotePosts.forEach(r => {
+              if (!knownPostIds.has(r.id)) {
+                knownPostIds.add(r.id);
+                const typeLabel = r.type === "event" ? "Nouvel événement" : r.type === "job_offer" ? "Nouvelle offre d'emploi" : "Nouvelle annonce";
+                dispatchNotification({
+                  id: `notif-post-${r.id}`,
+                  title: `${typeLabel} : ${r.title}`,
+                  text: `Publié par ${r.authorName || r.author?.name || "Membre Alumni"} · ${r.organization || "Réseau Santé"}`,
+                  icon: r.type === "event" ? "calendar" : r.type === "job_offer" ? "briefcase" : "message",
+                  targetNav: "timeline",
+                  targetPostId: r.id,
+                  targetUid: "all",
+                  authorUid: r.authorUid || r.author?.uid || "",
+                  date: "À l'instant"
+                }, { silentToast: false, animate: true });
+              }
+
+              // Vérification des commentaires entrants
+              (r.comments || []).forEach(c => {
+                if (!knownCommentIds.has(c.id)) {
+                  knownCommentIds.add(c.id);
+                  const myUid = currentUserUid();
+                  const isMyPost = Boolean(myUid && (r.authorUid === myUid || r.author?.uid === myUid));
+                  if (isMyPost && c.authorUid !== myUid) {
+                    const isRsvp = c.participation && c.participation !== "none";
+                    dispatchNotification({
+                      id: `notif-comment-received-${c.id}`,
+                      title: isRsvp ? "Nouvelle participation à votre événement" : "Nouveau commentaire sur votre publication",
+                      text: `${c.authorName} : ${c.text ? `« ${c.text.slice(0, 65)} »` : (PARTICIPATION_CHOICES[c.participation]?.label || "A répondu")} (« ${r.title} »)`,
+                      icon: isRsvp ? "calendar" : "message",
+                      targetNav: "timeline",
+                      targetPostId: r.id,
+                      targetUid: myUid,
+                      authorUid: c.authorUid || "",
+                      date: "À l'instant"
+                    }, { silentToast: false, animate: true });
+                  }
+                }
+              });
+            });
+          }
         }, () => {
           // Mode silencieux : règles de sécurité posts en attente
         });
@@ -5099,6 +5481,8 @@ initPlatformHints();
 bindDialogGestures();
 initNavigation();
 initServiceWorker();
+ensureStarterNotifications();
+updateNotifBadge();
 initFirestoreSync();
 syncMicroAdVisibility();
 const authStatusTimer = setTimeout(() => {
@@ -5185,14 +5569,17 @@ function applyAuthState({ user, premium }) {
     verifiedPaid: premiumActive,
     plan: premiumActive ? "premium-active" : "freemium",
     profile: user ? {
-      name:user.displayName || "",
-      email:user.email || "",
-      emailVerified:user.emailVerified === true
+      uid: user.uid,
+      name: user.displayName || "",
+      email: user.email || "",
+      emailVerified: user.emailVerified === true
     } : {}
   };
   const wasOnboarding = state.onboarding;
   state.onboarding = Boolean(user?.uid && (pendingOnboardingUid === user.uid || readStoredValue(ONBOARDING_KEY) === user.uid));
   writeJSON(STORE.auth, state.auth);
+  updateNotifBadge();
+  if (state.notifsOpen) renderNotifPopoverContent();
   const avatar = $(".avatar-button");
   if (avatar) avatar.textContent = (user?.displayName || user?.email || "M").trim().charAt(0).toUpperCase();
   document.documentElement.classList.toggle("is-premium-user", premium === true);
