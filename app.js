@@ -4929,11 +4929,132 @@ function initServiceWorker() {
   }
 }
 
+// --- LENTILLE OPTIQUE EN VERRE LIQUIDE (RÉFRACTION DYNAMIQUE SUR CURSEUR SOURIS) ---
+function initLiquidGlassCursor() {
+  if (!window.matchMedia('(pointer: fine)').matches) return;
+  const lens = document.getElementById('liquid-glass-cursor');
+  const feImg = document.getElementById('liquid-glass-lens-map');
+  if (!lens) return;
+
+  // 1. Génération de la carte de réfraction optique sphérique (Displacement Map normale)
+  try {
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      const imgData = ctx.createImageData(size, size);
+      const data = imgData.data;
+      const center = size / 2;
+      const radius = center - 2;
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          const dx = (x - center) / radius;
+          const dy = (y - center) / radius;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist <= 1.0) {
+            // Courbure convexe de lentille liquide (gradient radial avec biseau périphérique)
+            const angle = Math.atan2(dy, dx);
+            const slope = dist * Math.pow(Math.max(0, 1 - dist * dist), 0.45) * 1.5;
+            const dispX = Math.cos(angle) * slope;
+            const dispY = Math.sin(angle) * slope;
+
+            // R: déplacement horizontal (128 = 0)
+            data[idx] = Math.round(128 + dispX * 127);
+            // G: déplacement vertical (128 = 0)
+            data[idx + 1] = Math.round(128 + dispY * 127);
+            // B: hauteur spéculaire de la surface du verre
+            data[idx + 2] = Math.round(255 * (1 - dist));
+            // A: opaque
+            data[idx + 3] = 255;
+          } else {
+            data[idx] = 128;
+            data[idx + 1] = 128;
+            data[idx + 2] = 128;
+            data[idx + 3] = 0;
+          }
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      if (feImg) {
+        feImg.setAttribute('href', canvas.toDataURL('image/png'));
+      }
+    }
+  } catch (err) {
+    console.warn('Génération carte de réfraction optique :', err);
+  }
+
+  // 2. Moteur de suivi cinétique ultra-fluide (Interpolation LERP 60-120fps)
+  let targetX = -300;
+  let targetY = -300;
+  let currentX = -300;
+  let currentY = -300;
+  let isVisible = false;
+  let isClicking = false;
+  let isHovering = false;
+  let rafId = null;
+
+  function renderLoop() {
+    currentX += (targetX - currentX) * 0.28;
+    currentY += (targetY - currentY) * 0.28;
+
+    lens.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)${isClicking ? ' scale(0.92)' : ''}`;
+
+    rafId = requestAnimationFrame(renderLoop);
+  }
+
+  window.addEventListener('pointermove', (e) => {
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    targetX = e.clientX;
+    targetY = e.clientY;
+
+    if (!isVisible) {
+      isVisible = true;
+      lens.classList.add('is-active');
+      if (!rafId) rafId = requestAnimationFrame(renderLoop);
+    }
+  }, { passive: true });
+
+  window.addEventListener('pointerdown', (e) => {
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    isClicking = true;
+    lens.classList.add('is-clicking');
+  }, { passive: true });
+
+  window.addEventListener('pointerup', () => {
+    isClicking = false;
+    lens.classList.remove('is-clicking');
+  }, { passive: true });
+
+  document.addEventListener('mouseleave', () => {
+    isVisible = false;
+    lens.classList.remove('is-active');
+  }, { passive: true });
+
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target;
+    if (target && target.closest && target.closest('button, a, input, select, textarea, .content-card, .filter-select-trigger, .multiselect-trigger, .community-tab, .filter-select-option, .multiselect-option, .rh-card, .tab-btn, .avatar-button')) {
+      if (!isHovering) {
+        isHovering = true;
+        lens.classList.add('is-hovering');
+      }
+    } else if (isHovering) {
+      isHovering = false;
+      lens.classList.remove('is-hovering');
+    }
+  }, { passive: true });
+}
+
 initTheme();
 initPlatformHints();
 bindDialogGestures();
 initNavigation();
 initServiceWorker();
+initLiquidGlassCursor();
 initFirestoreSync();
 syncMicroAdVisibility();
 const authStatusTimer = setTimeout(() => {
