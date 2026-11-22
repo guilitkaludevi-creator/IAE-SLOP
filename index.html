@@ -31,7 +31,7 @@
       window.MOSAQUE_STRIPE_CHECKOUT_URL = "";
     </script>
     <title>Mosaïque Santé — Executive Health & Care Management</title>
-    <link rel="stylesheet" href="./app.css?v=20261122-liquid-glass">
+    <link rel="stylesheet" href="./app.css?v=20261122-smooth-animations">
   </head>
   <body>
     <svg class="glass-filter-defs" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
@@ -43,19 +43,7 @@
         <feGaussianBlur in="edges" stdDeviation=".03" edgeMode="duplicate" result="lens"/>
         <feDisplacementMap in="SourceGraphic" in2="lens" scale=".12" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
-      <!-- Lentille optique en verre liquide avec réfraction dynamique -->
-      <filter id="liquid-glass-lens-filter" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
-        <feImage id="liquid-glass-lens-map" href="" result="lensMap" preserveAspectRatio="none"/>
-        <feDisplacementMap in="SourceGraphic" in2="lensMap" scale="44" xChannelSelector="R" yChannelSelector="G" result="refracted"/>
-        <feGaussianBlur in="refracted" stdDeviation="0.35" result="smoothRefracted"/>
-        <feBlend in="SourceGraphic" in2="smoothRefracted" mode="normal"/>
-      </filter>
     </svg>
-    <!-- Lentille de verre liquide interactive attachée au curseur -->
-    <div id="liquid-glass-cursor" class="liquid-glass-cursor" aria-hidden="true">
-      <div class="liquid-glass-specular"></div>
-      <div class="liquid-glass-ring"></div>
-    </div>
     <div class="ambient ambient-a" aria-hidden="true"></div>
     <div class="ambient ambient-b" aria-hidden="true"></div>
     <div class="auth-lock-scene" id="auth-lock" data-mode="signin" data-progress="4" aria-hidden="true">
@@ -196,6 +184,6 @@
     <script type="module" src="./firebase-init.js?v=20261122-highend"></script>
     <script defer src="./data.js?v=20261122-highend"></script>
     <script defer src="./flashcards.js?v=20261122-highend"></script>
-    <script defer src="./app.js?v=20261122-liquid-glass"></script>
+    <script defer src="./app.js?v=20261122-smooth-animations"></script>
   </body>
 </html>
