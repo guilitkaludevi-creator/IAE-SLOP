@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 
-const { ACTORS, CONVENTIONS, DOCUMENTS, ESTABLISHMENTS, FAQ, JOBS, MAP_EDGES, MAP_NODES, MEETINGS, NAV, RESEARCH_AREAS, SOFTWARES, SOURCES, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS } = window.MOSAQUE_DATA;
+const { ACTORS, CONVENTIONS, DOCUMENTS, ESTABLISHMENTS, FAQ, JOBS, MAP_EDGES, MAP_NODES, MEETINGS, NAV, RESEARCH_AREAS, SOFTWARES, SOURCES, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS, RH_LEAVE_TYPES, RH_THERAPEUTIC_PART_TIME, RH_PLANNING_CHANGE, RH_INTERNS_APPRENTICES, ARS_INSPECTION_GUIDE, MANAGEMENT_TRANSITION_GUIDE, GLOSSARY_TERMS } = window.MOSAQUE_DATA;
 
 window.MOSAQUE_FLASHCARDS?.configure({
   data: window.MOSAQUE_DATA,
@@ -58,7 +58,9 @@ function createInitialMapPositions() {
 const state = {
   page: "accueil",
   filters: { establishments:"Tout", jobs:"Tout", meetings:"Tout", documents:"Tout", actors:"Tout", supportJobs:"Tout", qualityTools:"Tout", laws:"Tout" },
-  queries: { establishments:"", jobs:"", meetings:"", documents:"", actors:"", faq:"", software:"", peers:"", supportJobs:"", qualityTools:"", laws:"", flashcards:"" },
+  queries: { establishments:"", jobs:"", meetings:"", documents:"", actors:"", faq:"", software:"", peers:"", supportJobs:"", qualityTools:"", laws:"", flashcards:"", glossary:"" },
+  glossaryCategory: "Tout",
+  glossaryLetter: "Tout",
   favorites: readJSON(STORE.favorites, []),
   docChecks: readJSON(STORE.checks, {}),
   peers: readJSON(STORE.peers, []),
@@ -240,7 +242,7 @@ function navMarkup() {
 function syncNavigation() {
   $("#desktop-nav").innerHTML = navMarkup();
   $$('.bottom-link').forEach(link => {
-    const toolsPage = ["reunions","documents","rh","droit-sante","logiciels","qualite","rex","audit","politique","timeline"].includes(state.page);
+    const toolsPage = ["reunions","documents","rh","droit-sante","logiciels","qualite","rex","audit","politique","timeline","inspection-ars","changement-direction","glossaire"].includes(state.page);
     const active = link.dataset.nav === state.page || (toolsPage && link.dataset.nav === "documents");
     link.classList.toggle("is-active", active);
     if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
@@ -580,7 +582,10 @@ function renderHome() {
         <button class="quick-tile" data-nav="metiers"><div class="quick-tile-content"><span class="icon-bubble sky">${icon("briefcase")}</span><span><strong>Métiers & responsabilités</strong><small>Direction d'établissement, RQGR, CGRAS, D3S, CAFDES et encadrement.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
         <button class="quick-tile" data-nav="documents"><div class="quick-tile-content"><span class="icon-bubble gold">${icon("file")}</span><span><strong>Documents de pilotage</strong><small>EPRD, CPOM, DUERP, PAAQ : qui le produit et comment le faire vivre.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
         <button class="quick-tile" data-nav="reunions"><div class="quick-tile-content"><span class="icon-bubble lavender">${icon("calendar")}</span><span><strong>Réunions & instances</strong><small>CODIR, COPIL Qualité, CVS, CSE, CREX : qui décide et qui associer.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
-        <button class="quick-tile" data-nav="rh"><div class="quick-tile-content"><span class="icon-bubble coral">${icon("users")}</span><span><strong>Pilotage RH & Calculateur ETP</strong><small>35+ FAQ droit du travail, calculs ETP/ETPT avec jauges et forfait jours.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="rh"><div class="quick-tile-content"><span class="icon-bubble coral">${icon("users")}</span><span><strong>Pilotage RH & Équipe</strong><small>9 types de congés, mi-temps thérapeutique, refonte de planning, accueil stagiaires et ETP.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="inspection-ars"><div class="quick-tile-content"><span class="icon-bubble mint">${icon("target")}</span><span><strong>Inspection de l'ARS</strong><small>Préparation du classeur permanent, déroulé jour J, contradictoire et plan d'actions.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="changement-direction"><div class="quick-tile-content"><span class="icon-bubble sky">${icon("rotate")}</span><span><strong>Changement de direction</strong><small>Enjeux, climat social, dossier de passation et positionnement clé du cadre.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
+        <button class="quick-tile" data-nav="glossaire"><div class="quick-tile-content"><span class="icon-bubble gold">${icon("book")}</span><span><strong>Glossaire des 118 sigles</strong><small>Décoder tout le vocabulaire sanitaire, médico-social, RH, qualité et gouvernance.</small></span></div><span class="quick-tile-arrow">${icon("chevron-right", 14)}</span></button>
       </div></div>
       <aside class="profile-card glass-panel"><span class="tag violet">PARCOURS MES</span><h3>Un profil qui tient plusieurs métiers</h3><p>Les fiches relient direction, qualité, RH, budget et numérique. Le terrain de référence est la MAS : accueil, équipes et autorisation.</p><div class="profile-chip-row"><span class="tag mint">Qualité HAS</span><span class="tag sky">Pilotage RH</span><span class="tag gold">EPRD · CNR</span></div><button class="button subtle" data-nav="metiers">Voir les pistes adaptées ${icon("arrow",15)}</button></aside>
     </div>
@@ -913,6 +918,707 @@ function renderFaq() {
     </div>
   </section>`;
 }
+
+/* ==========================================================================
+   MODULES COMPLÉMENTAIRES : RH, INSPECTION ARS, CHANGEMENT DE DIRECTION & GLOSSAIRE
+   ========================================================================== */
+
+/* --- 1. RENDU DES TYPES DE CONGÉS POUR LES PROFESSIONNELS --- */
+function renderRhLeaveTypes() {
+  const leaves = RH_LEAVE_TYPES || [];
+  return `
+    <section class="section-block" id="rh-leave-types">
+      <div class="section-title-row">
+        <div>
+          <span class="eyebrow">DROIT DU TRAVAIL & STATUT HOSPITALIER</span>
+          <h2>Les différents types de congés & absences</h2>
+          <p>Droits fondamentaux, rémunération, formalités et spécificités comparées FPH vs Secteur Privé (CCN51, CCN66).</p>
+        </div>
+      </div>
+
+      <div class="rh-leave-grid">
+        ${leaves.map((item, index) => `
+          <article class="content-card glass-panel rh-leave-card">
+            <div class="rh-leave-header">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+                <span class="tag ${tagColor(item.badge)}">${esc(item.badge)}</span>
+                <span class="duration-badge">${icon("clock", 13)} ${esc(item.duration)}</span>
+              </div>
+              <h3 style="font-size:16px;margin:4px 0 2px">${esc(item.title)}</h3>
+              <p class="rh-leave-subtitle">${esc(item.subtitle)}</p>
+            </div>
+
+            <div class="rh-leave-comparison">
+              <div class="detail-cell comparison-box">
+                <h4>${icon("building", 14)} Fonction Publique Hospitalière (FPH)</h4>
+                <p>${esc(item.fphRules)}</p>
+              </div>
+              <div class="detail-cell comparison-box">
+                <h4>${icon("briefcase", 14)} Secteur Privé (CCN51, CCN66, Droit commun)</h4>
+                <p>${esc(item.priveRules)}</p>
+              </div>
+            </div>
+
+            <div class="rh-leave-footer-info">
+              <div class="rh-procedure">
+                <strong>${icon("clipboard", 13)} Démarche & Formalités :</strong>
+                <span>${esc(item.procedure)}</span>
+              </div>
+              <div class="notice compact-notice" style="margin-top:10px">
+                ${icon("info", 14)}
+                <span><strong>Conseil & Posture du cadre :</strong> ${esc(item.tips)}</span>
+              </div>
+              ${item.sources?.length ? sourceLinks(item.sources) : ""}
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+/* --- 2. RENDU DU TEMPS PARTIEL / MI-TEMPS THÉRAPEUTIQUE --- */
+function renderTherapeuticPartTime() {
+  const tpt = RH_THERAPEUTIC_PART_TIME;
+  if (!tpt) return "";
+  return `
+    <section class="section-block" id="rh-therapeutic-part-time">
+      <div class="section-title-row">
+        <div>
+          <span class="eyebrow">REPRISE D'ACTIVITÉ & SANTÉ AU TRAVAIL</span>
+          <h2>Gérer le mi-temps & temps partiel thérapeutique</h2>
+          <p>Cadre légal réformé, coordination médicale, articulation des plannings et maintien de traitement.</p>
+        </div>
+      </div>
+
+      <div class="notice" style="margin-bottom:20px">
+        ${icon("info", 18)}
+        <span><strong>Définition & Principe directeur :</strong> ${esc(tpt.definition)}</span>
+      </div>
+
+      <div class="tpt-framework-block glass-panel" style="padding:18px;border-radius:14px;margin-bottom:24px">
+        <h3 style="font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          ${icon("shield", 16)} Fondements juridiques & réformes récentes
+        </h3>
+        <ul class="bullet-list">
+          ${tpt.legalFramework.map(law => `<li>${esc(law)}</li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="section-title-row">
+        <div>
+          <span class="eyebrow">LES 4 ACTEURS INDISPENSABLES</span>
+          <h3>Qui fait quoi dans le circuit de décision ?</h3>
+        </div>
+      </div>
+      <div class="tpt-actors-grid">
+        ${tpt.keyActors.map((actor, idx) => `
+          <article class="content-card glass-panel tpt-actor-card">
+            <span class="eyebrow">ACTEUR 0${idx+1}</span>
+            <h4 style="font-size:15px;margin:6px 0 8px;color:var(--text)">${esc(actor.role)}</h4>
+            <p style="font-size:13px;line-height:1.55">${esc(actor.mission)}</p>
+          </article>
+        `).join("")}
+      </div>
+
+      <div class="section-title-row" style="margin-top:28px">
+        <div>
+          <span class="eyebrow">MÉTHODOLOGIE EN 5 ÉTAPES</span>
+          <h3>Le parcours de mise en œuvre pas à pas</h3>
+        </div>
+      </div>
+      <div class="step-flow">
+        ${tpt.steps.map(s => `
+          <div class="step-flow-item glass-panel">
+            <div class="step-flow-num">${s.step}</div>
+            <div class="step-flow-body">
+              <h4>${esc(s.title)}</h4>
+              <p>${esc(s.desc)}</p>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="section-title-row" style="margin-top:28px">
+        <div>
+          <span class="eyebrow">RÉMUNÉRATION COMPARÉE</span>
+          <h3>Maintien de salaire FPH vs Secteur Privé</h3>
+        </div>
+      </div>
+      <div class="tpt-comparison-grid">
+        <article class="content-card glass-panel" style="border-top:3px solid var(--accent-mint)">
+          <span class="tag mint">FPH (Décret 2021-997)</span>
+          <h4 style="font-size:16px;margin:8px 0 6px">${esc(tpt.fphVsPrive.fph.title)}</h4>
+          <p><strong>Rémunération :</strong> ${esc(tpt.fphVsPrive.fph.remuneration)}</p>
+          <div class="separator"></div>
+          <p><strong>Durée légale :</strong> ${esc(tpt.fphVsPrive.fph.duration)}</p>
+          <p><strong>Formalités :</strong> ${esc(tpt.fphVsPrive.fph.formalities)}</p>
+        </article>
+
+        <article class="content-card glass-panel" style="border-top:3px solid var(--accent-gold)">
+          <span class="tag gold">Secteur Privé (CCN51 / CCN66)</span>
+          <h4 style="font-size:16px;margin:8px 0 6px">${esc(tpt.fphVsPrive.prive.title)}</h4>
+          <p><strong>Rémunération :</strong> ${esc(tpt.fphVsPrive.prive.remuneration)}</p>
+          <div class="separator"></div>
+          <p><strong>Durée légale :</strong> ${esc(tpt.fphVsPrive.prive.duration)}</p>
+          <p><strong>Formalités :</strong> ${esc(tpt.fphVsPrive.prive.formalities)}</p>
+        </article>
+      </div>
+
+      <div class="checklist-card glass-panel" style="margin-top:24px">
+        <h3 style="font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          ${icon("check", 16)} La check-list du cadre de santé & manager
+        </h3>
+        <ul class="bullet-list checklist-bullets">
+          ${tpt.managerChecklist.map(item => `<li><strong>Règle d'or :</strong> ${esc(item)}</li>`).join("")}
+        </ul>
+      </div>
+      ${sourceLinks(tpt.sources)}
+    </section>
+  `;
+}
+
+/* --- 3. RENDU DU CHANGEMENT DE PLANNING D'UNE ORGANISATION --- */
+function renderPlanningChangeMethodology() {
+  const plan = RH_PLANNING_CHANGE;
+  if (!plan) return "";
+  return `
+    <section class="section-block" id="rh-planning-change">
+      <div class="section-title-row">
+        <div>
+          <span class="eyebrow">ORGANISATION DU TRAVAIL & GESTION DES TEMPS</span>
+          <h2>Changement de planning d'une organisation : méthodologie & étapes</h2>
+          <p>Pourquoi transformer une trame de roulement, les intérêts croisés pour l'établissement, les soignants et les usagers, et les 7 étapes incontournables.</p>
+        </div>
+      </div>
+
+      <aside class="ethical-dignity-banner glass-panel" style="margin-bottom:24px">
+        <div class="ethical-badge">${icon("heart", 18)} <span>LE SENS ÉTHIQUE DE LA RÉORGANISATION</span></div>
+        <p class="ethical-text">${esc(plan.ethicalPurpose)}</p>
+      </aside>
+
+      <div class="section-title-row">
+        <div>
+          <span class="eyebrow">TRIPLE FINALITÉ GAGNANT-GAGNANT</span>
+          <h3>Pourquoi changer de planning ? Quel intérêt pour l'organisation ?</h3>
+        </div>
+      </div>
+
+      <div class="triple-interest-grid">
+        <article class="content-card glass-panel" style="border-left:4px solid var(--accent-mint)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="icon-bubble mint">${icon("heart", 16)}</span>
+            <h4 style="font-size:15px;margin:0">Pour les Résidents & Patients</h4>
+          </div>
+          <ul class="bullet-list">
+            ${plan.whyChange.residents.map(r => `<li>${esc(r)}</li>`).join("")}
+          </ul>
+        </article>
+
+        <article class="content-card glass-panel" style="border-left:4px solid var(--accent-sky)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="icon-bubble sky">${icon("users", 16)}</span>
+            <h4 style="font-size:15px;margin:0">Pour les Soignants & Équipes</h4>
+          </div>
+          <ul class="bullet-list">
+            ${plan.whyChange.staff.map(s => `<li>${esc(s)}</li>`).join("")}
+          </ul>
+        </article>
+
+        <article class="content-card glass-panel" style="border-left:4px solid var(--accent-gold)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="icon-bubble gold">${icon("building", 16)}</span>
+            <h4 style="font-size:15px;margin:0">Pour l'Établissement & la Direction</h4>
+          </div>
+          <ul class="bullet-list">
+            ${plan.whyChange.organization.map(o => `<li>${esc(o)}</li>`).join("")}
+          </ul>
+        </article>
+      </div>
+
+      <div class="section-title-row" style="margin-top:28px">
+        <div>
+          <span class="eyebrow">GARDE-FOUS RÉGLEMENTAIRES</span>
+          <h3>Les contraintes légales incontournables du temps de travail</h3>
+        </div>
+      </div>
+      <div class="rule-pills-wrap">
+        ${plan.regulatoryRules.map(r => `
+          <div class="rule-pill glass-panel">
+            <strong>${esc(r.label)} :</strong>
+            <span>${esc(r.value)}</span>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="section-title-row" style="margin-top:28px">
+        <div>
+          <span class="eyebrow">DÉMARCHE CONDUCTRICE EN 7 ÉTAPES</span>
+          <h3>La feuille de route d'un changement de planning réussi</h3>
+        </div>
+      </div>
+
+      <div class="process-steps-list">
+        ${plan.sevenSteps.map((step, idx) => `
+          <article class="process-step-item glass-panel">
+            <div class="step-marker">${step.step.replace(/[^0-9]/g, "")}</div>
+            <div class="step-content">
+              <h4>${esc(step.title)}</h4>
+              <p>${esc(step.detail)}</p>
+              <div class="step-actors">
+                <strong>${icon("people", 13)} Acteurs mobilisés :</strong>
+                <span>${esc(step.actors)}</span>
+              </div>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+      ${sourceLinks(plan.sources)}
+    </section>
+  `;
+}
+
+/* --- 4. RENDU DE LA GESTION DES STAGIAIRES & ALTERNANTS --- */
+function renderInternsApprenticesGuide() {
+  const guide = RH_INTERNS_APPRENTICES;
+  if (!guide) return "";
+  return `
+    <section class="section-block" id="rh-interns-apprentices">
+      <div class="section-title-row">
+        <div>
+          <span class="eyebrow">TRANSMISSION DES SAVOIRS & PRÉ-RECRUTEMENT</span>
+          <h2>Accueil, encadrement & intégration des stagiaires et alternants</h2>
+          <p>Du tutorat infirmier à l'alternance de direction : préparer la venue, formaliser les conventions et respecter l'éthique de dignité.</p>
+        </div>
+      </div>
+
+      <aside class="ethical-dignity-banner glass-panel" style="margin-bottom:24px">
+        <div class="ethical-badge">${icon("heart", 18)} <span>LE RESPECT DU RÉSIDENT & DE L'APPRENANT</span></div>
+        <p class="ethical-text">${esc(guide.ethicalRule)}</p>
+      </aside>
+
+      <div class="notice" style="margin-bottom:20px">
+        ${icon("lightbulb", 18)}
+        <span><strong>Vision stratégique :</strong> ${esc(guide.strategicVision)}</span>
+      </div>
+
+      <div class="section-title-row">
+        <div>
+          <span class="eyebrow">DEUX STATUTS, DEUX CADRES JURIDIQUES</span>
+          <h3>Stagiaires de formation initiale vs Alternants en contrat de travail</h3>
+        </div>
+      </div>
+
+      <div class="intern-profiles-grid">
+        ${guide.types.map(t => `
+          <article class="content-card glass-panel">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span class="tag sky">${esc(t.category)}</span>
+            </div>
+            <p><strong>Profils accueillis :</strong> ${esc(t.profiles)}</p>
+            <div class="separator"></div>
+            <p><strong>Cadre légal & gratification :</strong> ${esc(t.framework)}</p>
+            <p style="margin-top:6px"><strong>Durée du travail & repos :</strong> ${esc(t.hours)}</p>
+          </article>
+        `).join("")}
+      </div>
+
+      <div class="section-title-row" style="margin-top:28px">
+        <div>
+          <span class="eyebrow">LE CYCLE D'INTÉGRATION EN 5 PHASES</span>
+          <h3>Accompagner l'apprenant de J-15 jusqu'à l'évaluation finale</h3>
+        </div>
+      </div>
+
+      <div class="integration-phases-grid">
+        ${guide.fivePhases.map((phase, idx) => `
+          <div class="phase-card glass-panel">
+            <div class="phase-card-head">
+              <span class="icon-bubble mint">${icon("check", 15)}</span>
+              <h4>${esc(phase.phase)}</h4>
+            </div>
+            <ul class="bullet-list phase-actions">
+              ${phase.actions.map(act => `<li>${esc(act)}</li>`).join("")}
+            </ul>
+          </div>
+        `).join("")}
+      </div>
+      ${sourceLinks(guide.sources)}
+    </section>
+  `;
+}
+
+/* --- 5. PAGE DÉDIÉE : INSPECTION DE L'ARS --- */
+function renderArsInspection() {
+  const guide = ARS_INSPECTION_GUIDE;
+  if (!guide) return "";
+  const isUnlocked = isPremiumUnlocked();
+
+  return `
+    <section class="page" aria-labelledby="ars-inspection-title">
+      ${sectionHead(
+        "POLICE SANITAIRE · CONTRÔLE DE TUTELLE",
+        "L'Inspection de l'ARS, <span class=\"text-gradient\">préparation, sang-froid et rigueur.</span>",
+        "Tout ce que la direction et le cadre doivent faire pour préparer l'établissement, faire face le jour J avec professionnalisme et piloter la phase contradictoire et le plan d'actions correctives.",
+        `<button class="button subtle" data-nav="audit">${icon("target",16)}Audits qualité</button><button class="button subtle" data-nav="documents">${icon("file",16)}Documents de pilotage</button>`
+      )}
+
+      <aside class="ethical-dignity-banner glass-panel">
+        <div class="ethical-badge">${icon("heart", 18)} <span>FINALITÉ SUPRÊME DE L'INSPECTION</span></div>
+        <p class="ethical-text">${esc(guide.ethicalCore)}</p>
+      </aside>
+
+      <div class="notice" style="margin:18px 0">
+        ${icon("shield", 18)}
+        <span><strong>Fondement juridique :</strong> ${esc(guide.legalBasis)}</span>
+      </div>
+
+      ${renderAccessStatusBar()}
+
+      <div class="section-block" data-page-theme="Typologie">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow">5 FORMES D'INTERVENTIONS</span>
+            <h2>Les différents types d'inspections de l'ARS</h2>
+            <p>Comprendre le motif de la visite pour adapter immédiatement la posture de l'encadrement.</p>
+          </div>
+        </div>
+        <div class="inspection-typology-grid">
+          ${guide.typology.map((t, idx) => `
+            <article class="content-card glass-panel">
+              <span class="tag ${tagColor(t.type)}">TYPE 0${idx+1}</span>
+              <h3 style="font-size:16px;margin:8px 0 6px">${esc(t.type)}</h3>
+              <p style="font-size:13px;line-height:1.55">${esc(t.context)}</p>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="section-block" data-page-theme="Préparation">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow">PHASE AMONT · ANTICIPATION CONTINUE</span>
+            <h2>${esc(guide.preparationPhase.title)}</h2>
+            <p>${esc(guide.preparationPhase.desc)}</p>
+          </div>
+        </div>
+
+        <div class="notice compact-notice" style="margin-bottom:16px">
+          ${icon("users", 16)}
+          <span><strong>Cellule d'accueil inspection :</strong> ${esc(guide.preparationPhase.crisisCell)}</span>
+        </div>
+
+        <div class="inspection-docs-grid">
+          ${guide.preparationPhase.documents.map(group => `
+            <article class="content-card glass-panel">
+              <h4 style="font-size:14.5px;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                ${icon("file", 14)} ${esc(group.group)}
+              </h4>
+              <ul class="bullet-list">
+                ${group.items.map(it => `<li>${esc(it)}</li>`).join("")}
+              </ul>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+
+      ${isUnlocked ? `
+        <div class="section-block" data-page-theme="Jour J">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow">LE DÉROULEMENT SUR LE TERRAIN</span>
+              <h2>${esc(guide.dayJPhase.title)}</h2>
+              <p>Chronologie rigoureuse d'une visite d'inspection in situ pour garder la maîtrise des échanges.</p>
+            </div>
+          </div>
+
+          <div class="process-steps-list">
+            ${guide.dayJPhase.steps.map(st => `
+              <article class="process-step-item glass-panel">
+                <div class="step-marker">${st.step}</div>
+                <div class="step-content">
+                  <h4>${esc(st.name)}</h4>
+                  <p>${esc(st.action)}</p>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="section-block" data-page-theme="Post-inspection">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow">APRÈS LA VISITE · PHASE CONTRADICTOIRE & SUIVI</span>
+              <h2>${esc(guide.postInspectionPhase.title)}</h2>
+              <p>Transformer les constats des inspecteurs en plan de mise en conformité protecteur et pérenne.</p>
+            </div>
+          </div>
+
+          <div class="post-inspection-grid">
+            ${guide.postInspectionPhase.substeps.map((sub, i) => `
+              <article class="content-card glass-panel" style="border-left:3px solid var(--accent-mint)">
+                <h4 style="font-size:15px;margin-bottom:6px">${esc(sub.name)}</h4>
+                <p style="font-size:13px;line-height:1.55">${esc(sub.desc)}</p>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      ` : paywallGate(
+        "Protocole Jour J & Phase Contradictoire ARS (Premium)",
+        "Accédez au déroulé détaillé en 6 étapes le jour J, à la conduite de la réunion de clôture, à la rédaction du mémoire en réponse contradictoire et au pilotage du Plan d'Actions Correctives (PAC).",
+        `<div class="premium-preview-grid"><div><strong>Jour J</strong><span>6 étapes chronologiques</span></div><div><strong>Contradictoire</strong><span>Mémoire en réponse sous 1 mois</span></div><div><strong>Plan d'action</strong><span>Levée des injonctions et prescriptions</span></div></div>`
+      )}
+
+      ${sourceLinks(guide.sources)}
+    </section>
+  `;
+}
+
+/* --- 6. PAGE DÉDIÉE : CHANGEMENT DE DIRECTION DANS UN ÉTABLISSEMENT --- */
+function renderManagementTransition() {
+  const guide = MANAGEMENT_TRANSITION_GUIDE;
+  if (!guide) return "";
+  const isUnlocked = isPremiumUnlocked();
+
+  return `
+    <section class="page" aria-labelledby="transition-title">
+      ${sectionHead(
+        "GOUVERNANCE & LEADERSHIP INSTITUTIONNEL",
+        "Changement de direction, <span class=\"text-gradient\">tenir le cap et accompagner le renouveau.</span>",
+        "Les contextes de transition, les 4 enjeux majeurs pour l'établissement, le dossier de passation du service et le positionnement stratégique du cadre de santé comme garant de la stabilité.",
+        `<button class="button subtle" data-nav="metiers">${icon("briefcase",16)}Métiers de direction</button><button class="button subtle" data-nav="reunions">${icon("calendar",16)}Instances & Réunions</button>`
+      )}
+
+      <aside class="ethical-dignity-banner glass-panel">
+        <div class="ethical-badge">${icon("heart", 18)} <span>LE CAP DÉONTOLOGIQUE INVARIABLE</span></div>
+        <p class="ethical-text">${esc(guide.ethicalAnchor)}</p>
+      </aside>
+
+      <div class="notice" style="margin:18px 0">
+        ${icon("spark", 18)}
+        <span><strong>Repère managérial :</strong> ${esc(guide.overview)}</span>
+      </div>
+
+      ${renderAccessStatusBar()}
+
+      <div class="section-block" data-page-theme="Contextes">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow">4 SITUATIONS DE DÉPART ET D'ARRIVÉE</span>
+            <h2>Les différents contextes de changement de direction</h2>
+            <p>Identifier la dynamique de transition pour adapter sa communication et son accompagnement des équipes.</p>
+          </div>
+        </div>
+        <div class="transition-contexts-grid">
+          ${guide.contexts.map(ctx => `
+            <article class="content-card glass-panel">
+              <h3 style="font-size:15px;margin-bottom:6px;color:var(--text)">${esc(ctx.title)}</h3>
+              <p style="font-size:13px;line-height:1.55">${esc(ctx.desc)}</p>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="section-block" data-page-theme="Enjeux">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow">LES 4 ENJEUX MAJEURS DE L'ÉTABLISSEMENT</span>
+            <h2>Ce qui se joue lors d'une transition managériale</h2>
+            <p>Préserver l'équilibre institutionnel et la qualité d'accueil pendant toute la période de passation.</p>
+          </div>
+        </div>
+        <div class="transition-challenges-grid">
+          ${guide.challenges.map(ch => `
+            <article class="content-card glass-panel">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                <span class="icon-bubble coral">${icon(ch.icon, 16)}</span>
+                <h3 style="font-size:15px;margin:0">${esc(ch.challenge)}</h3>
+              </div>
+              <p style="font-size:13px;line-height:1.55">${esc(ch.desc)}</p>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+
+      ${isUnlocked ? `
+        <div class="section-block" data-page-theme="Positionnement">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow">POSTURE & ENGAGEMENT DU CADRE</span>
+              <h2>Le positionnement du cadre : pilier de stabilité et courroie de transmission</h2>
+              <p>Adopter l'attitude juste entre loyauté institutionnelle, écoute des soignants et objectivité opérationnelle.</p>
+            </div>
+          </div>
+
+          <div class="cadre-posture-grid">
+            ${guide.cadreRole.posture.map(p => `
+              <article class="content-card glass-panel" style="border-top:3px solid var(--accent-lavender)">
+                <h4 style="font-size:15px;margin-bottom:8px">${esc(p.title)}</h4>
+                <p style="font-size:13px;line-height:1.55">${esc(p.desc)}</p>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="section-block" data-page-theme="Passation">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow">OUTIL CONCRET POUR LE NOUVEAU DIRECTEUR</span>
+              <h2>${esc(guide.cadreRole.handoverDossier.title)}</h2>
+              <p>La trame d'état des lieux factuelle et synthétique que le cadre doit préparer pour la première rencontre.</p>
+            </div>
+          </div>
+
+          <div class="handover-grid">
+            ${guide.cadreRole.handoverDossier.sections.map(sec => `
+              <article class="content-card glass-panel">
+                <h4 style="font-size:14.5px;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                  ${icon("file", 14)} ${esc(sec.name)}
+                </h4>
+                <p style="font-size:13px;line-height:1.55">${esc(sec.content)}</p>
+              </article>
+            `).join("")}
+          </div>
+
+          <div class="notice compact-notice" style="margin-top:20px">
+            ${icon("spark", 16)}
+            <div>
+              <strong>Conseils pour réussir le premier entretien :</strong>
+              <ul class="bullet-list" style="margin-top:6px">
+                ${guide.cadreRole.firstMeetingTips.map(tip => `<li>${esc(tip)}</li>`).join("")}
+              </ul>
+            </div>
+          </div>
+        </div>
+      ` : paywallGate(
+        "Posture du Cadre & Dossier de Passation Complet (Premium)",
+        "Accédez aux 4 volets du dossier de passation, aux grilles de cartographie d'équipe et aux clés relationnelles pour réussir le premier entretien avec le nouveau chef d'établissement.",
+        `<div class="premium-preview-grid"><div><strong>Dossier de passation</strong><span>RH, résidents, risques et projets</span></div><div><strong>Posture</strong><span>Devoir de réserve et courroie de transmission</span></div><div><strong>Entretien J1</strong><span>Co-construction et partenariat</span></div></div>`
+      )}
+
+      ${sourceLinks(guide.sources)}
+    </section>
+  `;
+}
+
+/* --- 7. PAGE DÉDIÉE : GLOSSAIRE EXHAUSTIF DES SIGLES DE LA SANTÉ --- */
+function renderGlossary() {
+  const terms = GLOSSARY_TERMS || [];
+  const categories = ["Tout", "Sanitaire", "Médico-social", "RH & Droit", "Qualité & Soins", "Instances & Tutelles"];
+  const letters = ["Tout", ...new Set(terms.map(t => t.sigle.charAt(0).toUpperCase()))].sort();
+
+  return `
+    <section class="page" aria-labelledby="glossary-title">
+      ${sectionHead(
+        "REPÈRES & VOCABULAIRE · " + terms.length + " SIGLES OFFICIELS",
+        "Le Glossaire des sigles, <span class=\"text-gradient\">décoder le système en un clin d’œil.</span>",
+        "De l'ARS au GIR, du CPOM au CITIS : tous les acronymes du sanitaire, du social, du médico-social, du droit hospitalier et de la gestion décodés pour les cadres et étudiants.",
+        `<button class="button subtle" data-nav="documents">${icon("file",16)}Documents</button><button class="button subtle" data-nav="reunions">${icon("calendar",16)}Instances</button>`
+      )}
+
+      <div class="glossary-header-tools glass-panel">
+        <div class="glossary-search-row">
+          <label class="search-box" style="flex:1">
+            <span data-icon="search"></span>
+            <input class="form-control" id="glossary-query" type="search" placeholder="Rechercher un sigle (ex: ARS, CPOM, CITIS, GIR, DUI, ETP, HAS, MAS…) ou une définition…" value="${esc(state.glossaryQuery || "")}" aria-label="Rechercher un sigle">
+          </label>
+          <button class="button subtle" type="button" data-action="reset-glossary-filters" title="Réinitialiser les filtres">
+            ${icon("reset", 14)} Réinitialiser
+          </button>
+        </div>
+
+        <div class="glossary-filter-bar" role="tablist" aria-label="Filtrer par thématique">
+          ${categories.map(cat => `
+            <button type="button" class="glossary-cat-btn ${(state.glossaryCategory || "Tout") === cat ? "is-active" : ""}" data-glossary-cat="${esc(cat)}" role="tab" aria-selected="${String((state.glossaryCategory || "Tout") === cat)}">
+              ${esc(cat)}
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="glossary-letter-bar" role="tablist" aria-label="Filtrer par lettre initiale">
+          ${letters.map(letter => `
+            <button type="button" class="glossary-letter-btn ${(state.glossaryLetter || "Tout") === letter ? "is-active" : ""}" data-glossary-letter="${esc(letter)}">
+              ${esc(letter)}
+            </button>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="section-block" style="margin-top:20px">
+        <div class="section-title-row" style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span class="eyebrow" id="glossary-count-label">RÉSULTATS DE RECHERCHE</span>
+          </div>
+        </div>
+        <div class="glossary-grid" id="glossary-results">
+          ${renderGlossaryItems()}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderGlossaryItems() {
+  const allTerms = GLOSSARY_TERMS || [];
+  const q = (state.glossaryQuery || "").trim().toLowerCase();
+  const cat = state.glossaryCategory || "Tout";
+  const letter = state.glossaryLetter || "Tout";
+
+  const filtered = allTerms.filter(item => {
+    const matchCat = cat === "Tout" || item.cat === cat;
+    const matchLetter = letter === "Tout" || item.sigle.toUpperCase().startsWith(letter.toUpperCase());
+    const matchQuery = !q || item.sigle.toLowerCase().includes(q) || item.full.toLowerCase().includes(q) || item.def.toLowerCase().includes(q);
+    return matchCat && matchLetter && matchQuery;
+  });
+
+  if (!filtered.length) {
+    return `
+      <div class="empty-state glass-panel" style="grid-column:1/-1;padding:36px;text-align:center">
+        ${icon("search", 28)}
+        <h3 style="margin-top:12px">Aucun sigle correspondant trouvé</h3>
+        <p style="color:var(--muted)">Essayez d'autres mots-clés ou réinitialisez les filtres par lettre et thématique.</p>
+        <button class="button subtle" style="margin-top:14px" data-action="reset-glossary-filters">Réinitialiser les filtres</button>
+      </div>
+    `;
+  }
+
+  return filtered.map(t => `
+    <article class="content-card glass-panel glossary-card" data-sigle="${esc(t.sigle)}">
+      <div class="glossary-card-head">
+        <span class="glossary-sigle">${esc(t.sigle)}</span>
+        <span class="tag ${tagColor(t.cat)}">${esc(t.cat)}</span>
+      </div>
+      <h3 class="glossary-full-title">${esc(t.full)}</h3>
+      <p class="glossary-def">${esc(t.def)}</p>
+      <div class="glossary-card-footer">
+        <button class="quiet-link" type="button" data-action="copy-glossary-def" data-copy-sigle="${esc(t.sigle)}" data-copy-full="${esc(t.full)}" data-copy-def="${esc(t.def)}" title="Copier la définition">
+          ${icon("clipboard", 13)} Copier la définition
+        </button>
+      </div>
+    </article>
+  `).join("");
+}
+
+function updateGlossaryResults() {
+  const container = $("#glossary-results");
+  if (!container) return;
+  container.innerHTML = renderGlossaryItems();
+  const countLabel = $("#glossary-count-label");
+  if (countLabel) {
+    const q = (state.glossaryQuery || "").trim().toLowerCase();
+    const cat = state.glossaryCategory || "Tout";
+    const letter = state.glossaryLetter || "Tout";
+    const count = (GLOSSARY_TERMS || []).filter(item => {
+      const matchCat = cat === "Tout" || item.cat === cat;
+      const matchLetter = letter === "Tout" || item.sigle.toUpperCase().startsWith(letter.toUpperCase());
+      const matchQuery = !q || item.sigle.toLowerCase().includes(q) || item.full.toLowerCase().includes(q) || item.def.toLowerCase().includes(q);
+      return matchCat && matchLetter && matchQuery;
+    }).length;
+    countLabel.textContent = `${count} SIGLE${count > 1 ? "S" : ""} DISPONIBLE${count > 1 ? "S" : ""}`;
+  }
+  hydrateIcons(container);
+}
+
 function renderHealthLaw() {
   const sections = [
     { id:"droits-usager", title:"Droits fondamentaux de l’usager", icon:"people", items:[
@@ -2044,6 +2750,8 @@ function globalSearchResults(query) {
     ...(typeof QUALITY_TOOLS !== "undefined" ? QUALITY_TOOLS : []).map(item => ({ kind:"quality_tool", id:item.id, cat:"qualite", label:item.name, detail:`${item.editor} · ${item.purpose}`, badge:"Outil Qualité", icon:"shield", item })),
     ...((typeof ADVERSE_EVENTS !== "undefined" && ADVERSE_EVENTS.levels) || []).map(item => ({ kind:"adverse_level", id:String(item.level), cat:"qualite", label:item.name, detail:item.short, badge:"Niveau EI", icon:"alert", item })),
     ...((typeof AUDIT_GUIDE !== "undefined" && AUDIT_GUIDE.types) || []).map(item => ({ kind:"audit", id:item.id, cat:"qualite", label:item.title, detail:item.desc, badge:"Audit HAS", icon:"target", item })),
+    ...((typeof GLOSSARY_TERMS !== "undefined" ? GLOSSARY_TERMS : [])).map(item => ({ kind:"glossary", id:item.sigle, cat:"rh", label:`${item.sigle} — ${item.full}`, detail:item.def.slice(0, 95) + "…", badge:"Sigle", icon:"book", item })),
+    ...((typeof RH_LEAVE_TYPES !== "undefined" ? RH_LEAVE_TYPES : [])).map(item => ({ kind:"rh_leave", id:item.id, cat:"rh", label:item.title, detail:item.subtitle, badge:"Congé RH", icon:"calendar", item })),
     ...((typeof HEALTH_POLICY !== "undefined" && HEALTH_POLICY.nationalLaws) || []).map(item => ({ kind:"health_law", id:item.id, cat:"lois", label:`${item.year} · ${item.name}`, detail:item.theme, badge:"Loi Santé", icon:"clipboard", item })),
     ...DOCUMENTS.map(item => ({ kind:"document", id:item.id, cat:"lois", label:item.name, detail:item.category, badge:"Document", icon:"file", item })),
     ...MEETINGS.map(item => ({ kind:"meeting", id:item.id, cat:"structures", label:`${item.name} (${item.full})`, detail:item.kind, badge:"Instance", icon:"calendar", item })),
@@ -4187,6 +4895,7 @@ function attachPageHandlers() {
     applyFilter("software");
   }
   if (state.page === "documents") updateChecklistProgress();
+  if (state.page === "glossaire") updateGlossaryResults();
   if (state.page === "carte") syncMapControls();
   if (state.page === "flashcards") bindFlashcardSearch();
 }
@@ -4607,6 +5316,43 @@ document.addEventListener("click", event => {
     const rows=$$("[data-etpt-row]");
     if(rows.length>1) { actionEl.closest("[data-etpt-row]")?.remove(); renumberEtptRows(); calculateEtp(); }
   }
+  if (action === "reset-glossary-filters") {
+    state.glossaryQuery = "";
+    state.glossaryCategory = "Tout";
+    state.glossaryLetter = "Tout";
+    const input = $("#glossary-query");
+    if (input) input.value = "";
+    $(".glossary-cat-btn").forEach(btn => btn.classList.toggle("is-active", btn.dataset.glossaryCat === "Tout"));
+    $(".glossary-letter-btn").forEach(btn => btn.classList.toggle("is-active", btn.dataset.glossaryLetter === "Tout"));
+    updateGlossaryResults();
+    return;
+  }
+  if (action === "copy-glossary-def") {
+    const sigle = actionEl.dataset.copySigle || "";
+    const full = actionEl.dataset.copyFull || "";
+    const def = actionEl.dataset.copyDef || "";
+    const text = `${sigle} (${full}) : ${def}`;
+    navigator.clipboard?.writeText(text)
+      .then(() => showToast(`Définition de ${sigle} copiée dans le presse-papier.`))
+      .catch(() => showToast("Erreur lors de la copie."));
+    return;
+  }
+  const glossCat = event.target.closest("[data-glossary-cat]");
+  if (glossCat) {
+    event.preventDefault();
+    state.glossaryCategory = glossCat.dataset.glossaryCat;
+    $(".glossary-cat-btn").forEach(b => b.classList.toggle("is-active", b === glossCat));
+    updateGlossaryResults();
+    return;
+  }
+  const glossLetter = event.target.closest("[data-glossary-letter]");
+  if (glossLetter) {
+    event.preventDefault();
+    state.glossaryLetter = glossLetter.dataset.glossaryLetter;
+    $(".glossary-letter-btn").forEach(b => b.classList.toggle("is-active", b === glossLetter));
+    updateGlossaryResults();
+    return;
+  }
   if (action === "copy-job-description") {
     const preview=$("#job-description-preview"),value=preview?.value.trim();
     if(!value) { showToast("Générez d’abord le brouillon de fiche de poste."); return; }
@@ -4778,6 +5524,7 @@ document.addEventListener("input", event => {
   if (el.id === "document-query") { state.queries.documents=el.value; applyFilter("documents"); }
   if (el.id === "actor-query") { state.queries.actors=el.value; applyFilter("actors"); }
   if (el.id === "faq-query") { state.queries.faq=el.value; applyFilter("faq"); }
+  if (el.id === "glossary-query") { state.glossaryQuery = el.value; updateGlossaryResults(); }
   if (el.id === "software-query") { state.queries.software=el.value; applyFilter("software"); }
 
   if (el.id === "support-job-query") { state.queries.supportJobs=el.value; applyFilter("supportJobs"); }
@@ -5602,7 +6349,7 @@ function applyAuthState({ user, premium }) {
     renderPage("accueil", { immediate:true, fromHistory:true, restoreScrollY:0 });
   } else if (state.onboarding && !wasOnboarding) {
     renderPage("inscription-annuaire", { immediate:true });
-  } else if (!state.onboarding && ["compte","abonnement","metiers","rh","secu","carte","reseau","inscription-annuaire","timeline","audit"].includes(state.page)) {
+  } else if (!state.onboarding && ["compte","abonnement","metiers","rh","secu","carte","reseau","inscription-annuaire","timeline","audit","inspection-ars","changement-direction","glossaire"].includes(state.page)) {
     renderPage(state.page, { immediate:true });
   }
   if (!user && wasAuthenticated) {

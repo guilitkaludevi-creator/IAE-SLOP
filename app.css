@@ -4205,3 +4205,474 @@ html[data-theme="light"] .flash-deck-tab.is-active .flash-deck-tab-count { backg
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   MODULES COMPLÉMENTAIRES : RH, ARS, CHANGEMENT DIRECTION & GLOSSAIRE
+   ========================================================================== */
+
+/* Bannière éthique & bientraitance */
+.ethical-dignity-banner {
+  margin-bottom: 22px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(245, 158, 11, 0.06), rgba(16, 185, 129, 0.08));
+  border: 1px solid rgba(244, 63, 94, 0.28);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.07);
+}
+.ethical-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff6b81;
+  margin-bottom: 8px;
+}
+.ethical-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.ethical-text em {
+  font-style: normal;
+  color: #ff9fb2;
+  font-weight: 600;
+}
+
+/* Grille des types de congés */
+.rh-leave-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.rh-leave-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border-radius: 18px;
+}
+.rh-leave-subtitle {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  margin: 0 0 14px;
+  line-height: 1.45;
+}
+.duration-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.rh-leave-comparison {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.comparison-box {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--stroke);
+}
+.comparison-box h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  margin: 0 0 6px;
+  color: var(--text);
+}
+.comparison-box p {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--text-soft);
+}
+.rh-leave-footer-info {
+  margin-top: auto;
+  border-top: 1px solid var(--stroke);
+  padding-top: 12px;
+}
+.rh-procedure {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-soft);
+  margin-bottom: 8px;
+}
+.rh-procedure strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text);
+}
+
+/* Temps partiel thérapeutique */
+.tpt-actors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.tpt-actor-card {
+  padding: 18px;
+  border-radius: 16px;
+}
+.step-flow {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+.step-flow-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  align-items: flex-start;
+}
+.step-flow-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--mint);
+  background: rgba(117, 224, 194, 0.15);
+  border: 1px solid rgba(117, 224, 194, 0.3);
+  flex-shrink: 0;
+}
+.step-flow-body h4 {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  color: var(--text);
+}
+.step-flow-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+.tpt-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+.checklist-card {
+  padding: 20px 22px;
+  border-radius: 18px;
+  border: 1px solid var(--stroke);
+  background: var(--surface-soft);
+}
+.checklist-bullets li {
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Changement de planning */
+.triple-interest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+.rule-pills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.rule-pill {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--stroke);
+}
+.rule-pill strong {
+  color: var(--text);
+}
+.rule-pill span {
+  color: var(--text-soft);
+}
+.process-steps-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+.process-step-item {
+  display: flex;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  align-items: flex-start;
+}
+.step-marker {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--sky);
+  background: rgba(125, 211, 252, 0.15);
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  flex-shrink: 0;
+}
+.step-content {
+  flex: 1;
+}
+.step-content h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: var(--text);
+}
+.step-content p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+.step-actors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* Stagiaires & Alternants */
+.intern-profiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+.integration-phases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.phase-card {
+  padding: 18px;
+  border-radius: 16px;
+}
+.phase-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.phase-card-head h4 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+}
+.phase-actions li {
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* Inspection ARS */
+.inspection-typology-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.inspection-docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+.post-inspection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+/* Changement de direction */
+.transition-contexts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.transition-challenges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.cadre-posture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+.handover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+/* Glossaire des sigles */
+.glossary-header-tools {
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.glossary-search-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.glossary-filter-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.glossary-cat-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.25s var(--ease-out);
+}
+.glossary-cat-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+.glossary-cat-btn.is-active {
+  background: var(--text);
+  color: #0b1420;
+  border-color: var(--text);
+  font-weight: 750;
+}
+.glossary-letter-bar {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px solid var(--stroke);
+}
+.glossary-letter-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-soft);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s var(--ease-out);
+}
+.glossary-letter-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--text);
+}
+.glossary-letter-btn.is-active {
+  background: var(--mint);
+  color: #0b1420;
+  font-weight: 850;
+  box-shadow: 0 2px 8px rgba(117, 224, 194, 0.35);
+}
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+.glossary-card {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+  border-radius: 18px;
+  transition: transform 0.28s var(--ease-out), box-shadow 0.28s var(--ease-out);
+}
+.glossary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft), 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.glossary-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.glossary-sigle {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  font-family: var(--font-display);
+}
+.glossary-full-title {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--sky);
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+.glossary-def {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-soft);
+  margin: 0 0 14px;
+}
+.glossary-card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--stroke);
+}
+
+@media (max-width: 768px) {
+  .rh-leave-grid,
+  .tpt-actors-grid,
+  .tpt-comparison-grid,
+  .triple-interest-grid,
+  .intern-profiles-grid,
+  .integration-phases-grid,
+  .inspection-typology-grid,
+  .inspection-docs-grid,
+  .post-inspection-grid,
+  .transition-contexts-grid,
+  .transition-challenges-grid,
+  .cadre-posture-grid,
+  .handover-grid,
+  .glossary-grid {
+    grid-template-columns: 1fr;
+  }
+  .glossary-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

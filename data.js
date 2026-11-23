@@ -82,7 +82,14 @@
     segurNum: { label: "ANS · Ségur du numérique en santé (DUI / DPI / INS / MSSanté)", url: "https://esante.gouv.fr/segur" },
     stratPsy: { label: "Ministère · Feuille de route santé mentale et psychiatrie", url: "https://solidarites-sante.gouv.fr/IMG/pdf/180628_-_feuille_de_route_sante_mentale_et_psychiatrie.pdf" },
     inclureTransition: { label: "Gouvernement · Stratégie nationale pour l'autisme et les TND 2023-2027", url: "https://www.gouvernement.fr/strategie-nationale-autisme-tnd" },
-    spda: { label: "CNSA · Service Public Départemental de l'Autonomie (SPDA)", url: "https://www.cnsa.fr/politiques-de-lautonomie/le-service-public-departemental-de-lautonomie" }
+    spda: { label: "CNSA · Service Public Départemental de l'Autonomie (SPDA)", url: "https://www.cnsa.fr/politiques-de-lautonomie/le-service-public-departemental-de-lautonomie" },
+    codeTravailConges: { label: "Code du travail · Congés payés et autorisations d'absence (L. 3141-1 s.)", url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000006198547/" },
+    citisFph: { label: "Légifrance · Décret n° 2019-122 sur le CITIS dans la FPH", url: "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000038158055/" },
+    tptAmeli: { label: "Ameli · Temps partiel thérapeutique et reprise progressive", url: "https://www.ameli.fr/assure/droits-demarches/maladie-accident-hospitalisation/arret-travail-maladie/reprise-travail-temps-partiel-therapeutique" },
+    anapPlanning: { label: "ANAP · Guide méthodologique de gestion et optimisation des plannings soignants", url: "https://anap.fr/" },
+    arsInspection: { label: "Ministère & ARS · Guide des inspections et contrôles en santé et médico-social", url: "https://www.ars.sante.fr/" },
+    charteBientraitance: { label: "HAS · Recommandations pour la bientraitance et la dignité des personnes accueillies", url: "https://www.has-sante.fr/jcms/c_703080/fr/la-bientraitance-definition-et-reperes-pour-la-mise-en-oeuvre" },
+
   };
 
   const ESTABLISHMENTS = [
@@ -1870,6 +1877,661 @@
     }
   };
 
+  
+  /* ==========================================================================
+     MODULES COMPLÉMENTAIRES : RH, INSPECTION ARS, TRANSITION & GLOSSAIRE
+     ========================================================================== */
+
+  /* --- 1. LES DIFFÉRENTS TYPES DE CONGÉS POUR LES PROFESSIONNELS --- */
+  const RH_LEAVE_TYPES = [
+    {
+      id: "ca-rtt",
+      badge: "Repos & Récupération",
+      title: "Congés Annuels (CA) & RTT / Repos compensateur",
+      subtitle: "Droit fondamental au repos, cycles de travail et règles de fractionnement",
+      duration: "CA : 25 j ouvrés (30 j ouvrables) · RTT : selon accord (12 à 23 j)",
+      fphRules: "Dans la FPH, l'année de référence est civile (1er janv. - 31 déc.). Droit égal à 5 fois les obligations hebdomadaires de travail (ex: 25 jours pour un temps plein sur 5 jours). Jours de fractionnement : 1 jour supplémentaire si 3 à 5 jours pris hors période 1er mai-31 oct., 2 jours si 6 jours et plus. Les RTT sont accordés en contrepartie d'une durée hebdomadaire supérieure à 35h (ex: 38h ou 38h30).",
+      priveRules: "Dans le secteur privé (CCN51, CCN66, Droit commun), la période de référence légale court du 1er juin au 31 mai (sauf accord d'entreprise sur l'année civile). Fractionnement identique au Code du travail. Cadres au forfait jours : 211 à 218 jours travaillés par an, les jours de repos (JRTT/forfait) varient selon le calendrier des jours fériés et chômés.",
+      procedure: "Demande formulée via le logiciel GTA ou formulaire interne dans le respect du délai de prévenance (généralement 1 mois avant). Le cadre arbitre en garantissant en premier lieu la continuité et la sécurité des soins des résidents.",
+      tips: "Jurisprudence européenne (Loi DDADUE 2024) : un salarié en arrêt maladie avant ou pendant ses congés payés a droit au report de ses congés non pris dans un délai de 15 mois. Les congés s'acquièrent désormais aussi pendant les arrêts maladie (dans la limite de 4 semaines par an).",
+      sources: ["codeTravailConges", "publicServiceCode"]
+    },
+    {
+      id: "maternite-paternite",
+      badge: "Parentalité",
+      title: "Congé Maternité, Paternité & Accueil de l'enfant",
+      subtitle: "Protection de la parentalité, durées légales et maintien de rémunération",
+      duration: "Maternité : 16 à 46 sem. · Paternité : 25 j (32 j si jumeaux) + 3 j naissance",
+      fphRules: "Plein traitement maintenu pendant la totalité du congé maternité et du congé paternité (titulaires et stagiaires). Le congé de paternité comprend 3 jours d'autorisation d'absence pour naissance + 25 jours calendaires fractionnables (dont 4 jours obligatoires consécutifs au congé de naissance).",
+      priveRules: "Indemnités journalières maternité/paternité versées par la Sécurité sociale (CPAM) avec maintien de salaire intégral pris en charge par l'employeur selon la convention collective (CCN51 dès 1 an d'ancienneté, CCN66 selon barème). Protection absolue contre le licenciement pendant le congé et les 10 semaines suivantes.",
+      procedure: "Transmission à la DRH du certificat médical attestant de l'état de grossesse et de la date présumée d'accouchement. Pour le père / conjoint : information de la direction au moins 1 mois avant la date de début du congé.",
+      tips: "Aménagement d'horaires : dans la plupart des conventions et statuts, les professionnelles enceintes bénéficient d'une réduction d'1 heure de travail par jour à compter du 3e ou 4e mois de grossesse, sans perte de salaire.",
+      sources: ["codeTravailConges", "publicServiceCode", "ameli"]
+    },
+    {
+      id: "parental-presence",
+      badge: "Famille & Enfance",
+      title: "Congé Parental d'Éducation (CPE) & Présence Parentale",
+      subtitle: "Suspension ou aménagement d'activité pour élever ou soigner un enfant",
+      duration: "CPE : jusqu'aux 3 ans de l'enfant · CPP : 310 jours sur 3 ans",
+      fphRules: "Le CPE est accordé de droit au fonctionnaire à l'issue du congé maternité/adoption. Peut être pris sous forme de temps partiel (50%, 60%, 70%, 80%). Le fonctionnaire conserve ses droits à avancement d'échelon pour moitié. Le Congé de Présence Parentale (CPP) ouvre droit au versement de l'AJPP (Allocation Journalière de Présence Parentale) par la CAF.",
+      priveRules: "Accessible à tout salarié justifiant d'un an d'ancienneté à la date de naissance. Peut être renouvelé 2 fois jusqu'au 3e anniversaire de l'enfant. L'employeur ne peut pas refuser un passage à temps partiel mais la fixation des horaires relève du pouvoir de direction (en concertation bienveillante).",
+      procedure: "Demande écrite envoyée au moins 1 mois avant la fin du congé maternité (ou 2 mois avant en cas de demande ultérieure) par lettre recommandée avec AR ou remise en main propre.",
+      tips: "À l'issue du congé parental, le professionnel retrouve obligatoirement son précédent emploi ou un emploi similaire assorti d'une rémunération équivalente, avec un entretien professionnel de reprise obligatoire.",
+      sources: ["codeTravailConges", "publicServiceCode"]
+    },
+    {
+      id: "aidant-solidarite",
+      badge: "Soutien aux Proches",
+      title: "Congé de Proche Aidant (CPA) & Solidarité Familiale",
+      subtitle: "Accompagner un proche dépendant, handicapé ou en fin de vie",
+      duration: "Proche aidant : 3 mois renouvelables (max 1 an) · Solidarité : 3 mois (max 6 mois)",
+      fphRules: "Accordé de droit sur présentation des justificatifs (notification GIR 1-3, PCH, carte invalidité). Le fonctionnaire en CPA peut percevoir l'AJPA (Allocation Journalière du Proche Aidant, environ 64 €/jour versée par la CAF/MSA, dans la limite de 66 jours sur la carrière). Le congé de solidarité familiale ouvre droit à l'AJAP.",
+      priveRules: "Accessible sans condition d'ancienneté minimale (loi Travail). L'employeur ne peut pas refuser le congé si les conditions sont remplies. Le contrat de travail est suspendu, avec fractionnement possible en demi-journées ou transformation en temps partiel avec l'accord de la direction.",
+      procedure: "Demande écrite adressée au moins 1 mois avant la date de départ souhaitée (délai supprimé en cas d'urgence absolue, dégradation soudaine ou fin de vie).",
+      tips: "Enjeux RH en santé : de nombreux soignants sont eux-mêmes aidants familiaux. La reconnaissance bienveillante de ce statut par le cadre prévient l'épuisement professionnel (burn-out) et les arrêts maladie de complaisance.",
+      sources: ["codeTravailConges", "publicServiceCode", "cnsa"]
+    },
+    {
+      id: "maladie-ordinaire",
+      badge: "Santé du Salarié",
+      title: "Congé de Maladie Ordinaire (CMO) & Arrêt de travail",
+      subtitle: "Délai de carence, indemnisation, subrogation et maintien de traitement",
+      duration: "Jusqu'à 6 mois consécutifs ou 1 an par période glissante",
+      fphRules: "Délai de carence : 1 jour retenu sur le traitement. Indemnisation : plein traitement pendant 3 mois, puis demi-traitement pendant les 9 mois suivants sur une période de 12 mois glissants. Contrôle médical possible par un médecin agréé diligenté par l'administration.",
+      priveRules: "Délai de carence Sécurité sociale : 3 jours. La CPAM verse les IJSS (50% du salaire journalier de base). Maintien conventionnel : en CCN51 et CCN66, maintien du salaire net après un délai de carence réduit ou nul selon l'ancienneté, souvent avec subrogation de l'employeur (l'établissement perçoit les IJSS et verse le salaire net complet).",
+      procedure: "Le soignant doit transmettre les volets 1 et 2 du certificat d'arrêt de travail à la CPAM (ou caisse de tutelle) et le volet 3 à l'employeur/cadre impérativement sous 48 heures ouvrées.",
+      tips: "Posture du cadre : maintenir un contact respectueux (sans intrusion médicale) pour anticiper le retour, organiser le remplacement et préparer l'entretien de reprise si l'arrêt a dépassé 30 jours.",
+      sources: ["codeTravailConges", "publicServiceCode", "ameli"]
+    },
+    {
+      id: "clm-cld-grave",
+      badge: "Affections Lourdes",
+      title: "Congé Longue Maladie (CLM), Longue Durée (CLD) & Grave Maladie",
+      subtitle: "Protection renforcée pour pathologies lourdes, cancers et ALD",
+      duration: "CLM : jusqu'à 3 ans · CLD : jusqu'à 5 ans · Grave maladie : jusqu'à 3 ans",
+      fphRules: "CLM (titulaires) : 1 an à plein traitement, 2 ans à demi-traitement pour affection nécessitant un traitement prolongé. CLD : 3 ans à plein traitement, 2 ans à demi-traitement (réservé à 5 groupes d'affections : tuberculose, maladie mentale, affections cancéreuses, poliomyélite, déficit immunitaire grave). Saisine du Conseil médical obligatoire.",
+      priveRules: "Régime des Affections de Longue Durée (ALD 30) : prise en charge à 100% par la Sécurité sociale pour les soins liés à la pathologie. IJSS versées jusqu'à 3 ans au titre de l'arrêt continu. Les contrats de prévoyance collective (obligatoires en santé) assurent le maintien d'un pourcentage élevé de la rémunération brute (généralement 75% à 90%).",
+      procedure: "Demande formulée par le professionnel accompagnée d'un certificat sous pli confidentiel adressé au médecin conseil / conseil médical. Décision formelle de l'autorité territoriale ou de l'employeur.",
+      tips: "Visite de pré-reprise : peut être demandée par le salarié auprès du médecin du travail dès que son état se stabilise, afin d'étudier en amont les aménagements ou un mi-temps thérapeutique.",
+      sources: ["publicServiceCode", "ameli"]
+    },
+    {
+      id: "at-mp-citis",
+      badge: "Risques Professionnels",
+      title: "Accident du Travail, Maladie Professionnelle & CITIS",
+      subtitle: "Prise en charge intégrale des lésions liées au service et protection légale",
+      duration: "Jusqu'à consolidation, guérison ou mise en inaptitude",
+      fphRules: "Régime du CITIS (Congé pour Invalidité Temporaire Imputée au Service) créé par décret 2019-122 : l'agent conserve l'intégralité de son traitement indiciaire, primes et indemnités. Remboursement à 100% de tous les frais médicaux et pharmaceutiques engagés. Déclaration sous 15 jours.",
+      priveRules: "Régime AT/MP de la Sécurité sociale : aucun jour de carence. IJSS majorées (60% puis 80% du salaire journalier) + complément employeur à 100% dès le premier jour selon CCN. Déclaration d'accident par l'employeur à la CPAM dans les 48 heures suivant l'information par le salarié.",
+      procedure: "Remplissage scrupuleux du registre des accidents bénins ou déclaration officielle CERFA. Le cadre doit analyser immédiatement les causes de l'événement (glissade, agression, piqûre AES, manutention lourde) pour actualiser le DUERP.",
+      tips: "En cas d'accident avec exposition au sang (AES), le protocole d'urgence médicale doit être enclenché dans les 4 heures (médecin référent, sérologies, traitement prophylactique éventuel).",
+      sources: ["citisFph", "carsat", "servicePublicWork"]
+    },
+    {
+      id: "evenements-familiaux",
+      badge: "Circonstances Exceptionnelles",
+      title: "Congés pour Événements Familiaux & Circonstances Exceptionnelles",
+      subtitle: "Mariage, PACS, naissance, décès, enfant malade et annonce de handicap",
+      duration: "1 à 14 jours ouvrés selon le motif et la convention",
+      fphRules: "Autorisations spéciales d'absence (ASA) accordées par le chef d'établissement : mariage/PACS (5 j ouvrables), décès d'un conjoint/parent (3 j), décès d'un enfant (12 à 14 j selon l'âge + 8 j de deuil), enfant malade (nombre de jours fixé selon la quotité de travail et le nombre d'enfants). Traitement intégral maintenu.",
+      priveRules: "Droits minimaux du Code du travail bonifiés par les conventions collectives : CCN51 : 5 jours pour mariage/PACS, 14 jours ouvrés pour décès d'un enfant de moins de 25 ans, 5 jours pour décès conjoint/parent. Annonce de la survenue d'un handicap ou d'une affection de longue durée chez un enfant : 5 jours ouvrés.",
+      procedure: "Présentation obligatoire du justificatif d'état civil (acte de mariage, certificat de décès, certificat médical) dans les meilleurs délais au service RH.",
+      tips: "Ces congés sont pris au moment de l'événement (ou dans une période raisonnable attenante). Ils sont assimilés à du temps de travail effectif pour le calcul des congés payés et de l'ancienneté.",
+      sources: ["codeTravailConges", "publicServiceCode"]
+    },
+    {
+      id: "formation-mobilite",
+      badge: "Évolution & Parcours",
+      title: "Congé de Formation Professionnelle, Sabbatique & Disponibilité",
+      subtitle: "Montée en compétences, reconversion soignante et convenances personnelles",
+      duration: "CFP : jusqu'à 3 ans · Sabbatique : 6 à 11 mois · Disponibilité : jusqu'à 5 ans",
+      fphRules: "CFP : ouvert aux agents après 3 ans de services effectifs, indemnité égale à 85% du traitement brut pendant 12 mois. Disponibilité pour convenances personnelles : accordée sous réserve des nécessités de service (durée max 5 ans renouvelable dans la limite de 10 ans sur la carrière).",
+      priveRules: "Projet de Transition Professionnelle (PTP - ex-CIF) financé par Transitions Pro pour changer de métier avec maintien de salaire. Congé sabbatique : ouvert aux salariés ayant 36 mois d'ancienneté dans l'établissement et 6 années d'activité professionnelle.",
+      procedure: "Demande écrite formulée auprès de la direction 3 à 4 mois avant la date de départ envisagée. L'employeur dispose d'un délai légal pour répondre (possibilité de différer pour nécessité de service).",
+      tips: "Pour les cadres de santé : accompagner les demandes de formation (ex: aide-soignant préparant le concours infirmier, IDE vers cadre ou IADE) constitue le premier levier de fidélisation et de promotion interne de l'établissement.",
+      sources: ["publicServiceCode", "codeTravailConges"]
+    }
+  ];
+
+  /* --- 2. GESTION DU MI-TEMPS / TEMPS PARTIEL THÉRAPEUTIQUE --- */
+  const RH_THERAPEUTIC_PART_TIME = {
+    definition: "Le temps partiel thérapeutique (couramment appelé mi-temps thérapeutique) est une modalité temporaire d'aménagement du temps de travail permettant à un professionnel de reprendre progressivement son activité professionnelle ou de la poursuivre afin de favoriser sa guérison, sa réadaptation et son maintien dans l'emploi.",
+    legalFramework: [
+      "Code de la sécurité sociale (art. L. 323-3) : réforme majeure supprimant l'obligation d'un arrêt de travail à temps complet préalable. Un soignant peut passer directement en mi-temps thérapeutique.",
+      "Code général de la fonction publique (art. L. 823-1 à L. 823-6) et décret n° 2021-997 : harmonisation du temps partiel thérapeutique dans la FPH avec maintien du plein traitement.",
+      "Conventions collectives de santé (CCN51, CCN66, FHP) : compléments de rémunération et suivi par les services de santé au travail."
+    ],
+    keyActors: [
+      {
+        role: "Médecin traitant",
+        mission: "Prescrit l'aménagement du travail, préconise la quotité hebdomadaire (50%, 60%, 80%) et fixe la durée prévisionnelle (généralement 1 à 3 mois renouvelables)."
+      },
+      {
+        role: "Médecin du travail / Médecin agréé",
+        mission: "Évalue l'adéquation entre l'état de santé du soignant et le poste. Formule des préconisations ergonomiques et organisationnelles formelles (ex: pas de port de charges > 5 kg, pas de travail de nuit, pas de postes isolés)."
+      },
+      {
+        role: "Employeur / Cadre de santé",
+        mission: "Donne son accord sur la faisabilité du poste et construit le planning adapté. Un refus de l'employeur est exceptionnel et doit être dûment motivé par des contraintes impérieuses de fonctionnement du service."
+      },
+      {
+        role: "Organisme de Sécurité Sociale (CPAM / MGEN)",
+        mission: "Donne son accord de prise en charge financière et verse les Indemnités Journalières de Temps Partiel Thérapeutique (IJ-TPT) en complément du salaire versé par l'établissement."
+      }
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Prescription par le médecin traitant",
+        desc: "Le professionnel consulte son médecin traitant qui rédige l'ordonnance et le volet d'arrêt de travail mentionnant expressément la reprise à temps partiel pour motif thérapeutique, en précisant la quotité recommandée (ex: 50%)."
+      },
+      {
+        step: 2,
+        title: "Visite médicale auprès du médecin du travail",
+        desc: "Examen médical d'aptitude au poste aménagé. Le médecin du travail émet une fiche d'aptitude assortie d'éventuelles restrictions (gestes répétitifs, horaires, transmissions) nécessaires à la protection de la santé de l'agent."
+      },
+      {
+        step: 3,
+        title: "Accord de l'employeur et co-construction du planning",
+        desc: "Le cadre de santé et le service RH étudient la répartition horaire avec le professionnel : demi-journées régulières ou journées complètes espacées (ex: lundi, mercredi, vendredi). Rédaction d'un avenant au contrat ou d'un arrêté d'affectation temporaire."
+      },
+      {
+        step: 4,
+        title: "Validation de la caisse (CPAM / Conseil médical)",
+        desc: "Transmission de l'attestation de salaire et de l'accord employeur à la CPAM (secteur privé) pour le calcul des IJSS, ou notification de l'arrêté dans la FPH."
+      },
+      {
+        step: 5,
+        title: "Entretien de reprise et suivi managérial régulier",
+        desc: "Le cadre accueille le professionnel, reprécise les missions confiées sans surcharge, informe l'équipe de l'organisation retenue (sans violer le secret médical) et planifie un point d'étape tous les 15 jours."
+      }
+    ],
+    fphVsPrive: {
+      fph: {
+        title: "Fonction Publique Hospitalière (FPH)",
+        remuneration: "Révolution du décret 2021-997 : l'agent conserve l'intégralité de son traitement indiciaire de base (100%), du supplément familial de traitement et de l'indemnité de résidence. Les primes et indemnités de sujétion (ex: prime de dimanche) sont versées au prorata des heures effectivement accomplies.",
+        duration: "Période maximale de 1 an pour une même affection. Possibilité d'un nouveau droit après 1 an de reprise à temps plein.",
+        formalities: "Autorisation accordée par le chef d'établissement sur demande de l'agent après avis du médecin du travail. En cas de contestation, saisine du Conseil médical."
+      },
+      prive: {
+        title: "Secteur Privé (CCN51, CCN66, Établissements commerciaux)",
+        remuneration: "L'employeur rémunère le temps de travail effectif au prorata des heures accomplies. La CPAM verse les IJ-TPT (Indemnités Journalières de Temps Partiel Thérapeutique). Le cumul salaire + IJSS ne peut excéder le salaire net de référence précédant l'arrêt.",
+        duration: "Fixée par la CPAM, généralement accordée par tranches de 3 mois, dans la limite de 1 an à 2 ans selon que l'affection relève du droit commun ou d'une ALD.",
+        formalities: "Avenant contractuel temporaire précisant la nouvelle durée hebdomadaire, la répartition des heures et le caractère provisoire."
+      }
+    },
+    managerChecklist: [
+      "Ne JAMAIS faire effectuer d'heures supplémentaires ou complémentaires à un salarié en temps partiel thérapeutique (interdiction stricte).",
+      "Respecter scrupuleusement les restrictions d'aptitude formulées par le médecin du travail (ergonomie, charges, postures).",
+      "Anticiper le roulement de l'équipe pour ne pas faire peser la quote-part non travaillée sur les collègues de poste.",
+      "Préserver strictement la confidentialité médicale : l'équipe sait que le planning est aménagé pour raison de santé, mais le diagnostic ou la pathologie relèvent du secret médical absolu.",
+      "Réaliser un entretien formalisé à mi-parcours pour ajuster la charge de travail si une fatigue anormale est constatée."
+    ],
+    sources: ["tptAmeli", "publicServiceCode", "servicePublicWork"]
+  };
+
+  /* --- 3. DÉROULEMENT D'UN CHANGEMENT DE PLANNING D'UNE ORGANISATION --- */
+  const RH_PLANNING_CHANGE = {
+    ethicalImperative: "LE MOT D'ORDRE ÉTHIQUE DIRECTEUR : Toute réorganisation du temps de travail, toute modification de trame ou de cycle doit impérativement avoir pour finalité première le bien-être, la sécurité physique et psychique, et la dignité inconditionnelle des résidents et patients accueillis. Le planning soignant n'est pas une simple équation budgétaire : il est le garant de la présence humaine et de la qualité de vie dans l'établissement.",
+    whyChange: {
+      residents: [
+        "Adéquation de la présence soignante aux moments clés de vulnérabilité : levers matinaux, toilettes non précipitées, aide aux repas, couchers personnalisés.",
+        "Stabilité et continuité des figures d'attachement : réduction des changements d'intervenants pour sécuriser les personnes désorientées ou anxieuses.",
+        "Diminution drastique des événements indésirables (chutes lors des relèves, erreurs médicamenteuses dues à la fatigue soignante)."
+      ],
+      staff: [
+        "Amélioration sensible de la Qualité de Vie et des Conditions de Travail (QVCT).",
+        "Visibilité et prévisibilité à long terme sur les repos, week-ends et congés.",
+        "Respect physiologique des rythmes de sommeil et diminution du travail en miettes ou des coupures usantes.",
+        "Réduction de l'absentéisme de courte durée, des burn-out et des rappels intempestifs sur repos."
+      ],
+      organization: [
+        "Alignement des effectifs sur la charge en soins réelle (ratios soignants par unité).",
+        "Conformité juridique absolue avec le Code du travail, les décrets hospitaliers et les accords de branche.",
+        "Réduction des coûts d'intérim onéreux et fidélisation des professionnels soignants."
+      ]
+    },
+    regulatoryRules: [
+      { label: "Repos quotidien", value: "Minimum 11h consécutives entre deux prises de poste (dérogations exceptionnelles très encadrées)." },
+      { label: "Repos hebdomadaire", value: "Minimum 35h consécutives (24h + 11h de repos quotidien), avec au moins 1 week-end sur 2 de repos dans la plupart des CCN." },
+      { label: "Durée maximale quotidienne", value: "10 heures max par poste (porté à 12 heures uniquement sur dérogation validée en accord collectif pour assurer la continuité)." },
+      { label: "Durée maximale hebdomadaire", value: "48 heures au cours d'une même semaine, et 44 heures en moyenne sur 12 semaines consécutives." },
+      { label: "Travail de nuit", value: "Tout travail effectué entre 21h et 6h (ou 22h et 7h selon accord), donnant droit à majoration et temps de repos compensateur." }
+    ],
+    sevenSteps: [
+      {
+        step: 1,
+        title: "Étape 1 · Diagnostic initial & mesure de la charge en soins",
+        detail: "Recueil des données objectives : taux d'absentéisme par unité, nombre d'heures supplémentaires, glissements de tâches, pyramide des âges, et courbe de présence des soignants comparée aux besoins réels des résidents (levers, soins, repas).",
+        actors: "Cadre de santé, direction, médecin coordonnateur, référent qualité."
+      },
+      {
+        step: 2,
+        title: "Étape 2 · Cadrage réglementaire & cahier des charges",
+        detail: "Définition des principes directeurs : choix du cycle (petites et grandes semaines, roulement sur 6 à 12 semaines), amplitudes horaires (7h, 7h30, 8h, 10h ou 12h), temps de transmission inter-équipes sanctuarisé (20 à 30 minutes indispensables).",
+        actors: "Direction des ressources humaines, cadre supérieur, direction des soins."
+      },
+      {
+        step: 3,
+        title: "Étape 3 · Co-construction participative avec les équipes",
+        detail: "Mise en place d'ateliers de travail pluridisciplinaires (IDE, AS, ASH, rééducateurs). Présentation de 2 ou 3 scénarios de trames types. Écoute active des contraintes personnelles et des propositions de terrain. Arbitrage transparent.",
+        actors: "Équipes soignantes, cadres de proximité, animateurs de groupe."
+      },
+      {
+        step: 4,
+        title: "Étape 4 · Consultation officielle des instances (CSE / F3SCT / CSAL)",
+        detail: "Présentation du dossier complet d'impact sur les conditions de travail auprès des représentants du personnel : évaluation des risques dans le DUERP, vote consultatif de l'instance, recueil des avis motivés.",
+        actors: "Président de séance (Directeur), membres élus CSE / F3SCT / CSAL."
+      },
+      {
+        step: 5,
+        title: "Étape 5 · Période d'expérimentation terrain (3 à 6 mois)",
+        detail: "Mise en œuvre du nouveau planning sous forme de test avec clause de réversibilité. Création d'un comité paritaire de suivi mensuel pour analyser les premiers retours, la fatigue ressentie et la continuité des prises en charge.",
+        actors: "Comité de suivi paritaire, cadre de santé, professionnels de terrain."
+      },
+      {
+        step: 6,
+        title: "Étape 6 · Bilan contradictoire & ajustements opérationnels",
+        detail: "Analyse des indicateurs à 3 mois : variation du taux d'absence, satisfaction des résidents et familles (enquête CVS), traçabilité des transmissions, ajustement des micro-dysfonctionnements identifiés.",
+        actors: "Direction, cadre, équipes, Conseil de la Vie Sociale."
+      },
+      {
+        step: 7,
+        title: "Étape 7 · Validation définitive & paramétrage dans le logiciel GTA",
+        detail: "Intégration pérenne dans le système de gestion des temps (Chronos, Octime, Planexa, etc.). Affichage des plannings annuels ou cycliques dans le respect des délais légaux de prévenance (minimum 15 jours à 1 mois avant).",
+        actors: "Responsable GTA / RH, cadres de santé, soignants."
+      }
+    ],
+    sources: ["anapPlanning", "codeTravailConges", "publicServiceCode"]
+  };
+
+  /* --- 4. GESTION ET ACCUEIL DES STAGIAIRES & ALTERNANTS --- */
+  const RH_INTERNS_APPRENTICES = {
+    strategicVision: "L'accueil d'un stagiaire ou d'un alternant n'est pas une simple charge administrative : c'est le premier vecteur de pré-recrutement dans un secteur en tension, une responsabilité pédagogique de transmission et une formidable opportunité de dynamisation des équipes grâce au regard neuf des apprenants.",
+    ethicalRule: "RÈGLE D'OR DÉONTOLOGIQUE : Un stagiaire ou alternant est en formation, il n'est en aucun cas une variable d'ajustement ni un ETP de remplacement d'un soignant absent. Tout soin, toute intervention auprès d'un résident/patient doit respecter sa pudeur, sa volonté et sa dignité inconditionnelle, sous la supervision active et bienveillante du tuteur désigné.",
+    types: [
+      {
+        category: "Stagiaires de formation initiale",
+        profiles: "Étudiants en soins infirmiers (ESI / IFSI), élèves aides-soignants (EAS / IFAS), étudiants universitaires (Licence/Master santé, psychologie, ergothérapie, secrétariat médical).",
+        framework: "Convention de stage tripartite obligatoire signée avant le 1er jour. Gratification obligatoire pour tout stage supérieur à 2 mois consécutifs (indexée sur le taux horaire légal de la Sécurité sociale, environ 4,35 €/h exonéré de charges).",
+        hours: "35h maximum par semaine, repos hebdomadaire de 2 jours consécutifs, travail de nuit interdit pour les mineurs et strictement encadré pour les majeurs selon objectifs pédagogiques."
+      },
+      {
+        category: "Alternants (Contrat d'apprentissage ou de pro)",
+        profiles: "Futurs soignants, cadres administratifs, adjoints de direction (Master MES), apprentis préparateurs en pharmacie, techniciens qualité.",
+        framework: "Véritable contrat de travail (CDD ou CDI) avec statut de salarié de l'établissement. Rémunération en pourcentage du SMIC calculée selon l'âge et l'année de cursus. Prise en charge des frais de formation par l'OPCO (ex: OPCO Santé) ou le budget de l'établissement public.",
+        hours: "Soumis au temps de travail applicable aux salariés de l'établissement, avec congés payés légaux (2,5 jours par mois) et 5 jours de congés supplémentaires rémunérés pour révision d'examen."
+      }
+    ],
+    fivePhases: [
+      {
+        phase: "Phase 1 · Préparation en amont (J - 15)",
+        actions: [
+          "Désignation nominative d'un tuteur ou maître d'apprentissage volontaire, formé et légitime.",
+          "Préparation du poste de travail : vestiaire, tenues professionnelles adaptées, badge d'accès sécurisé.",
+          "Création des accès informatiques au Dossier Patient/Usager Informatisé (DPI/DUI) avec profil 'Stagiaire' à droits d'écriture et de lecture adaptés et traçables.",
+          "Envoi d'un message de bienvenue avec le livret d'accueil, le plan d'accès et les horaires du premier jour."
+        ]
+      },
+      {
+        phase: "Phase 2 · Accueil et intégration (J1)",
+        actions: [
+          "Accueil personnalisé par le cadre de santé et le tuteur dès l'arrivée.",
+          "Visite guidée complète des locaux : unités de vie, postes de soins, salle de repos, locaux techniques, issues de secours.",
+          "Présentation officielle à l'équipe pluridisciplinaire et aux résidents/patients lors du tour de transmission.",
+          "Signature solennelle de la Charte de Bientraitance et rappel impératif du secret professionnel et de la discrétion médicale."
+        ]
+      },
+      {
+        phase: "Phase 3 · Suivi pédagogique & progression tutorée",
+        actions: [
+          "Examen du portfolio de compétences de l'institut (ex: les 10 compétences du référentiel infirmier IFSI) et contractualisation d'objectifs SMART.",
+          "Gradation de la prise d'autonomie : 1. Observation guidée -> 2. Pratique accompagnée en binôme -> 3. Réalisation autonome supervisée.",
+          "Point hebdomadaire de 15 minutes entre le tuteur et l'apprenant pour débriefer les situations émotionnellement marquantes ou complexes."
+        ]
+      },
+      {
+        phase: "Phase 4 · Bilan de mi-parcours",
+        actions: [
+          "Entretien d'étape à mi-stage avec la grille d'évaluation intermédiaire.",
+          "Identification partagée des compétences acquises et des axes de remédiation prioritaires.",
+          "Réajustement des activités confiées (ex: participation à une commission qualité, passage dans un autre secteur technique pour enrichir le parcours)."
+        ]
+      },
+      {
+        phase: "Phase 5 · Évaluation finale & perspective de pré-recrutement",
+        actions: [
+          "Entretien tripartite de bilan : Stagiaire, Tuteur de proximité, Cadre de santé.",
+          "Remplissage rigoureux, objectif et bienveillant du livret de stage / portfolio avec appréciations écrites valorisantes.",
+          "Pour les stagiaires de dernière année ou alternants méritants : proposition formelle d'embauche ou inscription prioritaire dans le vivier de recrutement de l'établissement."
+        ]
+      }
+    ],
+    sources: ["codeTravailConges", "publicServiceCode", "charteBientraitance"]
+  };
+
+  /* --- 5. GUIDE D'INSPECTION DE L'ARS (AGENCE RÉGIONALE DE SANTÉ) --- */
+  const ARS_INSPECTION_GUIDE = {
+    overview: "L'inspection de l'Agence Régionale de Santé (ARS) est une mission de contrôle légale diligentée par les inspecteurs assermentés de la santé publique (médecins, pharmaciens, ingénieurs et inspecteurs de l'action sanitaire et sociale). Elle a pour vocation de vérifier la conformité des pratiques, des organisations et des locaux aux lois et règlements en vigueur.",
+    ethicalCore: "LA FINALITÉ SUPRÊME DE L'INSPECTION : Loin d'être un simple piège policier ou punitif, l'inspection a pour but impérieux d'assurer la protection, la sécurité sanitaire, la bientraitance et le respect absolu de la dignité et des droits des résidents et patients hébergés. Une direction préparée et transparente démontre sa responsabilité éthique.",
+    legalBasis: "Articles L. 1421-1 et suivants et L. 1435-7 du Code de la santé publique ; articles L. 313-13 à L. 313-20 du CASF. Les inspecteurs ont un droit d'accès permanent à tous les locaux, peuvent auditionner tout professionnel sans témoin et saisir tout document utile.",
+    typology: [
+      {
+        type: "Inspection programmée",
+        context: "Inscrite au Programme Régional d'Inspection et de Contrôle (PRIC) de l'ARS. L'établissement reçoit un préavis officiel (quelques jours à quelques semaines) précisant la thématique et les documents à préparer."
+      },
+      {
+        type: "Inspection inopinée",
+        context: "Sans aucun avertissement préalable. Les inspecteurs se présentent à l'accueil à tout moment (y compris tôt le matin, la nuit ou le week-end) pour constater la réalité brute du fonctionnement opérationnel."
+      },
+      {
+        type: "Inspection conjointe ARS / Conseil Départemental",
+        context: "Très fréquente en EHPAD et secteur handicap : associe les inspecteurs de l'ARS (volet soins, hygiène, sécurité sanitaire) et les contrôleurs du Conseil Départemental (volet hébergement, dépendance, personnel socio-éducatif, tarification)."
+      },
+      {
+        type: "Inspection réactive suite à signalement / EIGS",
+        context: "Déclenchée en urgence après la déclaration d'un Événement Indésirable Grave associé aux Soins (EIGS), une plainte d'une famille, une alerte syndicale, un signalement de maltraitance sur le portail national ou une médiatisation de crise."
+      },
+      {
+        type: "Inspection thématique",
+        context: "Ciblée sur un risque spécifique : circuit et sécurisation du médicament (PUI), sécurité incendie, gestion des effectifs et présence soignante effective, bientraitance et contention, respect des libertés fondamentales."
+      }
+    ],
+    preparationPhase: {
+      title: "Phase 1 · Préparation en amont : le 'Classeur d'Inspection' permanent",
+      desc: "Une inspection ne se prépare pas la veille : l'établissement doit maintenir un dossier documentaire unique toujours à jour et immédiatement mobilisable.",
+      documents: [
+        {
+          group: "1. Gouvernance & Autorisations",
+          items: ["Arrêté d'autorisation et FINESS", "Convention tripartite ou CPOM signé", "Projet d'établissement et Projet de soins à jour", "Livret d'accueil, Règlement de fonctionnement et Charte des droits", "Dernier rapport d'évaluation externe HAS"]
+        },
+        {
+          group: "2. Ressources Humaines & Plannings",
+          items: ["Registre Unique du Personnel (RUP) signé et conforme", "Plannings réels des 3 à 6 derniers mois avec émargements", "Tableau de concordance plannings prévus vs réalisés", "Dossiers des soignants : diplômes certifiés, inscriptions aux Ordres (ONI, CNOM)", "Fiches de poste signées et attestations de formation obligatoire (incendie, AFGSU, bientraitance)"]
+        },
+        {
+          group: "3. Qualité, Soins & Bientraitance",
+          items: ["Document Unique d'Évaluation des Risques Professionnels (DUERP) actualisé", "Registre des Événements Indésirables (FEI/EIGS) avec analyses de causes REX", "Protocoles de prise en charge de la douleur et protocoles de contention prescrits", "Circuit du médicament : convention pharmacie/PUI, ordonnancier des stupéfiants, chaîne du froid tracée", "Protocoles d'hygiène et prévention des IAS (infections associées aux soins)"]
+        },
+        {
+          group: "4. Sécurité des Locaux & Bâtiment",
+          items: ["Registre de sécurité incendie et levée des réserves des commissions", "Contrats de maintenance des dispositifs médicaux et lève-malades", "Carnet sanitaire de l'eau (analyses légionelle et potabilité)", "Plan bleu / Plan blanc et protocoles de canicule / grand froid"]
+        }
+      ],
+      crisisCell: "Constitution immédiate de la cellule d'accueil inspection : Directeur, Cadre de santé / DSI, Médecin coordonnateur, Responsable Qualité."
+    },
+    dayJPhase: {
+      title: "Phase 2 · Déroulement le jour J : les 6 étapes de la visite",
+      steps: [
+        {
+          step: 1,
+          name: "Accueil & vérification d'identité",
+          action: "Vérifier la carte professionnelle et l'ordre de mission officiel des inspecteurs. Les installer dans une salle dédiée, calme, avec accès réseau et boissons."
+        },
+        {
+          step: 2,
+          name: "Réunion d'ouverture (30 à 45 min)",
+          action: "Présentation concise de l'établissement par la direction : historique, capacité autorisée, profil des usagers, points forts et chantiers en cours. Écoute du périmètre exact de la mission d'inspection."
+        },
+        {
+          step: 3,
+          name: "Visite in situ des unités et des locaux",
+          action: "Accompagnement par le cadre de santé et le directeur. Visite des chambres (en demandant l'autorisation préalable des résidents), des salles de soins, de la pharmacie, des locaux DASRI, de la cuisine et de la lingerie. Observation directe de la propreté, des équipements et des interactions soignants/usagers."
+        },
+        {
+          step: 4,
+          name: "Entretiens confidentiels avec le personnel et les usagers",
+          action: "Les inspecteurs s'entretiennent seuls (sans la hiérarchie) avec des infirmiers, aides-soignants, représentants du personnel (CSE), membres du Conseil de la Vie Sociale (CVS) et des résidents volontaires."
+        },
+        {
+          step: 5,
+          name: "Contrôle approfondi sur pièces et logiciels",
+          action: "Échantillonnage de dossiers patients/usagers dans le DPI/DUI : traçabilité des prescriptions médicales, concordances d'administration, projet personnalisé, consentement et fiche de liaison d'urgence."
+        },
+        {
+          step: 6,
+          name: "Réunion de restitution à chaud",
+          action: "Synthèse orale immédiate délivrée par les inspecteurs : points de conformité, vulnérabilités constatées et urgences éventuelles. La direction écoute avec calme, prend des notes exhaustives et s'abstient de toute polémique agressive."
+        }
+      ]
+    },
+    postInspectionPhase: {
+      title: "Phase 3 · Post-inspection : la phase contradictoire et le plan d'action",
+      substeps: [
+        {
+          name: "1. Réception du rapport provisoire",
+          desc: "L'ARS transmet le document sous 1 à 2 mois. S'ouvre alors la phase contradictoire légale : la direction dispose d'un délai impératif (généralement 3 semaines à 1 mois) pour formuler ses observations écrites."
+        },
+        {
+          name: "2. Rédaction du mémoire en réponse contradictoire",
+          desc: "Travail minutieux piloté par la direction et le cadre : répondre point par point à chaque constat, en apportant des preuves matérielles tangibles (photos de travaux réalisés, commandes de matériel, protocoles révisés, attestations de formation)."
+        },
+        {
+          name: "3. Rapport définitif et typologie des décisions",
+          desc: "Le directeur général de l'ARS notifie le rapport définitif pouvant contenir : des Recommandations (bonnes pratiques), des Prescriptions (obligations de mise en conformité sous délai fixé), ou des Injonctions sous astreinte financière (art. L. 313-14 CASF avec risque d'administration provisoire ou fermeture en cas de danger pour les usagers)."
+        },
+        {
+          name: "4. Pilotage du Plan d'Actions Correctives (PAC)",
+          desc: "Désignation de pilotes d'actions (ex: cadre de santé pour le circuit du médicament), calendrier de réalisation, présentation au Conseil d'Administration / Conseil de la Vie Sociale, et envoi régulier de rapports d'avancement à l'ARS."
+        }
+      ]
+    },
+    sources: ["arsInspection", "charteBientraitance", "casf"]
+  };
+
+  /* --- 6. CHANGEMENT DE DIRECTION DANS UN ÉTABLISSEMENT --- */
+  const MANAGEMENT_TRANSITION_GUIDE = {
+    overview: "Le changement de direction est une étape cruciale dans la vie d'un établissement de santé ou médico-social. Période de fragilité organisationnelle et de doute pour les équipes, c'est aussi une opportunité majeure de renouveau stratégique, d'impulsion de projets et de revalorisation de la qualité.",
+    ethicalAnchor: "LA BIENTRAITANCE ET LA DIGNITÉ EN LIGNE DE MIRE : Quels que soient les bouleversements managériaux, les départs ou les réorganisations au sommet, le premier devoir de l'équipe d'encadrement est de faire rempart pour que jamais les résidents et patients ne subissent une dégradation de l'attention, de la sécurité ou du respect de leur dignité.",
+    contexts: [
+      {
+        title: "Transition anticipée & fluide",
+        desc: "Départ à la retraite programmé ou mobilité annoncée. Période de tuilage possible entre l'ancien et le nouveau directeur, transmission sereine des dossiers en cours."
+      },
+      {
+        title: "Départ soudain / Crise institutionnelle",
+        desc: "Révocation, démission brutale, burn-out ou crise majeure (conflit social dur, inspection sanction). Climat d'anxiété élevé et rumeurs au sein des équipes."
+      },
+      {
+        title: "Direction par intérim",
+        desc: "Désignation temporaire d'un cadre supérieur, d'un directeur adjoint ou d'un directeur d'établissement voisin pour gérer les affaires courantes en attendant le recrutement pérenne."
+      },
+      {
+        title: "Fusion de groupement / Direction commune",
+        desc: "Mutualisation de gouvernance au sein d'un GHT ou d'une association multi-sites. Déplacement du centre de décision et nécessité de réaffirmer la place de l'établissement."
+      }
+    ],
+    challenges: [
+      {
+        icon: "heart",
+        challenge: "1. Continuité de service & sécurité des personnes accueillies",
+        desc: "Garantir qu'aucune rupture n'intervienne dans les soins, les approvisionnements, les circuits de sécurité ou l'accompagnement humain du quotidien."
+      },
+      {
+        icon: "users",
+        challenge: "2. Climat social & gestion de l'incertitude",
+        desc: "Canaliser les rumeurs ('il va supprimer nos congés', 'on va fusionner les services'), rassurer les équipes soignantes et maintenir l'engagement au travail."
+      },
+      {
+        icon: "clipboard",
+        challenge: "3. Maintien des projets stratégiques et budgétaires",
+        desc: "Poursuivre sans interruption la négociation du CPOM, la préparation de la certification HAS, le bouclage de l'EPRD/ERRD et le déploiement du Ségur numérique."
+      },
+      {
+        icon: "network",
+        challenge: "4. Relation de confiance avec les tutelles & les familles",
+        desc: "Donner des gages de stabilité immédiate à l'ARS, au Conseil Départemental, aux membres du CVS et aux associations de familles."
+      }
+    ],
+    cadreRole: {
+      posture: [
+        {
+          title: "Pilier de stabilité opérationnelle",
+          desc: "Le cadre de santé est le repère constant, visible et rassurant pour les soignants et les usagers. Sa présence sereine sur le terrain désamorce les angoisses du changement."
+        },
+        {
+          title: "Devoir de réserve & loyauté institutionnelle",
+          desc: "Neutralité absolue vis-à-vis du passé. Refuser le dénigrement de l'ancienne direction comme les procès d'intention envers la nouvelle. Accueillir le nouvel arrivant avec bienveillance professionnelle."
+        },
+        {
+          title: "Courroie de transmission ascendante & descendante",
+          desc: "Faire remonter fidèlement au nouveau dirigeant la réalité du terrain (atouts, fragilités réelles) sans fard mais sans alarmisme stérile ; et expliciter aux équipes le sens de la nouvelle vision stratégique."
+        }
+      ],
+      handoverDossier: {
+        title: "La constitution du 'Dossier de passation du service/pôle'",
+        sections: [
+          {
+            name: "Volet Ressources Humaines",
+            content: "Effectifs réels en ETP, postes vacants, compétences spécifiques, départs programmés, arrêts maladie de longue durée et climat relationnel de l'équipe."
+          },
+          {
+            name: "Volet Résidents & Soins",
+            content: "Profil de dépendance des personnes accueillies (GMP/PMP, GIR 1-2), situations cliniques instables, projets personnalisés en cours et dynamiques de vie sociale."
+          },
+          {
+            name: "Volet Qualité & Risques",
+            content: "Derniers événements indésirables déclarés (EIGS/FEI), actions de conformité HAS engagées, alertes techniques ou matérielles à résoudre en urgence."
+          },
+          {
+            name: "Volet Projets & Perspectives",
+            content: "Chantiers de réorganisation en cours (plannings, DUI, démarches bientraitance) et propositions constructives d'amélioration."
+          }
+        ]
+      },
+      firstMeetingTips: [
+        "Adopter une posture d'écoute active pour saisir la vision managériale et les priorités du nouveau directeur.",
+        "Présenter les réussites et les savoir-faire de son équipe avant de lister les difficultés.",
+        "Être force de proposition et se positionner comme un partenaire opérationnel fiable et loyal.",
+        "Réaffirmer la dignité de la personne soignée comme boussole commune indiscutable de toutes les décisions futures."
+      ]
+    },
+    sources: ["publicServiceCode", "anap", "charteBientraitance"]
+  };
+
+  /* --- 7. GLOSSAIRE EXHAUSTIF DES SIGLES DE LA SANTÉ & MÉDICO-SOCIAL --- */
+  const GLOSSARY_TERMS = [
+    { sigle: "AAH", full: "Allocation aux Adultes Handicapés", cat: "Médico-social", def: "Prestation financière versée par la CAF/MSA assurant un minimum de ressources aux personnes en situation de handicap, attribuée sur décision de la CDAPH au sein de la MDPH." },
+    { sigle: "AES", full: "Accompagnant Éducatif et Social (ou Accident d'Exposition au Sang)", cat: "RH & Droit", def: "Professionnel soignant diplômé d'État accompagnant au quotidien les personnes vulnérables (ex-AMP/AVS) ; ou dans le contexte de sécurité des soins : Accident d'Exposition au Sang nécessitant une prise en charge urgente." },
+    { sigle: "AFGSU", full: "Attestation de Formation aux Gestes et Soins d'Urgence", cat: "Qualité & Soins", def: "Formation réglementaire obligatoire pour les professionnels de santé (niveaux 1 et 2), renouvelable tous les 4 ans pour garantir la réactivité face aux urgences vitales." },
+    { sigle: "AGGIR", full: "Autonomie Gérontologie Groupes Iso-Ressources", cat: "Médico-social", def: "Grille nationale d'évaluation de la perte d'autonomie des personnes âgées, mesurant 10 variables discriminantes et 7 variables illustratives pour déterminer le GIR (de 1 à 6)." },
+    { sigle: "AJPA", full: "Allocation Journalière du Proche Aidant", cat: "RH & Droit", def: "Indemnisation financière versée par la CAF permettant aux salariés ou fonctionnaires de suspendre temporairement leur activité pour s'occuper d'un proche en situation de dépendance ou de handicap." },
+    { sigle: "AJPP", full: "Allocation Journalière de Présence Parentale", cat: "RH & Droit", def: "Prestation versée au parent qui suspend ou réduit son activité professionnelle pour rester auprès d'un enfant malade, accidenté ou handicapé dont l'état exige une présence soutenue." },
+    { sigle: "ALD", full: "Affection de Longue Durée", cat: "Sanitaire", def: "Maladie grave et/ou chronique (ALD 30, liste fixée par décret) ouvrant droit à une prise en charge à 100% par l'Assurance Maladie des soins et traitements liés à cette pathologie." },
+    { sigle: "AMP", full: "Aide Médico-Psychologique", cat: "RH & Droit", def: "Ancien diplôme d'État d'accompagnant du secteur médico-social, intégré depuis 2016 dans le diplôme d'Accompagnant Éducatif et Social (DEAES)." },
+    { sigle: "ANAP", full: "Agence Nationale d'Appui à la Performance des établissements de santé et médico-sociaux", cat: "Instances & Tutelles", def: "Agence publique d'expertise apportant conseils, grilles d'audit, méthodes d'organisation et outils de gestion aux directions d'établissements sanitaires et médico-sociaux." },
+    { sigle: "ANS", full: "Agence du Numérique en Santé", cat: "Instances & Tutelles", def: "Opérateur public chargé de définir et déployer la politique publique du numérique en santé (cadre d'interopérabilité, référentiels de sécurité, MSSanté, INS, programme Ségur)." },
+    { sigle: "ANSM", full: "Agence Nationale de Sécurité du Médicament et des produits de santé", cat: "Instances & Tutelles", def: "Établissement public garantissant la sécurité, l'évaluation, l'accès équitable et le bon usage des médicaments, dispositifs médicaux et produits biologiques en France." },
+    { sigle: "APA", full: "Allocation Personnalisée d'Autonomie", cat: "Médico-social", def: "Prestation sociale universelle attribuée par le Conseil Départemental aux personnes âgées de 60 ans et plus en perte d'autonomie (GIR 1 à 4), à domicile ou en établissement (EHPAD)." },
+    { sigle: "ARS", full: "Agence Régionale de Santé", cat: "Instances & Tutelles", def: "Établissement public de l'État sous tutelle ministérielle, chargé d'organiser l'offre de soins, la prévention, la veille sanitaire, la régulation et le contrôle des établissements de santé et médico-sociaux dans chaque région." },
+    { sigle: "AS", full: "Aide-Soignant(e)", cat: "RH & Droit", def: "Professionnel de santé diplômé d'État travaillant sous la responsabilité de l'infirmier pour dispenser les soins d'hygiène, de confort et préserver l'autonomie du patient/résident." },
+    { sigle: "ASH", full: "Agent des Services Hospitaliers", cat: "RH & Droit", def: "Professionnel chargé de l'hygiène, du bionettoyage des locaux, de la distribution des repas et de l'aide matérielle au confort des personnes accueillies." },
+    { sigle: "CA", full: "Congés Annuels (ou Conseil d'Administration)", cat: "RH & Droit", def: "Congés payés légaux annuels (25 jours ouvrés) acquis par les professionnels ; ou organe délibérant de gouvernance d'un établissement public ou associatif." },
+    { sigle: "CAF", full: "Caisse d'Allocations Familiales", cat: "Instances & Tutelles", def: "Branche Famille de la Sécurité sociale versant les prestations familiales, aides au logement, PreParE, AJPA, AAH et aides d'action sociale." },
+    { sigle: "CAFDES", full: "Certificat d'Aptitude aux Fonctions de Directeur d'Établissement ou de Service d'intervention sociale", cat: "Instances & Tutelles", def: "Diplôme de niveau 7 (Master) délivré par l'EHESP, formant les directeurs d'ESSMS (EHPAD, MAS, FAM, IME)." },
+    { sigle: "CARSAT", full: "Caisse d'Assurance Retraite et de la Santé au Travail", cat: "Instances & Tutelles", def: "Organisme régional de Sécurité sociale gérant la retraite du régime général et assurant la prévention et tarification des risques professionnels (AT/MP)." },
+    { sigle: "CASF", full: "Code de l'Action Sociale et des Familles", cat: "RH & Droit", def: "Recueil législatif et réglementaire fondamental régissant le fonctionnement, les autorisations et les droits des usagers dans les établissements médico-sociaux (ESSMS)." },
+    { sigle: "CATTP", full: "Centre d'Accueil Thérapeutique à Temps Partiel", cat: "Sanitaire", def: "Structure sanitaire ambulatoire rattachée à un secteur de psychiatrie, proposant des soins collectifs et des activités adaptées pour maintenir l'insertion sociale." },
+    { sigle: "CCN51", full: "Convention Collective Nationale du 31 octobre 1951 (FEHAP)", cat: "RH & Droit", def: "Convention collective applicable aux établissements privés à but non lucratif du secteur sanitaire, social et médico-social (adhérents FEHAP)." },
+    { sigle: "CCN66", full: "Convention Collective Nationale du 15 mars 1966 (Nexem)", cat: "RH & Droit", def: "Convention collective régissant le secteur associatif médico-social accompagnant les personnes en situation de handicap, enfants et adultes en difficulté sociale." },
+    { sigle: "CD", full: "Conseil Départemental", cat: "Instances & Tutelles", def: "Collectivité territoriale chef de file de l'action sociale (aide sociale à l'enfance, APA, PCH, tutelle des EHPAD conjointement avec l'ARS, financement du handicap)." },
+    { sigle: "CDAPH", full: "Commission des Droits et de l'Autonomie des Personnes Handicapées", cat: "Médico-social", def: "Instance décisionnelle de la MDPH qui statue sur l'attribution des aides (AAH, PCH, carte mobilité) et les orientations en établissements médico-sociaux (MAS, FAM, ESAT, IME)." },
+    { sigle: "CDS", full: "Centre De Santé", cat: "Sanitaire", def: "Structure sanitaire de proximité assurant des soins ambulatoires de premier recours en tiers payant intégral, gérée par des collectivités, mutuelles ou associations." },
+    { sigle: "CDU", full: "Commission Des Usagers", cat: "Qualité & Soins", def: "Instance hospitalière obligatoire chargée de veiller au respect des droits des usagers, de faciliter leurs démarches de réclamation et de participer à l'amélioration de la qualité." },
+    { sigle: "CET", full: "Compte Épargne-Temps", cat: "RH & Droit", def: "Dispositif permettant aux salariés et fonctionnaires d'accumuler des droits à congés rémunérés ou de bénéficier d'une rémunération en contrepartie de périodes de repos non prises." },
+    { sigle: "CFP", full: "Congé de Formation Professionnelle (ou Compte Formation)", cat: "RH & Droit", def: "Congé permettant à un professionnel de suivre une formation longue de perfectionnement ou de reconversion avec maintien partiel de sa rémunération." },
+    { sigle: "CH / CHU", full: "Centre Hospitalier / Centre Hospitalier Universitaire", cat: "Sanitaire", def: "Établissement public de santé dispensant des soins de proximité ou de recours, assurant en CHU une triple mission de soins, d'enseignement médical et de recherche clinique." },
+    { sigle: "CITIS", full: "Congé pour Invalidité Temporaire Imputée au Service", cat: "RH & Droit", def: "Régime d'indemnisation de la Fonction Publique Hospitalière garantissant le maintien à 100% du plein traitement et des frais médicaux consécutifs à un accident de service ou maladie pro." },
+    { sigle: "CLD", full: "Congé de Longue Durée", cat: "RH & Droit", def: "Congé accordé aux fonctionnaires atteints de l'une des 5 pathologies lourdes prévues par la loi (cancer, maladie mentale, tuberculose, polio, sida) : 3 ans à plein traitement, 2 ans à demi-traitement." },
+    { sigle: "CLM", full: "Congé de Longue Maladie", cat: "RH & Droit", def: "Congé statutaire de la FPH accordé pour affection grave nécessitant un traitement prolongé : 1 an à plein traitement, 2 ans à demi-traitement sur une durée totale de 3 ans." },
+    { sigle: "CMO", full: "Congé de Maladie Ordinaire", cat: "RH & Droit", def: "Congé maladie de droit commun dans la fonction publique hospitalière : 3 mois à plein traitement, 9 mois à demi-traitement sur 12 mois glissants, après 1 jour de carence." },
+    { sigle: "CMP", full: "Centre Médico-Psychologique", cat: "Sanitaire", def: "Pivot territorial de la psychiatrie de secteur, dispensant des consultations gratuites pluridisciplinaires (psychiatres, psychologues, infirmiers) sans hébergement." },
+    { sigle: "CNAV", full: "Caisse Nationale d'Assurance Vieillesse", cat: "Instances & Tutelles", def: "Établissement public gérant la branche Retraite du régime général de la Sécurité sociale pour les salariés du secteur privé." },
+    { sigle: "CNSA", full: "Caisse Nationale de Solidarité pour l'Autonomie", cat: "Instances & Tutelles", def: "Pilote de la 5e branche de la Sécurité sociale (branche Autonomie), finançant les aides aux personnes âgées et en situation de handicap et régulant les budgets des ESMS." },
+    { sigle: "CPAM", full: "Caisse Primaire d'Assurance Maladie", cat: "Instances & Tutelles", def: "Organisme local de la Sécurité sociale assurant la gestion des droits aux soins (remboursements, IJSS, ALD, AT/MP) des assurés du régime général." },
+    { sigle: "CPOM", full: "Contrat Pluriannuel d'Objectifs et de Moyens", cat: "Qualité & Soins", def: "Contrat stratégique conclu pour 5 ans entre un gestionnaire d'établissement et ses autorités de tarification (ARS, Département) fixant les objectifs d'activité, qualité et allocations budgétaires." },
+    { sigle: "CPTS", full: "Communauté Professionnelle Territoriale de Santé", cat: "Sanitaire", def: "Organisation coordonnée des professionnels de santé d'un territoire (médecins, pharmaciens, infirmiers libéraux, hôpitaux) pour améliorer l'accès aux soins et la prévention." },
+    { sigle: "CREX", full: "Comité de Retour d'EXpérience", cat: "Qualité & Soins", def: "Instance pluridisciplinaire interne d'un établissement analysant collectivement et sans esprit punitif les causes profondes d'un événement indésirable survenu pour éviter sa récidive." },
+    { sigle: "CSAL", full: "Comité Social d'Administration Locale", cat: "RH & Droit", def: "Instance représentative du personnel dans les établissements publics de santé (remplaçant les comités techniques d'établissement), consultée sur les organisations et le fonctionnement." },
+    { sigle: "CSE", full: "Comité Social et Économique", cat: "RH & Droit", def: "Instance représentative unique du personnel dans le secteur privé, exerçant les attributions économiques, sociales et de préservation de la santé au travail." },
+    { sigle: "CVS", full: "Conseil de la Vie Sociale", cat: "Médico-social", def: "Instance démocratique obligatoire en ESSMS où siègent résidents, familles et salariés pour donner leur avis sur le fonctionnement, les repas, les activités et les projets de l'établissement." },
+    { sigle: "D3S", full: "Directeur d'Établissement Sanitaire, Social et Médico-Social", cat: "RH & Droit", def: "Corps de direction de la Fonction Publique Hospitalière (catégorie A+) formé à l'EHESP, dirigeant des EHPAD publics, des MAS, des foyers ou des centres hospitaliers de proximité." },
+    { sigle: "DAC", full: "Dispositif d'Appui à la Coordination", cat: "Sanitaire", def: "Guichet unique territorial venant en appui aux professionnels de santé et sociaux pour coordonner les parcours de santé complexes sans distinction d'âge ou de pathologie." },
+    { sigle: "DGCS", full: "Direction Générale de la Cohésion Sociale", cat: "Instances & Tutelles", def: "Direction ministérielle concevant et pilotant les politiques publiques relatives aux personnes vulnérables, au handicap, au grand âge et à l'action sociale." },
+    { sigle: "DGOS", full: "Direction Générale de l'Offre de Soins", cat: "Instances & Tutelles", def: "Direction ministérielle chargée du pilotage, de la régulation et de l'organisation de l'offre de soins hospitalière et ambulatoire en France." },
+    { sigle: "DH", full: "Directeur d'Hôpital", cat: "RH & Droit", def: "Haut fonctionnaire de la Fonction Publique Hospitalière (catégorie A+) dirigeant un Centre Hospitalier ou un CHU après formation à l'EHESP." },
+    { sigle: "DIM", full: "Département d'Information Médicale", cat: "Sanitaire", def: "Service hospitalier piloté par un médecin DIM chargé du recueil, du codage médico-économique des séjours (PMSI) et de la valorisation de l'activité tarifée à l'activité (T2A)." },
+    { sigle: "DMP", full: "Dossier Médical Partagé", cat: "Qualité & Soins", def: "Carnet de santé numérique sécurisé intégré à 'Mon espace santé', accessible par le patient et les professionnels autorisés pour partager antécédents, traitements et comptes-rendus." },
+    { sigle: "DPI", full: "Dossier Patient Informatisé", cat: "Qualité & Soins", def: "Système d'information hospitalier centralisant l'ensemble des données médicales, soignantes et administratives du patient hospitalisé." },
+    { sigle: "DREES", full: "Direction de la Recherche, des Études, de l'Évaluation et des Statistiques", cat: "Instances & Tutelles", def: "Service statistique public produisant les données de référence sur la santé, les comptes de la Sécurité sociale, les effectifs soignants et la démographie médicale." },
+    { sigle: "DSI", full: "Direction des Soins Infirmiers (ou Système d'Information)", cat: "RH & Droit", def: "Direction stratégique des activités soignantes, de rééducation et médico-techniques au sein d'un hôpital ; ou Direction des Systèmes d'Information." },
+    { sigle: "DUD", full: "Dossier Unique du Demandeur", cat: "Médico-social", def: "Dossier standardisé de demande d'admission en EHPAD, comprenant un volet administratif renseigné par l'usager et un volet médical sous pli confidentiel (ViaTrajectoire)." },
+    { sigle: "DUI", full: "Dossier Usager Informatisé", cat: "Qualité & Soins", def: "Logiciel métier médico-social garantissant le suivi personnalisé, les transmissions soignantes, le projet de vie et la sécurité des données des personnes accompagnées (Ségur ESSMS)." },
+    { sigle: "DUERP", full: "Document Unique d'Évaluation des Risques Professionnels", cat: "RH & Droit", def: "Document obligatoire et légal de l'employeur recensant tous les risques physiques, chimiques, biologiques et psychosociaux dans l'établissement, assorti d'un plan d'actions (PAPRIPACT)." },
+    { sigle: "EHPAD", full: "Établissement d'Hébergement pour Personnes Âgées Dépendantes", cat: "Médico-social", def: "Structure médico-sociale médicalisée accueillant des personnes âgées de 60 ans et plus en perte d'autonomie physique ou cognitive nécessitant une aide quotidienne et des soins 24h/24." },
+    { sigle: "EHESP", full: "École des Hautes Études en Santé Publique", cat: "Instances & Tutelles", def: "Grande école publique située à Rennes assurant la formation statutaire des directeurs d'hôpitaux (DH), d'établissements médico-sociaux (D3S) et directeurs de soins." },
+    { sigle: "EIGS", full: "Événement Indésirable Grave associé aux Soins", cat: "Qualité & Soins", def: "Tout événement inattendu survenu lors d'un acte de soin ou d'accompagnement entraînant le décès, la mise en jeu du pronostic vital ou un déficit fonctionnel permanent, soumis à déclaration obligatoire à l'ARS." },
+    { sigle: "EPRD", full: "État des Prévisions de Recettes et de Dépenses", cat: "Instances & Tutelles", def: "Budget prévisionnel pluriannuel des établissements de santé et médico-sociaux sous CPOM, structuré en comptes de résultat prévisionnels et tableaux d'investissements." },
+    { sigle: "ERRD", full: "État Réalisé des Recettes et des Dépenses", cat: "Instances & Tutelles", def: "Document budgétaire de clôture financière constatant les recettes et dépenses réelles de l'exercice écoulé dans les établissements sous cadre EPRD." },
+    { sigle: "ESAT", full: "Établissement et Service d'Accompagnement par le Travail", cat: "Médico-social", def: "Structure médico-sociale permettant aux adultes en situation de handicap d'exercer une activité professionnelle adaptée assortie d'un soutien médico-social et éducatif." },
+    { sigle: "ETP", full: "Équivalent Temps Plein", cat: "RH & Droit", def: "Unité de mesure standardisée de la charge de travail représentant le temps de travail d'un salarié à temps complet sur une période donnée (35h hebdo)." },
+    { sigle: "ETPT", full: "Équivalent Temps Plein Travaillé", cat: "RH & Droit", def: "Mesure de la ressource humaine réelle mobilisée, proratisée sur l'année en tenant compte des dates d'embauche, des départs et des quotités contractuelles réelles." },
+    { sigle: "F3SCT", full: "Formation Spécialisée en Santé, Sécurité et Conditions de Travail", cat: "RH & Droit", def: "Commission spécialisée du CSE (privé) ou du CSAL (public) compétente pour analyser les risques professionnels, accidents du travail et projets de réorganisation de service." },
+    { sigle: "FAM", full: "Foyer d'Accueil Médicalisé", cat: "Médico-social", def: "Établissement médico-social accueillant des adultes lourdement handicapés inaptes à tout travail, nécessitant l'aide d'une tierce personne et une surveillance médicale régulière (financement conjoint ARS / CD)." },
+    { sigle: "FEI", full: "Fiche d'Événement Indésirable", cat: "Qualité & Soins", def: "Formulaire interne (papier ou numérique) permettant à tout soignant de déclarer un dysfonctionnement, une chute, une erreur de dispensation ou une situation anormale constatée." },
+    { sigle: "FPH", full: "Fonction Publique Hospitalière", cat: "RH & Droit", def: "Versant hospitalier de la fonction publique regroupant les agents titulaires et contractuels exerçant dans les établissements publics de santé et médico-sociaux." },
+    { sigle: "GCS", full: "Groupement de Coopération Sanitaire", cat: "Sanitaire", def: "Structure juridique permettant à des établissements de santé publics et privés de mutualiser des activités médicales, plateaux techniques ou fonctions logistiques." },
+    { sigle: "GHT", full: "Groupement Hospitalier de Territoire", cat: "Sanitaire", def: "Groupement obligatoire liant les hôpitaux publics d'un territoire autour d'un établissement support pour coordonner le projet médical, la pharmacie, les achats et le système d'information." },
+    { sigle: "GIR", full: "Groupe Iso-Ressources", cat: "Médico-social", def: "Niveau de perte d'autonomie issu de la grille AGGIR, classé de 1 (dépendance totale) à 6 (autonomie complète) ; les GIR 1 à 4 ouvrent droit à l'APA." },
+    { sigle: "GMP", full: "GIR Moyen Pondéré", cat: "Médico-social", def: "Indicateur représentatif du niveau moyen de dépendance des résidents d'un EHPAD, servant de clé de calcul pour l'allocation du forfait dépendance versé par le Département." },
+    { sigle: "HAD", full: "Hospitalisation À Domicile", cat: "Sanitaire", def: "Établissement de santé à part entière permettant d'assurer au domicile du patient ou en EHPAD des soins médicaux et infirmiers complexes, évitant ou raccourcissant une hospitalisation." },
+    { sigle: "HAS", full: "Haute Autorité de Santé", cat: "Instances & Tutelles", def: "Autorité publique indépendante chargée d'élaborer les recommandations de bonnes pratiques, de certifier les hôpitaux/cliniques et de définir le référentiel d'évaluation des ESSMS." },
+    { sigle: "HDJ", full: "Hôpital De Jour", cat: "Sanitaire", def: "Modalité de prise en charge ambulatoire en établissement de santé sans hébergement de nuit, pour des bilans, traitements chimiothérapiques, chirurgie ou réadaptation." },
+    { sigle: "IDCC", full: "Identifiant De la Convention Collective", cat: "RH & Droit", def: "Code unique à 4 chiffres attribué par le Ministère du Travail identifiant chaque convention collective (ex: IDCC 0029 pour la CCN51, IDCC 0413 pour la CCN66)." },
+    { sigle: "IDE", full: "Infirmier(ère) Diplômé(e) d'État", cat: "RH & Droit", def: "Professionnel de santé exerçant sous décret de compétences pour évaluer l'état de santé, administrer les traitements prescrits et coordonner les soins du patient." },
+    { sigle: "IDEC", full: "Infirmier(ère) Diplômé(e) d'État Coordinateur(trice)", cat: "RH & Droit", def: "Cadre de proximité en EHPAD ou SSIAD coordonnant l'équipe soignante, organisant les plannings et assurant l'interface avec les familles et médecins traitants." },
+    { sigle: "IFAS", full: "Institut de Formation d'Aides-Soignants", cat: "Instances & Tutelles", def: "Établissement agréé dispensant la formation initiale conduisant au Diplôme d'État d'Aide-Soignant (DEAS)." },
+    { sigle: "IFSI", full: "Institut de Formation en Soins Infirmiers", cat: "Instances & Tutelles", def: "Institut rattaché à un hôpital et conventionné avec l'université, formant les futurs infirmiers en 3 ans (grade Licence)." },
+    { sigle: "IME", full: "Institut Médico-Éducatif", cat: "Médico-social", def: "Établissement médico-social accueillant des enfants et adolescents en situation de déficience intellectuelle ou troubles du neuro-développement, associant scolarisation et rééducations." },
+    { sigle: "INS", full: "Identité Nationale de Santé", cat: "Qualité & Soins", def: "Identifiant numérique unique et sécurisé (matricule NIR + traits d'identité vérifiés) obligatoire pour référencer toute donnée de santé en France." },
+    { sigle: "IRP", full: "Instances Représentatives du Personnel", cat: "RH & Droit", def: "Ensemble des organes élus de dialogue social représentant les intérêts des salariés et soignants (CSE, CSAL, commissions spécialisées)." },
+    { sigle: "LFSS", full: "Loi de Financement de la Sécurité Sociale", cat: "Instances & Tutelles", def: "Loi votée chaque automne par le Parlement déterminant les conditions générales de l'équilibre financier de la Sécurité sociale et fixant l'ONDAM." },
+    { sigle: "MAS", full: "Maison d'Accueil Spécialisée", cat: "Médico-social", def: "Établissement médico-social hébergeant des adultes avec handicap lourd nécessitant une aide constante pour les actes de la vie quotidienne et une surveillance médicale continue (financé par l'Assurance Maladie)." },
+    { sigle: "MCO", full: "Médecine, Chirurgie, Obstétrique", cat: "Sanitaire", def: "Pôle d'activités hospitalières de soins de courte durée ou aigus en hospitalisation complète ou ambulatoire." },
+    { sigle: "MDPH", full: "Maison Départementale des Personnes Handicapées", cat: "Médico-social", def: "Guichet unique d'accueil, d'information et d'évaluation des droits des personnes en situation de handicap dans chaque département, piloté par la CDAPH." },
+    { sigle: "MSP", full: "Maison de Santé Pluriprofessionnelle", cat: "Sanitaire", def: "Structure d'exercice libéral coordonné réunissant des médecins généralistes et auxiliaires médicaux autour d'un projet de santé commun pour la population locale." },
+    { sigle: "MSSanté", full: "Messagerie Sécurisée de Santé", cat: "Qualité & Soins", def: "Espace de confiance réglementé par l'ANS permettant aux professionnels de santé d'échanger des données nominatives de patients en toute confidentialité." },
+    { sigle: "ONDAM", full: "Objectif National de Dépenses d'Assurance Maladie", cat: "Instances & Tutelles", def: "Montant annuel prévisionnel voté par le Parlement dans la LFSS plafonnant les dépenses de santé remboursées par l'Assurance Maladie (soins de ville, hôpital, médico-social)." },
+    { sigle: "PAPRIPACT", full: "Programme Annuel de Prévention des Risques Professionnels et d'Amélioration des Conditions de Travail", cat: "RH & Droit", def: "Document d'application opérationnelle du DUERP fixant la liste détaillée des mesures de prévention, leur budget et leurs échéances de réalisation." },
+    { sigle: "PASA", full: "Pôle d'Activités et de Soins Adaptés", cat: "Médico-social", def: "Dispositif au sein d'un EHPAD accueillant dans la journée des résidents souffrant de la maladie d'Alzheimer avec troubles du comportement modérés pour des activités thérapeutiques." },
+    { sigle: "PCH", full: "Prestation de Compensation du Handicap", cat: "Médico-social", def: "Aide financière personnalisée versée par le Département destinée à couvrir les surcoûts liés au handicap (aide humaine, aménagement du logement ou véhicule, aides techniques)." },
+    { sigle: "PGFP", full: "Plan Global de Financement Pluriannuel", cat: "Instances & Tutelles", def: "Document financier prospectif sur 5 ans accompagnant l'EPRD pour évaluer la capacité d'autofinancement et la soutenabilité des investissements d'un établissement." },
+    { sigle: "PATHOS", full: "Modèle d'évaluation des soins requis en gériatrie", cat: "Médico-social", def: "Outil médicalisé quantifiant la charge en soins et la lourdeur des pathologies des résidents d'EHPAD, déterminant le PMP (Pathos Moyen Pondéré) et le forfait soins." },
+    { sigle: "PMP", full: "Pathos Moyen Pondéré", cat: "Médico-social", def: "Indicateur moyen des besoins en soins infirmiers et médicaux d'un EHPAD issu de la coupe Pathos, déterminant la dotation globale soins versée par l'ARS." },
+    { sigle: "PRIAC", full: "Programme Régional Interdépartemental d'Accompagnement des handicaps et de la perte d'autonomie", cat: "Instances & Tutelles", def: "Document stratégique élaboré par l'ARS fixant les créations de places et les priorités de financement médico-sociales pour 5 ans." },
+    { sigle: "PRS", full: "Projet Régional de Santé", cat: "Instances & Tutelles", def: "Feuille de route stratégique décennale de l'ARS arrêtant les priorités de santé publique, le schéma régional d'organisation des soins et les implantations autorisées." },
+    { sigle: "PUI", full: "Pharmacie à Usage Intérieur", cat: "Sanitaire", def: "Pharmacie hospitalière interne autorisée au sein d'un établissement de santé ou médico-social pour dispenser médicaments, stupéfiants et dispositifs médicaux stériles." },
+    { sigle: "REX", full: "Retour d'EXpérience", cat: "Qualité & Soins", def: "Méthode d'analyse collective formalisée suivant un incident pour comprendre les facteurs organisationnels et humains ayant favorisé l'événement et définir des actions correctives." },
+    { sigle: "RMM", full: "Revue de Morbi-Mortalité", cat: "Qualité & Soins", def: "Réunion collégiale médicale et soignante analysant rétrospectivement un cas de décès inattendu ou de complication grave survenu lors d'un parcours de soins." },
+    { sigle: "RTT", full: "Réduction du Temps de Travail", cat: "RH & Droit", def: "Jours de repos accordés aux professionnels en contrepartie d'une durée de travail hebdomadaire excédant la durée légale des 35 heures (ex: 38h30 générant des JRTT)." },
+    { sigle: "RUP", full: "Registre Unique du Personnel", cat: "RH & Droit", def: "Registre obligatoire tenu par tout employeur consignant par ordre d'arrivée les mentions indispensables de tous les salariés (contrats, stagiaires, dates d'entrée et sortie)." },
+    { sigle: "SAAD", full: "Service d'Aide et d'Accompagnement à Domicile", cat: "Médico-social", def: "Service social assurant au domicile des personnes dépendantes des prestations d'aide aux actes quotidiens (lever, toilette, courses, repas), intégré aux SAD." },
+    { sigle: "SAD", full: "Service Autonomie à Domicile", cat: "Médico-social", def: "Nouvelle structure médico-sociale issue de la réforme LFSS 2022 fusionnant SSIAD et SAAD pour proposer un accompagnement conjoint en soins infirmiers et aide humaine." },
+    { sigle: "SAMSAH", full: "Service d'Accompagnement Médico-Social pour Adultes Handicapés", cat: "Médico-social", def: "Service médico-social intervenant au domicile d'adultes handicapés pour assurer des prestations de soins et une aide à l'insertion sociale et professionnelle." },
+    { sigle: "SAVS", full: "Service d'Accompagnement à la Vie Sociale", cat: "Médico-social", def: "Service médico-social proposant un accompagnement personnalisé favorisant le maintien ou l'apprentissage de l'autonomie en milieu ordinaire pour adultes handicapés." },
+    { sigle: "SESSAD", full: "Service d'Éducation Spéciale et de Soins À Domicile", cat: "Médico-social", def: "Équipe mobile médico-sociale intervenant sur les lieux de vie de l'enfant (domicile, école) pour dispenser soins, rééducations et soutien à la scolarisation." },
+    { sigle: "SMR", full: "Soins Médicaux et de Réadaptation (ex-SSR)", cat: "Sanitaire", def: "Activité de soins hospitalière ayant pour objet de prévenir ou réduire les conséquences fonctionnelles de déficiences chez des patients à la suite d'un épisode aigu." },
+    { sigle: "SPDA", full: "Service Public Départemental de l'Autonomie", cat: "Instances & Tutelles", def: "Dispositif territorial guichet unique issu de la loi Bien Vieillir 2024 unifiant l'accueil et l'orientation des aînés et personnes en situation de handicap." },
+    { sigle: "SSIAD", full: "Service de Soins Infirmiers À Domicile", cat: "Médico-social", def: "Service assurant sur prescription médicale des soins d'hygiène et soins infirmiers au domicile des personnes âgées ou handicapées (désormais regroupé dans les SAD)." },
+    { sigle: "SSR", full: "Soins de Suite et de Réadaptation", cat: "Sanitaire", def: "Ancienne appellation réglementaire désormais remplacée par les Soins Médicaux et de Réadaptation (SMR)." },
+    { sigle: "TPT", full: "Temps Partiel Thérapeutique", cat: "RH & Droit", def: "Aménagement temporaire du temps de travail sur prescription médicale favorisant la reprise d'activité progressive du professionnel après ou pendant une affection de santé." },
+    { sigle: "UCC", full: "Unité Cognitivo-Comportementale", cat: "Sanitaire", def: "Unité hospitalière de SMR accueillant des patients atteints de la maladie d'Alzheimer ou apparentée présentant des troubles du comportement perturbateurs pour réajuster la prise en charge." },
+    { sigle: "UHR", full: "Unité d'Hébergement Renforcée", cat: "Médico-social", def: "Unité de vie protégée au sein d'un EHPAD (12 à 14 places) accueillant jour et nuit des résidents présentant des troubles sévères du comportement avec encadrement renforcé." },
+    { sigle: "URSSAF", full: "Union de Recouvrement des cotisations de Sécurité Sociale et d'Allocations Familiales", cat: "Instances & Tutelles", def: "Organisme collectant les cotisations et contributions sociales salariales et patronales finançant les différentes branches de la Sécurité sociale." },
+    { sigle: "USLD", full: "Unité de Soins de Longue Durée", cat: "Sanitaire", def: "Structure sanitaire hospitalière accueillant des personnes âgées très dépendantes dont l'état clinique requiert une surveillance médicale et soignante continue et rapprochée." }
+  ];
+
   const NAV = [
     { id: "accueil", label: "Accueil", icon: "home", group: "Espace de travail" },
     { id: "abonnement", label: "Abonnement & Accès", icon: "star", group: "Espace de travail" },
@@ -2031,5 +2693,5 @@
     }
   ];
 
-  window.MOSAQUE_DATA = { SOURCES, ESTABLISHMENTS, JOBS, MEETINGS, DOCUMENTS, ACTORS, FAQ, CONVENTIONS, SOFTWARES, MAP_NODES, MAP_EDGES, RESEARCH_AREAS, NAV, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS };
+  window.MOSAQUE_DATA = { SOURCES, ESTABLISHMENTS, JOBS, MEETINGS, DOCUMENTS, ACTORS, FAQ, CONVENTIONS, SOFTWARES, MAP_NODES, MAP_EDGES, RESEARCH_AREAS, NAV, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS, RH_LEAVE_TYPES, RH_THERAPEUTIC_PART_TIME, RH_PLANNING_CHANGE, RH_INTERNS_APPRENTICES, ARS_INSPECTION_GUIDE, MANAGEMENT_TRANSITION_GUIDE, GLOSSARY_TERMS };
 })();
