@@ -237,7 +237,17 @@ function tagColor(text = "") {
 }
 function navMarkup() {
   const groups = [...new Set(NAV.map(item => item.group))];
-  return groups.map(group => `<div class="nav-group"><div class="nav-heading">${esc(group)}</div>${NAV.filter(item => item.group === group).map(item => `<button class="nav-link${state.page === item.id ? " is-active" : ""}" data-nav="${item.id}"${state.page === item.id ? ' aria-current="page"' : ""}><span class="nav-icon">${icon(item.icon)}</span><span>${esc(item.label)}</span>${item.id === "etablissements" ? `<span class="nav-count">${ESTABLISHMENTS.length}</span>` : ""}</button>`).join("")}</div>`).join("");
+  return groups.map(group => `<div class="nav-group"><div class="nav-heading">${esc(group)}</div>${NAV.filter(item => item.group === group).map(item => {
+    let badgeHtml = "";
+    if (item.badge) {
+      const bClass = item.badge === "Nouveau" ? "nav-badge-new" : (item.badge === "Enrichi" ? "nav-badge-updated" : "nav-badge-count");
+      badgeHtml = `<span class="nav-pill ${bClass}">${esc(item.badge)}</span>`;
+    } else if (item.id === "etablissements") {
+      badgeHtml = `<span class="nav-count">${ESTABLISHMENTS.length}</span>`;
+    }
+    const isNew = item.badge === "Nouveau" || item.badge === "118 sigles" || item.badge === "Enrichi";
+    return `<button class="nav-link${state.page === item.id ? " is-active" : ""}${isNew ? " is-highlighted" : ""}" data-nav="${item.id}"${state.page === item.id ? ' aria-current="page"' : ""}><span class="nav-icon">${icon(item.icon)}</span><span class="nav-text">${esc(item.label)}</span>${badgeHtml}</button>`;
+  }).join("")}</div>`).join("");
 }
 function syncNavigation() {
   $("#desktop-nav").innerHTML = navMarkup();

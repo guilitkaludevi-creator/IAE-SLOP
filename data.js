@@ -2541,16 +2541,19 @@
     { id: "etablissements", label: "Établissements", icon: "building", group: "Panorama & Métiers" },
     { id: "metiers", label: "Métiers de direction", icon: "briefcase", group: "Panorama & Métiers" },
     { id: "metiers-support", label: "Métiers support", icon: "people", group: "Panorama & Métiers" },
+    { id: "changement-direction", label: "Changement de direction", icon: "rotate", group: "Panorama & Métiers", badge: "Nouveau" },
 
     { id: "qualite", label: "Qualité & Événements (EI)", icon: "shield", group: "Qualité & Sécurité" },
     { id: "rex", label: "Retours d'expérience (REX)", icon: "lightbulb", group: "Qualité & Sécurité" },
     { id: "audit", label: "Audits qualité & méthodes", icon: "target", group: "Qualité & Sécurité" },
+    { id: "inspection-ars", label: "Inspection ARS", icon: "target", group: "Qualité & Sécurité", badge: "Nouveau" },
 
     { id: "logiciels", label: "Logiciels métiers", icon: "layers", group: "Pilotage & Gestion" },
     { id: "documents", label: "Documents de pilotage", icon: "file", group: "Pilotage & Gestion" },
     { id: "reunions", label: "Réunions & instances", icon: "calendar", group: "Pilotage & Gestion" },
-    { id: "rh", label: "Questions RH & Droit", icon: "users", group: "Pilotage & Gestion" },
+    { id: "rh", label: "Questions RH & Équipe", icon: "users", group: "Pilotage & Gestion", badge: "Enrichi" },
     { id: "droit-sante", label: "Droit de la santé", icon: "shield", group: "Pilotage & Gestion" },
+    { id: "glossaire", label: "Glossaire des sigles", icon: "book", group: "Pilotage & Gestion", badge: "118 sigles" },
 
     { id: "secu", label: "Sécurité Sociale & Liens", icon: "shield", group: "Stratégie" },
     { id: "politique", label: "Politique de santé & Lois", icon: "clipboard", group: "Stratégie" },

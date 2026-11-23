@@ -4676,3 +4676,52 @@ html[data-theme="light"] .flash-deck-tab.is-active .flash-deck-tab-count { backg
     align-items: stretch;
   }
 }
+
+/* ==========================================================================
+   MISE EN ÉVIDENCE DES NOUVEAUX ONGLETS DU MENU
+   ========================================================================== */
+.nav-link.is-highlighted {
+  position: relative;
+}
+.nav-link.is-highlighted .nav-icon {
+  color: var(--mint);
+}
+.nav-pill {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1.2;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.nav-badge-new {
+  color: #06281e;
+  background: linear-gradient(135deg, #75e0c2, #34d399);
+  box-shadow: 0 0 12px rgba(117, 224, 194, 0.45);
+  animation: pulseNewBadge 2.8s infinite ease-in-out;
+}
+.nav-badge-updated {
+  color: #3b2003;
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.35);
+}
+.nav-badge-count {
+  color: #7dd3fc;
+  background: rgba(125, 211, 252, 0.16);
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  font-weight: 700;
+}
+@keyframes pulseNewBadge {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(117, 224, 194, 0.4);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 16px rgba(117, 224, 194, 0.75);
+  }
+}
