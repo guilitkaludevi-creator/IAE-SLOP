@@ -68,7 +68,15 @@ const state = {
   auth: readJSON(STORE.auth, { isUnlocked:false, verifiedPaid:false, plan:"freemium", role:"visiteur" }),
   posts: readJSON(STORE.posts, []),
   rsvps: readJSON(STORE.rsvps, {}),
-  notifs: readJSON(STORE.notifs, []),
+  notifs: (() => {
+    const raw = readJSON(STORE.notifs, []);
+    const seen = new Set();
+    return (Array.isArray(raw) ? raw : []).filter(n => {
+      if (!n || !n.id || seen.has(n.id)) return false;
+      seen.add(n.id);
+      return true;
+    });
+  })(),
   editingPeerId: null,
   onboarding: false,
   highlightPeerId: null,
@@ -428,7 +436,10 @@ function renderPage(page, { immediate = false, fromHistory = false, restoreScrol
       secu:renderSecu,
       abonnement:renderSubscription,
       flashcards:renderFlashcards,
-      compte:renderAccount
+      compte:renderAccount,
+      "inspection-ars": renderArsInspection,
+      "changement-direction": renderManagementTransition,
+      glossaire: renderGlossary
     };
     stage.innerHTML = (renderers[page] || renderHome)();
     hydrateIcons(stage);
@@ -3619,7 +3630,9 @@ function clearAllNotifs() {
   showToast("Historique des notifications effacé.");
 }
 
+const STARTER_NOTIFS_SEEDED_KEY = "mosaique-starter-notifs-seeded";
 function ensureStarterNotifications() {
+  if (readStoredValue(STARTER_NOTIFS_SEEDED_KEY) === "1") return;
   if (!Array.isArray(state.notifs) || state.notifs.length === 0) {
     const starter = [
       {
@@ -3662,6 +3675,7 @@ function ensureStarterNotifications() {
     state.notifs = starter;
     writeJSON(STORE.notifs, state.notifs);
   }
+  writeStoredValue(STARTER_NOTIFS_SEEDED_KEY, "1");
 }
 
 async function addPeer(form) {
@@ -6089,37 +6103,29 @@ function initFirestoreSync() {
           // Notifications temps réel pour les alumni
           if (!initialAlumniSyncDone) {
             remoteAlumni.forEach(r => knownPeerKeys.add(r.email || r.id));
-            const recentAlumni = remoteAlumni.slice(0, 2);
-            recentAlumni.forEach(r => {
-              dispatchNotification({
-                id: `notif-alumni-join-${r.id}`,
-                title: "Nouveau membre dans le réseau",
-                text: `${r.name} (${r.role || "Alumni"}) a rejoint la promotion${r.region ? ` (${r.region})` : ""}.`,
-                icon: "users",
-                targetNav: "reseau",
-                targetPeerId: r.id,
-                targetUid: "all",
-                authorUid: r.authorUid || r.email || "",
-                date: "Récemment"
-              }, { silentToast: true });
-            });
             initialAlumniSyncDone = true;
           } else {
             remoteAlumni.forEach(r => {
               const key = r.email || r.id;
               if (!knownPeerKeys.has(key)) {
                 knownPeerKeys.add(key);
-                dispatchNotification({
-                  id: `notif-alumni-join-${r.id}`,
-                  title: "Nouveau membre dans le réseau",
-                  text: `${r.name} (${r.role || "Alumni"}) a rejoint la promotion${r.region ? ` (${r.region})` : ""}.`,
-                  icon: "users",
-                  targetNav: "reseau",
-                  targetPeerId: r.id,
-                  targetUid: "all",
-                  authorUid: r.authorUid || r.email || "",
-                  date: "À l'instant"
-                }, { silentToast: false, animate: true });
+                const joinTime = r.createdAt ? new Date(r.createdAt).getTime() : 0;
+                const isLive = joinTime && (Date.now() - joinTime < 180000);
+                const myUid = currentUserUid();
+                const isMe = (myUid && r.authorUid === myUid) || (state.auth?.profile?.email && r.email === state.auth.profile.email);
+                if (isLive && !isMe) {
+                  dispatchNotification({
+                    id: `notif-alumni-join-${r.id}`,
+                    title: "Nouveau membre dans le réseau",
+                    text: `${r.name} (${r.role || "Alumni"}) a rejoint la promotion${r.region ? ` (${r.region})` : ""}.`,
+                    icon: "users",
+                    targetNav: "reseau",
+                    targetPeerId: r.id,
+                    targetUid: "all",
+                    authorUid: r.authorUid || r.email || "",
+                    date: "À l'instant"
+                  }, { silentToast: false, animate: true });
+                }
               }
             });
           }
@@ -6146,47 +6152,40 @@ function initFirestoreSync() {
               knownPostIds.add(r.id);
               (r.comments || []).forEach(c => knownCommentIds.add(c.id));
             });
-            const recentPosts = remotePosts.slice(0, 2);
-            recentPosts.forEach(r => {
-              const typeLabel = r.type === "event" ? "Nouvel événement" : r.type === "job_offer" ? "Nouvelle offre d'emploi" : "Nouvelle annonce";
-              dispatchNotification({
-                id: `notif-post-${r.id}`,
-                title: `${typeLabel} : ${r.title}`,
-                text: `Publié par ${r.authorName || r.author?.name || "Membre Alumni"} · ${r.organization || "Réseau Santé"}`,
-                icon: r.type === "event" ? "calendar" : r.type === "job_offer" ? "briefcase" : "message",
-                targetNav: "timeline",
-                targetPostId: r.id,
-                targetUid: "all",
-                authorUid: r.authorUid || r.author?.uid || "",
-                date: "Récemment"
-              }, { silentToast: true });
-            });
             initialPostsSyncDone = true;
           } else {
             remotePosts.forEach(r => {
               if (!knownPostIds.has(r.id)) {
                 knownPostIds.add(r.id);
-                const typeLabel = r.type === "event" ? "Nouvel événement" : r.type === "job_offer" ? "Nouvelle offre d'emploi" : "Nouvelle annonce";
-                dispatchNotification({
-                  id: `notif-post-${r.id}`,
-                  title: `${typeLabel} : ${r.title}`,
-                  text: `Publié par ${r.authorName || r.author?.name || "Membre Alumni"} · ${r.organization || "Réseau Santé"}`,
-                  icon: r.type === "event" ? "calendar" : r.type === "job_offer" ? "briefcase" : "message",
-                  targetNav: "timeline",
-                  targetPostId: r.id,
-                  targetUid: "all",
-                  authorUid: r.authorUid || r.author?.uid || "",
-                  date: "À l'instant"
-                }, { silentToast: false, animate: true });
+                const postTime = r.createdAt ? new Date(r.createdAt).getTime() : 0;
+                const isLive = postTime && (Date.now() - postTime < 180000);
+                const myUid = currentUserUid();
+                const isMine = myUid && (r.authorUid === myUid || r.author?.uid === myUid);
+                if (isLive && !isMine) {
+                  const typeLabel = r.type === "event" ? "Nouvel événement" : r.type === "job_offer" ? "Nouvelle offre d'emploi" : "Nouvelle annonce";
+                  dispatchNotification({
+                    id: `notif-post-${r.id}`,
+                    title: `${typeLabel} : ${r.title}`,
+                    text: `Publié par ${r.authorName || r.author?.name || "Membre Alumni"} · ${r.organization || "Réseau Santé"}`,
+                    icon: r.type === "event" ? "calendar" : r.type === "job_offer" ? "briefcase" : "message",
+                    targetNav: "timeline",
+                    targetPostId: r.id,
+                    targetUid: "all",
+                    authorUid: r.authorUid || r.author?.uid || "",
+                    date: "À l'instant"
+                  }, { silentToast: false, animate: true });
+                }
               }
 
               // Vérification des commentaires entrants
               (r.comments || []).forEach(c => {
                 if (!knownCommentIds.has(c.id)) {
                   knownCommentIds.add(c.id);
+                  const commentTime = c.createdAt ? new Date(c.createdAt).getTime() : 0;
+                  const isLive = commentTime && (Date.now() - commentTime < 180000);
                   const myUid = currentUserUid();
                   const isMyPost = Boolean(myUid && (r.authorUid === myUid || r.author?.uid === myUid));
-                  if (isMyPost && c.authorUid !== myUid) {
+                  if (isLive && isMyPost && c.authorUid !== myUid) {
                     const isRsvp = c.participation && c.participation !== "none";
                     dispatchNotification({
                       id: `notif-comment-received-${c.id}`,
