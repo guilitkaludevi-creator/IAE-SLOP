@@ -1891,20 +1891,12 @@ function renderTimeline() {
         <form id="timeline-post-form">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px">
             <div>
-              <label class="field-label" id="timeline-post-type-label">Type de publication *</label>
-              ${renderCustomSelect({
-                id: "timeline-post-type-select",
-                name: "type",
-                options: [
-                  { value: "job_offer", label: "💼 Offre d'emploi / Alternance / Stage" },
-                  { value: "event", label: "📅 Événement / Job Dating / Rencontre" },
-                  { value: "announcement", label: "📢 Annonce générale / Appel à projets" }
-                ],
-                value: "job_offer",
-                placeholder: "Type de publication…",
-                search: false,
-                required: true
-              })}
+              <label class="field-label" id="timeline-post-type-label" for="timeline-post-type-select">Type de publication *</label>
+              <select name="type" class="form-control" id="timeline-post-type-select" required>
+                <option value="job_offer" selected>💼 Offre d'emploi / Alternance / Stage</option>
+                <option value="event">📅 Événement / Job Dating / Rencontre</option>
+                <option value="announcement">📢 Annonce générale / Appel à projets</option>
+              </select>
             </div>
             <div>
               <label class="field-label">Titre de l'annonce *</label>
@@ -5886,6 +5878,10 @@ document.addEventListener("submit", event => {
     }
     const wrap = $("#timeline-post-form-wrap");
     if (wrap) wrap.style.display = "none";
+    const extra = $("#timeline-event-extra-fields");
+    if (extra) extra.style.display = "none";
+    const submitBtn = $("#timeline-post-submit-btn");
+    if (submitBtn) submitBtn.innerHTML = `${icon("send", 14)} Diffuser l'offre`;
     return;
   }
   if (event.target.id === "peer-form") { event.preventDefault(); addPeer(event.target); }

@@ -2,9 +2,9 @@ const CACHE = "mosaique-sante-v2026-11-23-modules-rh-ars-transition-glossaire-v3
 const CORE = [
   "./",
   "./index.html",
-  "./app.css?v=20261123-v3",
-  "./app.js?v=20261123-v3",
-  "./data.js?v=20261123-v3",
+  "./app.css?v=20261123-v4",
+  "./app.js?v=20261123-v4",
+  "./data.js?v=20261123-v4",
   "./flashcards.js?v=20261122-highend",
   "./firebase-init.js?v=20261122-highend",
   "./manifest.webmanifest",
