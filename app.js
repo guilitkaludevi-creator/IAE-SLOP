@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 
-const { ACTORS, CONVENTIONS, DOCUMENTS, ESTABLISHMENTS, FAQ, JOBS, MAP_EDGES, MAP_NODES, MEETINGS, NAV, RESEARCH_AREAS, SOFTWARES, SOURCES, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS, RH_LEAVE_TYPES, RH_THERAPEUTIC_PART_TIME, RH_PLANNING_CHANGE, RH_INTERNS_APPRENTICES, ARS_INSPECTION_GUIDE, MANAGEMENT_TRANSITION_GUIDE, GLOSSARY_TERMS } = window.MOSAQUE_DATA;
+const { ACTORS, CONVENTIONS, DOCUMENTS, ESTABLISHMENTS, FAQ, JOBS, MAP_EDGES, MAP_NODES, MEETINGS, NAV, RESEARCH_AREAS, SOFTWARES, SOURCES, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS, RH_LEAVE_TYPES, RH_THERAPEUTIC_PART_TIME, RH_PLANNING_CHANGE, RH_INTERNS_APPRENTICES, ARS_INSPECTION_GUIDE, MANAGEMENT_TRANSITION_GUIDE, GLOSSARY_TERMS, ERP_SECURITY_GUIDE, CONFORMITY_VISIT_GUIDE, MATERIOVIGILANCE_GUIDE, SIRENA_SYSTEM_GUIDE, NAPIR_LIBERTY_GUIDE, DIRECTOR_PENAL_RESPONSIBILITY_GUIDE } = window.MOSAQUE_DATA;
 
 window.MOSAQUE_FLASHCARDS?.configure({
   data: window.MOSAQUE_DATA,
@@ -1286,70 +1286,338 @@ function renderInternsApprenticesGuide() {
 /* --- 5. PAGE DÉDIÉE : INSPECTION DE L'ARS --- */
 function renderArsInspection() {
   const guide = ARS_INSPECTION_GUIDE;
+  const erpGuide = ERP_SECURITY_GUIDE || window.MOSAQUE_DATA?.ERP_SECURITY_GUIDE;
+  const confGuide = CONFORMITY_VISIT_GUIDE || window.MOSAQUE_DATA?.CONFORMITY_VISIT_GUIDE;
+  const sirenaGuide = SIRENA_SYSTEM_GUIDE || window.MOSAQUE_DATA?.SIRENA_SYSTEM_GUIDE;
+  const matvigGuide = MATERIOVIGILANCE_GUIDE || window.MOSAQUE_DATA?.MATERIOVIGILANCE_GUIDE;
+  const napirGuide = NAPIR_LIBERTY_GUIDE || window.MOSAQUE_DATA?.NAPIR_LIBERTY_GUIDE;
   if (!guide) return "";
   const isUnlocked = isPremiumUnlocked();
 
   return `
     <section class="page" aria-labelledby="ars-inspection-title">
       ${sectionHead(
-        "POLICE SANITAIRE · CONTRÔLE DE TUTELLE",
-        "L'Inspection de l'ARS, <span class=\"text-gradient\">préparation, sang-froid et rigueur.</span>",
-        "Tout ce que la direction et le cadre doivent faire pour préparer l'établissement, faire face le jour J avec professionnalisme et piloter la phase contradictoire et le plan d'actions correctives.",
-        `<button class="button subtle" data-nav="audit">${icon("target",16)}Audits qualité</button><button class="button subtle" data-nav="documents">${icon("file",16)}Documents de pilotage</button>`
+        "POLICE SANITAIRE · CONTRÔLE DE TUTELLE & CONFORMITÉ",
+        "L'Inspection de l'ARS, <span class=\"text-gradient\">préparation, sang-froid et rigueur opérationnelle.</span>",
+        "Tout ce que la direction et le cadre de santé doivent maîtriser : les 5 formes d'intervention, la visite de conformité CASF D.313-11, la gestion des alertes SIRENA, la sécurité ERP, la matériovigilance, le protocole NAPIR et le déroulé pas à pas du jour J.",
+        `<button class="button subtle" data-nav="responsabilite-penale">${icon("shield",16)}Responsabilité pénale</button><button class="button subtle" data-nav="documents">${icon("file",16)}Documents de pilotage</button><button class="button subtle" data-nav="audit">${icon("target",16)}Audits qualité</button>`
       )}
 
-      <aside class="ethical-dignity-banner glass-panel">
-        <div class="ethical-badge">${icon("heart", 18)} <span>FINALITÉ SUPRÊME DE L'INSPECTION</span></div>
-        <p class="ethical-text">${esc(guide.ethicalCore)}</p>
+      <!-- Bannière Éthique Cardinale -->
+      <aside class="ethical-dignity-banner glass-panel" style="border-left:4px solid var(--accent-rose);margin-bottom:24px">
+        <div class="ethical-badge">${icon("heart", 18)} <span>FINALITÉ SUPRÊME DU CONTRÔLE DE TUTELLE</span></div>
+        <p class="ethical-text" style="font-size:14px;line-height:1.65">${esc(guide.ethicalCore)}</p>
       </aside>
 
-      <div class="notice" style="margin:18px 0">
-        ${icon("shield", 18)}
-        <span><strong>Fondement juridique :</strong> ${esc(guide.legalBasis)}</span>
+      <!-- Fondement Juridique & Prérogatives -->
+      <div class="notice glass-panel" style="margin:16px 0 28px;border:1px solid rgba(117,224,194,0.3);background:rgba(117,224,194,0.04);border-radius:16px;padding:16px 20px">
+        ${icon("shield", 22)}
+        <div style="font-size:13.5px;line-height:1.65">
+          <strong style="color:var(--text)">Fondement juridique opposable :</strong> ${esc(guide.legalBasis)}
+          <div style="margin-top:4px;color:var(--text-soft)">Les inspecteurs de santé publique assermentés disposent d'un droit d'accès permanent à tous les locaux de l'établissement (y compris la nuit et le week-end), peuvent s'entretenir avec tout membre du personnel sans témoin et se faire communiquer immédiatement tout document utile.</div>
+        </div>
       </div>
 
       ${renderAccessStatusBar()}
 
+      <!-- 1. TYPOLOGIE DES CONTRÔLES ARS (REFONTE APPLE DESIGN) -->
       <div class="section-block" data-page-theme="Typologie">
-        <div class="section-title-row">
+        <div class="section-title-row" style="margin-bottom:20px">
           <div>
-            <span class="eyebrow">5 FORMES D'INTERVENTIONS</span>
-            <h2>Les différents types d'inspections de l'ARS</h2>
-            <p>Comprendre le motif de la visite pour adapter immédiatement la posture de l'encadrement.</p>
+            <span class="eyebrow" style="color:var(--mint);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">5 FORMES D'INTERVENTIONS</span>
+            <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Les différents types d'inspections de l'ARS</h2>
+            <p style="font-size:13px;color:var(--text-soft);margin:0">Comprendre le motif et la cinétique de la visite pour adapter immédiatement la posture de l'encadrement.</p>
           </div>
         </div>
-        <div class="inspection-typology-grid">
-          ${guide.typology.map((t, idx) => `
-            <article class="content-card glass-panel">
-              <span class="tag ${tagColor(t.type)}">TYPE 0${idx+1}</span>
-              <h3 style="font-size:16px;margin:8px 0 6px">${esc(t.type)}</h3>
-              <p style="font-size:13px;line-height:1.55">${esc(t.context)}</p>
-            </article>
-          `).join("")}
+
+        <div class="inspection-typology-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">
+          ${guide.typology.map((t, idx) => {
+            const isUrgent = t.type.includes("inopinée") || t.type.includes("réactive");
+            const pillColor = idx === 0 ? "rgba(117,224,194,0.14)" : idx === 1 ? "rgba(244,63,94,0.16)" : idx === 2 ? "rgba(143,199,245,0.14)" : idx === 3 ? "rgba(245,158,11,0.16)" : "rgba(167,139,250,0.14)";
+            const textColor = idx === 0 ? "var(--mint)" : idx === 1 ? "#ff6b81" : idx === 2 ? "var(--accent-cyan)" : idx === 3 ? "var(--gold)" : "var(--accent-lavender)";
+            const icons = ["calendar", "zap", "users", "alert", "target"];
+            
+            // Éclatement précis du contenu textuel en repères visuels clairs
+            let details = [];
+            if (idx === 0) {
+              details = [
+                { label: "Cadre", val: "Programme Régional d'Inspection et de Contrôle (PRIC)." },
+                { label: "Préavis", val: "Courrier officiel reçu quelques jours à semaines à l'avance." },
+                { label: "Réflexe Cadre", val: "Rassembler le 'Classeur d'inspection' et vérifier les plannings." }
+              ];
+            } else if (idx === 1) {
+              details = [
+                { label: "Préavis", val: "AUCUN · Présentation immédiate 24h/24 (matin, nuit, week-end)." },
+                { label: "Objectif", val: "Constater la réalité brute du fonctionnement opérationnel." },
+                { label: "Réflexe Cadre", val: "Vérifier les cartes des inspecteurs et installer la cellule d'accueil." }
+              ];
+            } else if (idx === 2) {
+              details = [
+                { label: "Tutelles", val: "Inspecteurs ARS (Soins/Santé) + Contrôleurs CD (Dépendance/Social)." },
+                { label: "Champs", val: "Soins infirmiers, hygiène, effectifs socio-éducatifs et tarification." },
+                { label: "Réflexe Cadre", val: "Mobiliser le Cadre de santé et le Directeur d'établissement." }
+              ];
+            } else if (idx === 3) {
+              details = [
+                { label: "Déclencheur", val: "Signalement EIGS, réclamation famille, alerte maltraitance SIRENA." },
+                { label: "Ambiance", val: "Investigation ciblée, recherche immédiate d'anomalies de prise en charge." },
+                { label: "Réflexe Cadre", val: "Fournir la chronologie REX factuelle et les mesures correctives." }
+              ];
+            } else {
+              details = [
+                { label: "Thématique", val: "Risque spécifique : médicament (PUI), contention/NAPIR, sécurité incendie." },
+                { label: "Acteurs", val: "Pharmacien PUI, médecin coordonnateur, cadre et responsable SSI." },
+                { label: "Réflexe Cadre", val: "Mettre à disposition les ordonnanciers, DUERP et fiches de suivi." }
+              ];
+            }
+
+            return `
+              <article class="content-card glass-panel apple-card" style="padding:22px;display:flex;flex-direction:column;justify-content:space-between;border-top:3.5px solid ${textColor}">
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <span class="apple-pill" style="background:${pillColor};color:${textColor}">
+                      ${icon(icons[idx] || "shield", 12)} TYPE 0${idx+1}
+                    </span>
+                    ${isUrgent ? `<span class="tag warning" style="font-size:10.5px;padding:3px 9px;border-radius:999px">${icon("alert", 11)} Alerte / Inopiné</span>` : `<span class="tag compact-tag" style="font-size:10.5px">Programmé</span>`}
+                  </div>
+                  
+                  <h3 style="font-size:16.5px;font-weight:720;letter-spacing:-0.02em;margin:0 0 10px;color:var(--text)">
+                    ${esc(t.type)}
+                  </h3>
+                  
+                  <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0 0 16px">
+                    ${esc(t.context)}
+                  </p>
+                </div>
+
+                <div class="apple-card-points" style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;margin-top:auto">
+                  ${details.map(d => `
+                    <div style="font-size:12.5px;margin-bottom:6px;line-height:1.5">
+                      <strong style="color:var(--text);font-weight:680">${esc(d.label)} :</strong>
+                      <span style="color:var(--text-soft)"> ${esc(d.val)}</span>
+                    </div>
+                  `).join("")}
+                </div>
+              </article>
+            `;
+          }).join("")}
         </div>
       </div>
 
-      <div class="section-block" data-page-theme="Préparation">
+      <!-- 2. VISITE DE CONFORMITÉ ARS / CONSEIL DÉPARTEMENTAL (CASF D.313-11) -->
+      ${confGuide ? `
+        <div class="section-block" data-page-theme="Conformité" style="margin-top:36px">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow" style="color:var(--gold);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">PRÉALABLE OBLIGATOIRE À L'OUVERTURE</span>
+              <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">La Visite de Conformité (CASF art. D. 313-11)</h2>
+              <p style="font-size:13px;color:var(--text-soft);margin:0">Le contrôle in situ conditionnant la mise en service effective de tout établissement ou extension autorisée.</p>
+            </div>
+          </div>
+
+          <div class="notice compact-notice" style="margin-bottom:18px;background:rgba(248,211,136,0.06);border-left:3.5px solid var(--gold);border-radius:14px;padding:14px 18px">
+            ${icon("shield", 18)}
+            <span style="font-size:13px;line-height:1.6"><strong>Règle d'or légale :</strong> ${esc(confGuide.legalBasis)}</span>
+          </div>
+
+          <div class="grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-bottom:18px">
+            <article class="content-card glass-panel apple-card" style="padding:22px">
+              <h4 style="font-size:15px;font-weight:720;color:var(--text);margin:0 0 12px;display:flex;align-items:center;gap:8px">
+                ${icon("target", 16)} 4 Objectifs du contrôle
+              </h4>
+              <ul class="bullet-list" style="font-size:13px;line-height:1.65;color:var(--text-soft);margin:0">
+                ${confGuide.objectifs.map(ob => `<li>${esc(ob)}</li>`).join("")}
+              </ul>
+            </article>
+
+            <article class="content-card glass-panel apple-card" style="padding:22px">
+              <h4 style="font-size:15px;font-weight:720;color:var(--text);margin:0 0 12px;display:flex;align-items:center;gap:8px">
+                ${icon("file", 16)} 8 Pièces indispensables du dossier
+              </h4>
+              <ul class="bullet-list" style="font-size:13px;line-height:1.65;color:var(--text-soft);margin:0">
+                ${confGuide.documentsRequis.map(d => `<li>${esc(d)}</li>`).join("")}
+              </ul>
+            </article>
+          </div>
+
+          <div class="process-steps-list" style="margin-top:14px">
+            ${confGuide.deroulement.map((st, i) => `
+              <article class="process-step-item glass-panel apple-card" style="padding:16px 20px">
+                <div class="step-marker" style="background:var(--gold);color:#0b1420;font-weight:800;font-size:13px">0${i+1}</div>
+                <div class="step-content">
+                  <h4 style="font-size:15px;font-weight:720;margin:0 0 4px">${esc(st.etape)}</h4>
+                  <p style="font-size:13px;color:var(--text-soft);margin:0;line-height:1.6">${esc(st.details)}</p>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      ` : ""}
+
+      <!-- 3. SYSTÈME SIRENA & MATÉRIOVIGILANCE -->
+      <div class="section-block" data-page-theme="Vigilances" style="margin-top:36px">
         <div class="section-title-row">
           <div>
-            <span class="eyebrow">PHASE AMONT · ANTICIPATION CONTINUE</span>
-            <h2>${esc(guide.preparationPhase.title)}</h2>
-            <p>${esc(guide.preparationPhase.desc)}</p>
+            <span class="eyebrow" style="color:var(--mint);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">VIGILANCES SANITAIRES & SIGNALEMENTS</span>
+            <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Système SIRENA & Matériovigilance des Dispositifs Médicaux</h2>
+            <p style="font-size:13px;color:var(--text-soft);margin:0">Comment l'ARS instruit les alertes sanitaires et comment réagir en cas d'incident sur un dispositif médical.</p>
           </div>
         </div>
 
-        <div class="notice compact-notice" style="margin-bottom:16px">
-          ${icon("users", 16)}
-          <span><strong>Cellule d'accueil inspection :</strong> ${esc(guide.preparationPhase.crisisCell)}</span>
+        <div class="grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px">
+          <!-- SIRENA -->
+          ${sirenaGuide ? `
+            <article class="content-card glass-panel apple-card" style="padding:22px;border-top:3.5px solid var(--accent-mint)">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <span class="icon-bubble mint">${icon("network", 16)}</span>
+                <h3 style="font-size:16px;font-weight:720;margin:0">Plateforme SIRENA de l'ARS</h3>
+              </div>
+              <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin-bottom:14px">${esc(sirenaGuide.overview)}</p>
+              <div style="font-size:12.5px;font-weight:700;margin-bottom:8px;color:var(--text)">Circuit d'instruction :</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                ${sirenaGuide.circuitSignalement.map(c => `
+                  <div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:10px;font-size:12.5px;line-height:1.5">
+                    <strong style="color:var(--mint)">${esc(c.acteur)} :</strong> <span style="color:var(--text-soft)">${esc(c.role)}</span>
+                  </div>
+                `).join("")}
+              </div>
+            </article>
+          ` : ""}
+
+          <!-- Matériovigilance -->
+          ${matvigGuide ? `
+            <article class="content-card glass-panel apple-card" style="padding:22px;border-top:3.5px solid var(--accent-coral)">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <span class="icon-bubble coral">${icon("alert", 16)}</span>
+                <h3 style="font-size:16px;font-weight:720;margin:0">Matériovigilance (Dispositifs Médicaux)</h3>
+              </div>
+              <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin-bottom:14px">${esc(matvigGuide.overview)}</p>
+              <div style="padding:12px 14px;background:rgba(244,63,94,0.08);border-radius:12px;margin-bottom:14px;border:1px solid rgba(244,63,94,0.25)">
+                <strong style="font-size:13px;color:#ff6b81">${icon("shield", 14)} Règle absolue de Quarantaine :</strong>
+                <p style="font-size:12.5px;color:var(--text-soft);margin:4px 0 0;line-height:1.55">Isoler immédiatement le DM (lit, lève-personne, seringue). Ne JAMAIS le nettoyer, ne pas le réparer ni changer les réglages avant l'expertise contradictoire.</p>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                ${matvigGuide.procedureEnCasDIncident.map(p => `
+                  <div style="font-size:12.5px;line-height:1.55">
+                    <strong style="color:var(--text)">${esc(p.action)} :</strong> <span style="color:var(--text-soft)">${esc(p.detail)}</span>
+                  </div>
+                `).join("")}
+              </div>
+            </article>
+          ` : ""}
+        </div>
+      </div>
+
+      <!-- 4. SÉCURITÉ ERP & COMMISSION DE SÉCURITÉ -->
+      ${erpGuide ? `
+        <div class="section-block" data-page-theme="ERP" style="margin-top:36px">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow" style="color:var(--accent-coral);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">SÉCURITÉ INCENDIE EN ERP</span>
+              <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Sécurité ERP & Commission de Sécurité</h2>
+              <p style="font-size:13px;color:var(--text-soft);margin:0">Règles spécifiques au Type U (Sanitaire) et Type J (Médico-social) et vérification des documents réglementaires.</p>
+            </div>
+          </div>
+
+          <div class="notice compact-notice" style="margin-bottom:18px;border-radius:14px;padding:14px 18px">
+            ${icon("shield", 18)}
+            <span style="font-size:13px;line-height:1.6"><strong>Principe fondamental :</strong> ${esc(erpGuide.overview)}</span>
+          </div>
+
+          <div class="grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-bottom:18px">
+            ${erpGuide.types.map(tp => `
+              <article class="content-card glass-panel apple-card" style="padding:22px;border-top:3.5px solid ${tp.type.includes('Type U') ? 'var(--accent-cyan)' : 'var(--accent-lavender)'}">
+                <h4 style="font-size:15.5px;font-weight:720;margin:0 0 4px">${esc(tp.type)}</h4>
+                <div style="font-size:12px;color:var(--text-soft);margin-bottom:10px">Champ : ${esc(tp.scope)}</div>
+                <ul class="bullet-list" style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">
+                  ${tp.rules.map(r => `<li>${esc(r)}</li>`).join("")}
+                </ul>
+              </article>
+            `).join("")}
+          </div>
+
+          <!-- Documents Réglementaires & Contrôles Périodiques -->
+          <article class="content-card glass-panel apple-card" style="padding:22px;margin-top:16px">
+            <h4 style="font-size:15.5px;font-weight:720;color:var(--text);margin:0 0 14px;display:flex;align-items:center;gap:8px">
+              ${icon("file", 18)} 9 Vérifications Techniques & Documents Réglementaires Obligatoires
+            </h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px">
+              ${erpGuide.documentsReglementaires.map(doc => `
+                <div style="padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.06)">
+                  <div style="font-size:13.5px;font-weight:720;color:var(--text);margin-bottom:3px">${esc(doc.doc)}</div>
+                  <span class="tag compact-tag" style="font-size:10.5px;margin-bottom:6px;display:inline-block">${esc(doc.frequence)}</span>
+                  <p style="font-size:12.5px;color:var(--text-soft);margin:0;line-height:1.55">${esc(doc.contenu)}</p>
+                </div>
+              `).join("")}
+            </div>
+          </article>
+        </div>
+      ` : ""}
+
+      <!-- 5. NAPIR : ATTEINTE AU DROIT D'ALLER ET VENIR -->
+      ${napirGuide ? `
+        <div class="section-block" data-page-theme="NAPIR" style="margin-top:36px">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow" style="color:var(--accent-rose);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">LIBERTÉS FONDAMENTALES & BIENTRAITANCE</span>
+              <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Mesures NAPIR & Atteinte au droit d'aller et venir</h2>
+              <p style="font-size:13px;color:var(--text-soft);margin:0">Contention physique, barrières de lit, unités fermées et respect absolu de la dignité selon la loi Bien Vieillir 2024.</p>
+            </div>
+          </div>
+
+          <aside class="ethical-dignity-banner glass-panel" style="margin-bottom:18px;background:rgba(244,63,94,0.05);border-color:rgba(244,63,94,0.3);border-radius:16px;padding:16px 20px">
+            <div class="ethical-badge">${icon("heart", 16)} <span>CADRE LÉGAL INTRANSIGEANT DE LA HAS ET DU CASF</span></div>
+            <p class="ethical-text" style="font-size:13.5px;line-height:1.6">${esc(napirGuide.overview)}</p>
+          </aside>
+
+          <div class="grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">
+            <article class="content-card glass-panel apple-card" style="padding:22px">
+              <h4 style="font-size:15px;font-weight:720;margin:0 0 12px">${icon("shield", 16)} 4 Principes Cardinaux d'Encadrement</h4>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                ${napirGuide.principesCardinaux.map(p => `
+                  <div>
+                    <strong style="font-size:13px;color:var(--text)">${esc(p.principe)}</strong>
+                    <p style="font-size:12.5px;color:var(--text-soft);margin:3px 0 0;line-height:1.55">${esc(p.regle)}</p>
+                  </div>
+                `).join("")}
+              </div>
+            </article>
+
+            <article class="content-card glass-panel apple-card" style="padding:22px">
+              <h4 style="font-size:15px;font-weight:720;margin:0 0 12px">${icon("clipboard", 16)} Check-list de Contrôle du Cadre</h4>
+              <ul class="bullet-list" style="font-size:13px;line-height:1.65;color:var(--text-soft);margin:0">
+                ${napirGuide.checkListCadre.map(ck => `<li>${esc(ck)}</li>`).join("")}
+              </ul>
+              <div style="margin-top:14px;padding:10px 12px;background:rgba(244,63,94,0.08);border-radius:10px;font-size:12px;color:#ff6b81;line-height:1.5">
+                <strong>Attention pénale :</strong> Toute contention sans prescription médicale en cours expose à des poursuites pour séquestration arbitraire (art. 224-1 Code pénal).
+              </div>
+            </article>
+          </div>
+        </div>
+      ` : ""}
+
+      <!-- 6. PRÉPARATION EN AMONT & CLASSEUR D'INSPECTION -->
+      <div class="section-block" data-page-theme="Préparation" style="margin-top:36px">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow" style="color:var(--mint);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">PHASE AMONT · ANTICIPATION CONTINUE</span>
+            <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">${esc(guide.preparationPhase.title)}</h2>
+            <p style="font-size:13px;color:var(--text-soft);margin:0">${esc(guide.preparationPhase.desc)}</p>
+          </div>
         </div>
 
-        <div class="inspection-docs-grid">
+        <div class="notice compact-notice" style="margin-bottom:18px;border-radius:14px;padding:14px 18px">
+          ${icon("users", 16)}
+          <span style="font-size:13px"><strong>Cellule d'accueil inspection :</strong> ${esc(guide.preparationPhase.crisisCell)}</span>
+        </div>
+
+        <div class="inspection-docs-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
           ${guide.preparationPhase.documents.map(group => `
-            <article class="content-card glass-panel">
-              <h4 style="font-size:14.5px;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <article class="content-card glass-panel apple-card" style="padding:20px">
+              <h4 style="font-size:14.5px;font-weight:720;color:var(--text);margin:0 0 10px;display:flex;align-items:center;gap:6px">
                 ${icon("file", 14)} ${esc(group.group)}
               </h4>
-              <ul class="bullet-list">
+              <ul class="bullet-list" style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">
                 ${group.items.map(it => `<li>${esc(it)}</li>`).join("")}
               </ul>
             </article>
@@ -1358,44 +1626,56 @@ function renderArsInspection() {
       </div>
 
       ${isUnlocked ? `
-        <div class="section-block" data-page-theme="Jour J">
+        <!-- 7. LE DÉROULEMENT SUR LE TERRAIN JOUR J -->
+        <div class="section-block" data-page-theme="Jour J" style="margin-top:36px">
           <div class="section-title-row">
             <div>
-              <span class="eyebrow">LE DÉROULEMENT SUR LE TERRAIN</span>
-              <h2>${esc(guide.dayJPhase.title)}</h2>
-              <p>Chronologie rigoureuse d'une visite d'inspection in situ pour garder la maîtrise des échanges.</p>
+              <span class="eyebrow" style="color:var(--gold);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">LE DÉROULEMENT SUR LE TERRAIN</span>
+              <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">${esc(guide.dayJPhase.title)}</h2>
+              <p style="font-size:13px;color:var(--text-soft);margin:0">Chronologie rigoureuse d'une visite d'inspection in situ pour garder la maîtrise des échanges.</p>
             </div>
           </div>
 
           <div class="process-steps-list">
             ${guide.dayJPhase.steps.map(st => `
-              <article class="process-step-item glass-panel">
-                <div class="step-marker">${st.step}</div>
+              <article class="process-step-item glass-panel apple-card" style="padding:16px 20px">
+                <div class="step-marker" style="font-weight:800;font-size:13px">0${st.step}</div>
                 <div class="step-content">
-                  <h4>${esc(st.name)}</h4>
-                  <p>${esc(st.action)}</p>
+                  <h4 style="font-size:15px;font-weight:720;margin:0 0 6px">${esc(st.name)}</h4>
+                  <p style="font-size:13px;color:var(--text-soft);margin:0;line-height:1.6">${esc(st.action)}</p>
                 </div>
               </article>
             `).join("")}
           </div>
         </div>
 
-        <div class="section-block" data-page-theme="Post-inspection">
+        <!-- 8. POST-INSPECTION & PHASE CONTRADICTOIRE -->
+        <div class="section-block" data-page-theme="Post-inspection" style="margin-top:36px">
           <div class="section-title-row">
             <div>
-              <span class="eyebrow">APRÈS LA VISITE · PHASE CONTRADICTOIRE & SUIVI</span>
-              <h2>${esc(guide.postInspectionPhase.title)}</h2>
-              <p>Transformer les constats des inspecteurs en plan de mise en conformité protecteur et pérenne.</p>
+              <span class="eyebrow" style="color:var(--mint);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">APRÈS LA VISITE · PHASE CONTRADICTOIRE & SUIVI</span>
+              <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">${esc(guide.postInspectionPhase.title)}</h2>
+              <p style="font-size:13px;color:var(--text-soft);margin:0">Transformer les constats des inspecteurs en plan de mise en conformité protecteur et pérenne.</p>
             </div>
           </div>
 
-          <div class="post-inspection-grid">
+          <div class="post-inspection-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
             ${guide.postInspectionPhase.substeps.map((sub, i) => `
-              <article class="content-card glass-panel" style="border-left:3px solid var(--accent-mint)">
-                <h4 style="font-size:15px;margin-bottom:6px">${esc(sub.name)}</h4>
-                <p style="font-size:13px;line-height:1.55">${esc(sub.desc)}</p>
+              <article class="content-card glass-panel apple-card" style="padding:20px;border-left:3.5px solid var(--accent-mint)">
+                <h4 style="font-size:15px;font-weight:720;margin:0 0 6px">${esc(sub.name)}</h4>
+                <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">${esc(sub.desc)}</p>
               </article>
             `).join("")}
+          </div>
+
+          <div class="notice compact-notice" style="margin-top:20px;border-left:3.5px solid var(--accent-coral);border-radius:14px;padding:14px 18px">
+            ${icon("alert", 18)}
+            <div>
+              <strong style="color:#ff6b81">Graduation des sanctions de tutelle :</strong>
+              <ul class="bullet-list" style="margin-top:6px;font-size:13px;color:var(--text-soft)">
+                ${guide.postInspectionPhase.sanctions.map(s => `<li>${esc(s)}</li>`).join("")}
+              </ul>
+            </div>
           </div>
         </div>
       ` : paywallGate(
@@ -1409,7 +1689,6 @@ function renderArsInspection() {
   `;
 }
 
-/* --- 6. PAGE DÉDIÉE : CHANGEMENT DE DIRECTION DANS UN ÉTABLISSEMENT --- */
 function renderManagementTransition() {
   const guide = MANAGEMENT_TRANSITION_GUIDE;
   if (!guide) return "";
@@ -1419,107 +1698,117 @@ function renderManagementTransition() {
     <section class="page" aria-labelledby="transition-title">
       ${sectionHead(
         "GOUVERNANCE & LEADERSHIP INSTITUTIONNEL",
-        "Changement de direction, <span class=\"text-gradient\">tenir le cap et accompagner le renouveau.</span>",
-        "Les contextes de transition, les 4 enjeux majeurs pour l'établissement, le dossier de passation du service et le positionnement stratégique du cadre de santé comme garant de la stabilité.",
-        `<button class="button subtle" data-nav="metiers">${icon("briefcase",16)}Métiers de direction</button><button class="button subtle" data-nav="reunions">${icon("calendar",16)}Instances & Réunions</button>`
+        "Changement de direction, <span class=\"text-gradient\">tenir le cap, sécuriser la passation et accompagner le renouveau.</span>",
+        "Les 4 contextes de transition, les 4 enjeux majeurs pour l'établissement, le dossier de passation du service (RH, sécurité ERP, vigilances, usagers) et le positionnement stratégique du cadre de santé comme garant de la stabilité.",
+        `<button class="button subtle" data-nav="responsabilite-penale">${icon("shield",16)}Responsabilité pénale</button><button class="button subtle" data-nav="metiers">${icon("briefcase",16)}Métiers de direction</button><button class="button subtle" data-nav="reunions">${icon("calendar",16)}Instances & Réunions</button>`
       )}
 
-      <aside class="ethical-dignity-banner glass-panel">
+      <!-- Bannière Éthique -->
+      <aside class="ethical-dignity-banner glass-panel" style="margin-bottom:24px;border-left:4px solid var(--accent-lavender);border-radius:16px;padding:16px 20px">
         <div class="ethical-badge">${icon("heart", 18)} <span>LE CAP DÉONTOLOGIQUE INVARIABLE</span></div>
-        <p class="ethical-text">${esc(guide.ethicalAnchor)}</p>
+        <p class="ethical-text" style="font-size:14px;line-height:1.65">${esc(guide.ethicalAnchor)}</p>
       </aside>
 
-      <div class="notice" style="margin:18px 0">
+      <div class="notice glass-panel" style="margin:16px 0 28px;border-radius:16px;padding:16px 20px">
         ${icon("spark", 18)}
-        <span><strong>Repère managérial :</strong> ${esc(guide.overview)}</span>
+        <span style="font-size:13.5px;line-height:1.6"><strong>Repère managérial :</strong> ${esc(guide.overview)}</span>
       </div>
 
       ${renderAccessStatusBar()}
 
+      <!-- 1. CONTEXTES DÉCISIONNELS -->
       <div class="section-block" data-page-theme="Contextes">
-        <div class="section-title-row">
+        <div class="section-title-row" style="margin-bottom:20px">
           <div>
-            <span class="eyebrow">4 SITUATIONS DE DÉPART ET D'ARRIVÉE</span>
-            <h2>Les différents contextes de changement de direction</h2>
-            <p>Identifier la dynamique de transition pour adapter sa communication et son accompagnement des équipes.</p>
+            <span class="eyebrow" style="color:var(--accent-lavender);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">4 SITUATIONS DE DÉPART ET D'ARRIVÉE</span>
+            <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Les différents contextes de changement de direction</h2>
+            <p style="font-size:13px;color:var(--text-soft);margin:0">Identifier la dynamique de transition pour adapter sa communication et son accompagnement des équipes.</p>
           </div>
         </div>
-        <div class="transition-contexts-grid">
-          ${guide.contexts.map(ctx => `
-            <article class="content-card glass-panel">
-              <h3 style="font-size:15px;margin-bottom:6px;color:var(--text)">${esc(ctx.title)}</h3>
-              <p style="font-size:13px;line-height:1.55">${esc(ctx.desc)}</p>
+        <div class="transition-contexts-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
+          ${guide.contexts.map((ctx, i) => `
+            <article class="content-card glass-panel apple-card" style="padding:22px;display:flex;flex-direction:column;justify-content:space-between;border-top:3.5px solid ${i === 0 ? 'var(--mint)' : i === 1 ? 'var(--accent-coral)' : i === 2 ? 'var(--gold)' : 'var(--accent-cyan)'}">
+              <div>
+                <span class="apple-pill" style="background:rgba(255,255,255,0.06);color:var(--text-soft);margin-bottom:10px">
+                  SITUATION 0${i+1}
+                </span>
+                <h3 style="font-size:16.5px;font-weight:720;letter-spacing:-0.02em;margin:0 0 10px;color:var(--text)">${esc(ctx.title)}</h3>
+                <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">${esc(ctx.desc)}</p>
+              </div>
             </article>
           `).join("")}
         </div>
       </div>
 
-      <div class="section-block" data-page-theme="Enjeux">
-        <div class="section-title-row">
+      <!-- 2. LES 4 ENJEUX INSTITUTIONNELS -->
+      <div class="section-block" data-page-theme="Enjeux" style="margin-top:36px">
+        <div class="section-title-row" style="margin-bottom:20px">
           <div>
-            <span class="eyebrow">LES 4 ENJEUX MAJEURS DE L'ÉTABLISSEMENT</span>
-            <h2>Ce qui se joue lors d'une transition managériale</h2>
-            <p>Préserver l'équilibre institutionnel et la qualité d'accueil pendant toute la période de passation.</p>
+            <span class="eyebrow" style="color:var(--gold);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">LES 4 ENJEUX MAJEURS DE L'ÉTABLISSEMENT</span>
+            <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Ce qui se joue lors d'une transition managériale</h2>
+            <p style="font-size:13px;color:var(--text-soft);margin:0">Préserver l'équilibre institutionnel et la qualité d'accueil pendant toute la période de passation.</p>
           </div>
         </div>
-        <div class="transition-challenges-grid">
+        <div class="transition-challenges-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px">
           ${guide.challenges.map(ch => `
-            <article class="content-card glass-panel">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-                <span class="icon-bubble coral">${icon(ch.icon, 16)}</span>
-                <h3 style="font-size:15px;margin:0">${esc(ch.challenge)}</h3>
+            <article class="content-card glass-panel apple-card" style="padding:22px">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <span class="icon-bubble coral" style="padding:8px">${icon(ch.icon, 18)}</span>
+                <h3 style="font-size:15.5px;font-weight:720;margin:0">${esc(ch.challenge)}</h3>
               </div>
-              <p style="font-size:13px;line-height:1.55">${esc(ch.desc)}</p>
+              <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">${esc(ch.desc)}</p>
             </article>
           `).join("")}
         </div>
       </div>
 
       ${isUnlocked ? `
-        <div class="section-block" data-page-theme="Positionnement">
-          <div class="section-title-row">
+        <!-- 3. POSTURE DU CADRE -->
+        <div class="section-block" data-page-theme="Positionnement" style="margin-top:36px">
+          <div class="section-title-row" style="margin-bottom:20px">
             <div>
-              <span class="eyebrow">POSTURE & ENGAGEMENT DU CADRE</span>
-              <h2>Le positionnement du cadre : pilier de stabilité et courroie de transmission</h2>
-              <p>Adopter l'attitude juste entre loyauté institutionnelle, écoute des soignants et objectivité opérationnelle.</p>
+              <span class="eyebrow" style="color:var(--accent-lavender);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">POSTURE & ENGAGEMENT DU CADRE</span>
+              <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Le positionnement du cadre : pilier de stabilité et courroie de transmission</h2>
+              <p style="font-size:13px;color:var(--text-soft);margin:0">Adopter l'attitude juste entre loyauté institutionnelle, écoute des soignants et objectivité opérationnelle.</p>
             </div>
           </div>
 
-          <div class="cadre-posture-grid">
+          <div class="cadre-posture-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">
             ${guide.cadreRole.posture.map(p => `
-              <article class="content-card glass-panel" style="border-top:3px solid var(--accent-lavender)">
-                <h4 style="font-size:15px;margin-bottom:8px">${esc(p.title)}</h4>
-                <p style="font-size:13px;line-height:1.55">${esc(p.desc)}</p>
+              <article class="content-card glass-panel apple-card" style="padding:22px;border-top:3.5px solid var(--accent-lavender)">
+                <h4 style="font-size:15.5px;font-weight:720;margin:0 0 10px;color:var(--text)">${esc(p.title)}</h4>
+                <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">${esc(p.desc)}</p>
               </article>
             `).join("")}
           </div>
         </div>
 
-        <div class="section-block" data-page-theme="Passation">
-          <div class="section-title-row">
+        <!-- 4. DOSSIER DE PASSATION -->
+        <div class="section-block" data-page-theme="Passation" style="margin-top:36px">
+          <div class="section-title-row" style="margin-bottom:20px">
             <div>
-              <span class="eyebrow">OUTIL CONCRET POUR LE NOUVEAU DIRECTEUR</span>
-              <h2>${esc(guide.cadreRole.handoverDossier.title)}</h2>
-              <p>La trame d'état des lieux factuelle et synthétique que le cadre doit préparer pour la première rencontre.</p>
+              <span class="eyebrow" style="color:var(--mint);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">OUTIL CONCRET POUR LE NOUVEAU DIRECTEUR</span>
+              <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">${esc(guide.cadreRole.handoverDossier.title)}</h2>
+              <p style="font-size:13px;color:var(--text-soft);margin:0">La trame d'état des lieux factuelle et synthétique que le cadre doit préparer pour la première rencontre.</p>
             </div>
           </div>
 
-          <div class="handover-grid">
+          <div class="handover-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px">
             ${guide.cadreRole.handoverDossier.sections.map(sec => `
-              <article class="content-card glass-panel">
-                <h4 style="font-size:14.5px;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-                  ${icon("file", 14)} ${esc(sec.name)}
+              <article class="content-card glass-panel apple-card" style="padding:22px;border-left:3.5px solid var(--accent-cyan)">
+                <h4 style="font-size:15px;font-weight:720;color:var(--text);margin:0 0 10px;display:flex;align-items:center;gap:8px">
+                  ${icon("file", 16)} ${esc(sec.name)}
                 </h4>
-                <p style="font-size:13px;line-height:1.55">${esc(sec.content)}</p>
+                <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">${esc(sec.content)}</p>
               </article>
             `).join("")}
           </div>
 
-          <div class="notice compact-notice" style="margin-top:20px">
-            ${icon("spark", 16)}
+          <div class="notice compact-notice" style="margin-top:22px;border-left:3.5px solid var(--gold);border-radius:14px;padding:16px 20px">
+            ${icon("spark", 18)}
             <div>
-              <strong>Conseils pour réussir le premier entretien :</strong>
-              <ul class="bullet-list" style="margin-top:6px">
+              <strong style="color:var(--gold);font-size:13.5px">4 Conseils pour réussir le premier entretien avec le nouveau chef d'établissement :</strong>
+              <ul class="bullet-list" style="margin-top:8px;font-size:13px;line-height:1.65;color:var(--text-soft)">
                 ${guide.cadreRole.firstMeetingTips.map(tip => `<li>${esc(tip)}</li>`).join("")}
               </ul>
             </div>
@@ -1536,8 +1825,6 @@ function renderManagementTransition() {
   `;
 }
 
-
-/* --- 6b. PAGE DÉDIÉE : RESPONSABILITÉ PÉNALE DU DIRECTEUR D'ÉTABLISSEMENT --- */
 function renderPenalResponsibility() {
   const guide = DIRECTOR_PENAL_RESPONSIBILITY_GUIDE || window.MOSAQUE_DATA?.DIRECTOR_PENAL_RESPONSIBILITY_GUIDE;
   const erpGuide = ERP_SECURITY_GUIDE || window.MOSAQUE_DATA?.ERP_SECURITY_GUIDE;

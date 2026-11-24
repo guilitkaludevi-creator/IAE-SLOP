@@ -4743,3 +4743,83 @@ html[data-theme="light"] .flash-deck-tab.is-active .flash-deck-tab-count { backg
     box-shadow: 0 0 16px rgba(117, 224, 194, 0.75);
   }
 }
+
+
+/* ==========================================================================
+   APPLE DESIGN & FLUID UI ENHANCEMENTS (WWDC Standards)
+   ========================================================================== */
+
+/* 1. Marge de défilement pour éviter que les titres soient coupés sous la topbar sticky */
+.section-block,
+[data-page-theme],
+.page-theme-tab,
+.page-theme-tabs,
+.ethical-dignity-banner,
+.section-title-row,
+h1, h2, h3 {
+  scroll-margin-top: 104px;
+}
+
+/* 2. Apple Card & Frosted Glass Surfaces */
+.apple-card {
+  background: rgba(15, 27, 42, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.16) !important;
+  transition: transform 0.28s cubic-bezier(0.12, 1, 0.24, 1), border-color 0.28s, box-shadow 0.28s !important;
+}
+
+.apple-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(117, 224, 194, 0.3) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 12px 32px rgba(0, 0, 0, 0.24) !important;
+}
+
+.apple-card:active {
+  transform: scale(0.985) !important;
+  transition-duration: 0.08s !important;
+}
+
+/* 3. Apple Pill Badge */
+.apple-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* 4. Grille de cartes fluide et responsive */
+.inspection-typology-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)) !important;
+  gap: 16px !important;
+  margin-top: 16px !important;
+}
+
+/* 5. Boutons de lettre du glossaire - Touch Feedback instantané */
+.glossary-letter-btn {
+  transition: transform 0.2s cubic-bezier(0.12, 1, 0.24, 1), background 0.2s, color 0.2s !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.glossary-letter-btn:active {
+  transform: scale(0.92) !important;
+}
+
+.glossary-cat-btn {
+  transition: transform 0.2s cubic-bezier(0.12, 1, 0.24, 1), background 0.2s, color 0.2s !important;
+  cursor: pointer !important;
+}
+
+.glossary-cat-btn:active {
+  transform: scale(0.95) !important;
+}
