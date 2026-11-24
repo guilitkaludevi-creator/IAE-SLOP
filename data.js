@@ -2315,6 +2315,13 @@
           name: "4. Pilotage du Plan d'Actions Correctives (PAC)",
           desc: "Désignation de pilotes d'actions (ex: cadre de santé pour le circuit du médicament), calendrier de réalisation, présentation au Conseil d'Administration / Conseil de la Vie Sociale, et envoi régulier de rapports d'avancement à l'ARS."
         }
+      ],
+      sanctions: [
+        "1. Recommandations simples : axes d'amélioration de bonnes pratiques sans caractère coercitif immédiat.",
+        "2. Prescriptions de mise en conformité : mesures obligatoires assorties d'un calendrier strict sous contrôle régulier.",
+        "3. Injonctions sous astreinte financière (art. L. 313-14 CASF) : pénalités financières journalières en cas d'atteinte grave à la sécurité ou à la dignité des personnes accueillies.",
+        "4. Désignation d'un administrateur provisoire : suspension temporaire des pouvoirs de direction de l'organisme gestionnaire.",
+        "5. Suspension ou retrait d'autorisation d'activité / Fermeture d'urgence : mesure ultime prise par le Directeur Général de l'ARS en cas de danger imminent."
       ]
     },
     sources: ["arsInspection", "charteBientraitance", "casf"]

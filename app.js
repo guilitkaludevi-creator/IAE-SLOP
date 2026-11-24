@@ -1673,7 +1673,7 @@ function renderArsInspection() {
             <div>
               <strong style="color:#ff6b81">Graduation des sanctions de tutelle :</strong>
               <ul class="bullet-list" style="margin-top:6px;font-size:13px;color:var(--text-soft)">
-                ${guide.postInspectionPhase.sanctions.map(s => `<li>${esc(s)}</li>`).join("")}
+                ${(guide.postInspectionPhase?.sanctions || []).map(s => `<li>${esc(s)}</li>`).join("")}
               </ul>
             </div>
           </div>
