@@ -440,6 +440,7 @@ function renderPage(page, { immediate = false, fromHistory = false, restoreScrol
       compte:renderAccount,
       "inspection-ars": renderArsInspection,
       "changement-direction": renderManagementTransition,
+      "responsabilite-penale": renderPenalResponsibility,
       glossaire: renderGlossary
     };
     stage.innerHTML = (renderers[page] || renderHome)();
@@ -1534,6 +1535,152 @@ function renderManagementTransition() {
     </section>
   `;
 }
+
+
+/* --- 6b. PAGE DÉDIÉE : RESPONSABILITÉ PÉNALE DU DIRECTEUR D'ÉTABLISSEMENT --- */
+function renderPenalResponsibility() {
+  const guide = DIRECTOR_PENAL_RESPONSIBILITY_GUIDE || window.MOSAQUE_DATA?.DIRECTOR_PENAL_RESPONSIBILITY_GUIDE;
+  const erpGuide = ERP_SECURITY_GUIDE || window.MOSAQUE_DATA?.ERP_SECURITY_GUIDE;
+  if (!guide) return "";
+  const isUnlocked = isPremiumUnlocked();
+
+  return `
+    <section class="page" aria-labelledby="penal-responsibility-title">
+      ${sectionHead(
+        "DROIT PÉNAL DE LA SANTÉ · GOUVERNANCE & GESTION DES RISQUES",
+        "Responsabilité Pénale du Directeur, <span class=\"text-gradient\">maîtriser le risque juridique et protéger l'institution.</span>",
+        "Fondements de la loi Fauchon, distinction auteur direct / indirect, cartographie des infractions (homicide involontaire, non-dénonciation de maltraitance art. 434-3, mise en danger ERP), délégation de pouvoir (C.A.M.) et conduite réflexe en cas d'enquête judiciaire.",
+        `<button class="button subtle" data-nav="changement-direction">${icon("rotate",16)}Changement de direction</button><button class="button subtle" data-nav="inspection-ars">${icon("target",16)}Inspection ARS</button><button class="button subtle" data-nav="droit-sante">${icon("shield",16)}Droit de la santé</button>`
+      )}
+
+      <!-- Bannière Éthique & Responsabilité -->
+      <aside class="ethical-dignity-banner glass-panel" style="border-left:4px solid var(--accent-coral);margin-bottom:20px">
+        <div class="ethical-badge">${icon("shield", 18)} <span>LA DIGNITÉ ET LA SÉCURITÉ DES USAGERS : BOUSSOLE PÉNALE CARDINALE</span></div>
+        <p class="ethical-text" style="font-size:14px;line-height:1.65">
+          La responsabilité pénale du directeur n'est ni une fatalité ni un piège abstrait : elle constitue la garantie juridique suprême que la structure de santé ou médico-sociale préserve la vie, la sécurité, la santé physique et psychique et le respect absolu de la dignité des personnes accueillies et des professionnels. Une organisation rigoureuse, tracée et bienveillante constitue le plus solide rempart légal.
+        </p>
+      </aside>
+
+      <!-- Aperçu Général -->
+      <div class="notice glass-panel" style="margin:16px 0 24px;border:1px solid rgba(244,63,94,0.3);background:rgba(244,63,94,0.04)">
+        ${icon("alert", 20)}
+        <div style="font-size:13px;line-height:1.6">
+          <strong>Principe fondamental de responsabilité personnelle :</strong> ${esc(guide.overview)}
+        </div>
+      </div>
+
+      ${renderAccessStatusBar()}
+
+      <!-- 1. LES FONDEMENTS JURIDIQUES -->
+      <div class="section-block" data-page-theme="Fondements">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow">CADRE LÉGAL OPPOSABLE</span>
+            <h2>Les 2 principes clés de la responsabilité pénale</h2>
+            <p>Comprendre la mécanique de l'imputation pénale en droit de la santé et du travail.</p>
+          </div>
+        </div>
+        <div class="grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+          ${guide.fondements.map(f => `
+            <article class="content-card glass-panel" style="border-top:3px solid var(--accent-mint)">
+              <h3 style="font-size:15px;margin:0 0 8px;color:var(--text)">${esc(f.principe)}</h3>
+              <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">${esc(f.detail)}</p>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- 2. CARTOGRAPHIE DES INFRACTIONS MAJEURES -->
+      <div class="section-block" data-page-theme="Infractions" style="margin-top:28px">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow" style="color:var(--accent-coral)">JURISPRUDENCE & RISQUES CONCRETS</span>
+            <h2>Les 5 infractions majeures engageant le chef d'établissement</h2>
+            <p>Analyse des chefs de poursuite les plus fréquents en milieu hospitalier et médico-social.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          ${guide.principalesInfractions.map((inf, idx) => `
+            <article class="content-card glass-panel" style="padding:18px 20px;border-left:4px solid ${idx === 0 ? 'var(--accent-coral)' : idx === 3 ? 'var(--accent-rose)' : 'var(--accent-lavender)'}">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                <h3 style="font-size:16px;margin:0;color:var(--text)">${esc(inf.nom)}</h3>
+                <span class="tag warning" style="font-size:11px">${esc(inf.sanction)}</span>
+              </div>
+              <div style="font-size:12.5px;font-weight:700;color:var(--gold);margin:8px 0 4px">Cas concrets issus de la jurisprudence :</div>
+              <ul class="bullet-list" style="font-size:13px;line-height:1.6;color:var(--text-soft)">
+                ${inf.exemplesJurisprudence.map(ex => `<li>${esc(ex)}</li>`).join("")}
+              </ul>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+
+      ${isUnlocked ? `
+        <!-- 3. LA DÉLÉGATION DE POUVOIR : LE BOUCLIER JURIDIQUE -->
+        <div class="section-block" data-page-theme="Délégation" style="margin-top:28px">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow" style="color:var(--mint)">SÉCURISATION JURIDIQUE</span>
+              <h2>La Délégation de Pouvoir : conditions et limites</h2>
+              <p>Comment transférer valablement la responsabilité pénale et protéger l'organisation.</p>
+            </div>
+          </div>
+
+          <div class="notice compact-notice" style="margin-bottom:16px;background:rgba(117,224,194,0.06);border-left:3px solid var(--mint)">
+            ${icon("shield", 16)}
+            <span><strong>Principe :</strong> ${esc(guide.delegationPouvoir.principe)}</span>
+          </div>
+
+          <div class="grid-3col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:16px">
+            ${guide.delegationPouvoir.conditionsValidite.map(c => `
+              <article class="content-card glass-panel" style="border-top:3px solid var(--accent-mint)">
+                <h4 style="font-size:15px;color:var(--mint);margin:0 0 6px">${esc(c.critere)}</h4>
+                <p style="font-size:12.5px;color:var(--text-soft);line-height:1.55;margin:0">${esc(c.exigence)}</p>
+              </article>
+            `).join("")}
+          </div>
+
+          <article class="content-card glass-panel">
+            <h4 style="font-size:14px;color:var(--gold);margin:0 0 8px">${icon("alert", 14)} Limites strictes : Ce qui ne peut JAMAIS être délégué</h4>
+            <ul class="bullet-list" style="font-size:13px;line-height:1.6;color:var(--text-soft)">
+              ${guide.delegationPouvoir.limites.map(l => `<li>${esc(l)}</li>`).join("")}
+            </ul>
+          </article>
+        </div>
+
+        <!-- 4. GUIDE RÉFLEXE ENQUÊTE JUDICIAIRE -->
+        <div class="section-block" data-page-theme="Réflexes" style="margin-top:28px">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow" style="color:var(--accent-coral)">CONDUITE DE CRISE</span>
+              <h2>Guide Réflexe : Perquisition, Garde à vue et Enquête judiciaire</h2>
+              <p>Les 5 réflexes immédiats pour faire valoir ses droits fondamentaux dès la première minute.</p>
+            </div>
+          </div>
+
+          <div class="process-steps-list">
+            ${guide.guideReflexeGardeAVue.map((ref, idx) => `
+              <article class="process-step-item glass-panel" style="padding:14px 18px">
+                <div class="step-marker" style="background:var(--accent-coral);color:#fff;font-weight:750">0${idx+1}</div>
+                <div class="step-content">
+                  <p style="font-size:13.5px;color:var(--text);margin:0;line-height:1.6">${esc(ref)}</p>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      ` : paywallGate(
+        "Délégation de Pouvoir & Guide Réflexe Judiciaire (Premium)",
+        "Accédez au guide complet de rédaction des délégations de pouvoir (modèle C.A.M. conforme à la jurisprudence de la Cour de cassation) et aux protocoles d'assistance en cas de garde à vue ou perquisition.",
+        `<div class="premium-preview-grid"><div><strong>Délégation C.A.M.</strong><span>Compétence, Autorité, Moyens réels</span></div><div><strong>Garde à vue</strong><span>5 réflexes immédiats avec avocat</span></div><div><strong>Perquisition</strong><span>Vérification de commission rogatoire</span></div></div>`
+      )}
+
+      ${sourceLinks(["codePenal", "loiFauchon", "codeSantePublique", "codeTravailConges"])}
+    </section>
+  `;
+}
+
 
 /* --- 7. PAGE DÉDIÉE : GLOSSAIRE EXHAUSTIF DES SIGLES DE LA SANTÉ --- */
 function renderGlossary() {
@@ -5207,6 +5354,24 @@ document.addEventListener("click", event => {
     return;
   }
 
+  // Glossaire filtres catégorie & lettre - interceptés avant data-action
+  const glossCat = event.target.closest("[data-glossary-cat]");
+  if (glossCat) {
+    event.preventDefault();
+    state.glossaryCategory = glossCat.dataset.glossaryCat;
+    $(".glossary-cat-btn").forEach(b => b.classList.toggle("is-active", b === glossCat));
+    updateGlossaryResults();
+    return;
+  }
+  const glossLetter = event.target.closest("[data-glossary-letter]");
+  if (glossLetter) {
+    event.preventDefault();
+    state.glossaryLetter = glossLetter.dataset.glossaryLetter;
+    $(".glossary-letter-btn").forEach(b => b.classList.toggle("is-active", b === glossLetter));
+    updateGlossaryResults();
+    return;
+  }
+
   const actionEl = event.target.closest("[data-action]");
   if (!actionEl) return;
   const action = actionEl.dataset.action;
@@ -5477,22 +5642,7 @@ document.addEventListener("click", event => {
       .catch(() => showToast("Erreur lors de la copie."));
     return;
   }
-  const glossCat = event.target.closest("[data-glossary-cat]");
-  if (glossCat) {
-    event.preventDefault();
-    state.glossaryCategory = glossCat.dataset.glossaryCat;
-    $(".glossary-cat-btn").forEach(b => b.classList.toggle("is-active", b === glossCat));
-    updateGlossaryResults();
-    return;
-  }
-  const glossLetter = event.target.closest("[data-glossary-letter]");
-  if (glossLetter) {
-    event.preventDefault();
-    state.glossaryLetter = glossLetter.dataset.glossaryLetter;
-    $(".glossary-letter-btn").forEach(b => b.classList.toggle("is-active", b === glossLetter));
-    updateGlossaryResults();
-    return;
-  }
+  /* Anciens gestionnaires glossaire déplacés en amont */
   if (action === "copy-job-description") {
     const preview=$("#job-description-preview"),value=preview?.value.trim();
     if(!value) { showToast("Générez d’abord le brouillon de fiche de poste."); return; }

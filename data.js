@@ -2410,8 +2410,352 @@
     sources: ["publicServiceCode", "anap", "charteBientraitance"]
   };
 
+  
+  /* --- 8. SÉCURITÉ ERP & COMMISSION DE SÉCURITÉ DANS LES ÉTABLISSEMENTS DE SANTÉ ET MÉDICO-SOCIAUX --- */
+  const ERP_SECURITY_GUIDE = {
+    overview: "Les établissements de santé et médico-sociaux sont des Établissements Recevant du Public (ERP) soumis à une réglementation incendie renforcée (Code de la construction et de l'habitation - CCH, arrêté du 25 juin 1980 modifié). En raison de la vulnérabilité et de la non-autonomie des personnes accueillies, le principe fondamental n'est pas l'évacuation verticale brutale, mais le transfert horizontal vers des zones refuges compartimentées protégées des fumées et du feu.",
+    categories: [
+      { cat: "1ère catégorie", capacity: "Plus de 1 500 personnes (public + personnel)", visitPeriod: "Tous les 2 ans" },
+      { cat: "2ème catégorie", capacity: "De 701 à 1 500 personnes", visitPeriod: "Tous les 2 ans" },
+      { cat: "3ème catégorie", capacity: "De 301 à 700 personnes", visitPeriod: "Tous les 3 ans" },
+      { cat: "4ème catégorie", capacity: "Moins de 300 personnes (hors 5ème catégorie)", visitPeriod: "Tous les 3 ans" },
+      { cat: "5ème catégorie", capacity: "Petits établissements sous les seuils d'assujettissement", visitPeriod: "Pas de visite périodique obligatoire (sauf locaux à sommeil)" }
+    ],
+    types: [
+      {
+        type: "Type U · Établissements de soins (Sanitaire)",
+        scope: "Centres hospitaliers, cliniques, SMR, maternités, hôpitaux de jour, unités psychiatriques.",
+        rules: [
+          "Principe du transfert horizontal : chaque niveau d'hospitalisation est divisé en au moins 2 zones protégées (compartiments coupe-feu 1h ou 2h) séparées par des portes pare-flammes à fermeture automatique.",
+          "Système de Sécurité Incendie (SSI) obligatoire de Catégorie A avec détection automatique d'incendie (DAI) dans les chambres, circulations et locaux à risques.",
+          "Dégagements et couloirs larges (au minimum 2 unités de passage = 1,40 m) pour permettre le passage aisé de lits médicalisés et brancards.",
+          "Désenfumage mécanique renforcé des circulations horizontales et des locaux communs pour éviter l'asphyxie par les gaz de combustion.",
+          "Obligation d'une équipe de sécurité incendie permanente (SSIAP 1, 2, 3) 24h/24 pour les établissements de 1ère et 2ème catégories."
+        ]
+      },
+      {
+        type: "Type J · Structures d'accueil pour personnes âgées et handicapées (Médico-social)",
+        scope: "EHPAD, Résidences autonomie, Maisons d'Accueil Spécialisées (MAS), Foyers d'Accueil Médicalisé (FAM), IME avec internat.",
+        rules: [
+          "Locaux à sommeil hébergeant des résidents dépendants ne pouvant évacuer seuls en cas d'alerte.",
+          "Cloisonnement traditionnel ou compartimentage coupe-feu garantissant au moins 30 minutes à 1 heure de résistance.",
+          "Présence permanente de personnel qualifié 24h/24 capable de mettre en œuvre immédiatement le plan d'évacuation et les transferts horizontaux.",
+          "Éclairage de sécurité (BAES - Blocs Autonomes d'Éclairage de Sécurité) et balisage lumineux des cheminements d'évacuation.",
+          "Exercices d'évacuation obligatoires semestriels (au moins 2 par an), dont au moins un exercice simulant les conditions de nuit avec effectif réduit."
+        ]
+      }
+    ],
+    commissionSecurite: {
+      role: "La Commission consultative départementale de sécurité et d'accessibilité (CCDSA) ou commission communale vérifie le respect scrupuleux des règles de sécurité contre les risques d'incendie et de panique. Elle émet un avis (favorable ou défavorable) transmis à l'autorité de police (le Maire ou le Préfet), qui prend l'arrêté autorisant l'ouverture ou ordonnant des travaux/fermeture.",
+      composition: [
+        { role: "Représentant du Préfet (Sous-préfet)", function: "Président de la commission" },
+        { role: "Sapeur-Pompier préventionniste (SDIS)", function: "Rapporteur technique, réalise la visite d'inspection et teste les installations" },
+        { role: "Maire de la commune (ou adjoint délégué)", function: "Détenteur du pouvoir de police générale sur la commune" },
+        { role: "Représentant de la DDT (Direction Départementale des Territoires)", function: "Contrôle de conformité de l'accessibilité PMR et de l'urbanisme" },
+        { role: "Officier de Police ou de Gendarmerie", function: "Sécurité publique et ordre" }
+      ],
+      deroulement: [
+        "1. Accueil protocolaire : présentation par le directeur, le responsable technique et le coordonnateur SSI.",
+        "2. Examen approfondi des pièces administratives : Registre de sécurité incendie, rapports de vérification périodique sans réserve, attestations de formation du personnel.",
+        "3. Visite technique in situ : essai réel du désenfumage, déclenchement d'alarmes, vérification de la fermeture automatique des portes coupe-feu, fonctionnement des BAES, débit des colonnes sèches et RIA.",
+        "4. Délibération à huis clos des membres de la commission.",
+        "5. Notification du Procès-Verbal (PV) : lecture de l'avis et des prescriptions obligatoires à exécuter."
+      ],
+      avisConsequences: {
+        favorable: "Autorisation d'exploitation poursuivie. Les prescriptions mineures éventuelles doivent être levées avec justificatifs transmis au secrétariat de la commission.",
+        defavorable: "Risque maximal pour l'établissement. Mise en demeure par le Maire avec délai impératif pour exécuter les travaux de mise en conformité. En cas de péril imminent ou carence de la direction, le Maire ou le Préfet peut prononcer la fermeture administrative immédiate de l'établissement. La responsabilité pénale du directeur est directement engagée en cas de poursuite d'activité sans levée des réserves."
+      }
+    },
+    documentsReglementaires: [
+      {
+        doc: "Registre de sécurité incendie",
+        frequence: "Tenue continue, mise à jour immédiate",
+        contenu: "Document légal côté et paraphé consignant toutes les vérifications techniques, formations incendie, exercices d'évacuation, consignes, dates des travaux et passages des commissions."
+      },
+      {
+        doc: "Rapport Q18 (Contrôle électrique périodique)",
+        frequence: "Annuel (par organisme agréé : Apave, Socotec, Dekra, etc.)",
+        contenu: "Vérification exhaustive de la conformité des installations électriques basse et haute tension. Document exigé par la commission de sécurité et les assureurs."
+      },
+      {
+        doc: "Certificat Q19 (Thermographie infrarouge)",
+        frequence: "Annuel (opérateur certifié CNPP)",
+        contenu: "Contrôle thermographique des armoires et tableaux électriques sous charge pour détecter les échauffements anormaux, faux contacts et risques d'arc avant départ de feu."
+      },
+      {
+        doc: "Contrôle des Systèmes de Sécurité Incendie (SSI)",
+        frequence: "Annuelle + contrat de maintenance préventive",
+        contenu: "Vérification du tableau centralisateur (CMSI), des détecteurs automatiques, des déclencheurs manuels, des clapets coupe-feu et des alimentations de sécurité (AES)."
+      },
+      {
+        doc: "Désenfumage & Portes coupe-feu",
+        frequence: "Annuelle",
+        contenu: "Essai des volets de désenfumage, moteurs d'extraction mécanique, exutoires de fumée en toiture et asservissements magnétiques des portes coupe-feu."
+      },
+      {
+        doc: "Moyens de secours (Extincteurs, RIA, Colonnes sèches)",
+        frequence: "Annuelle (extincteurs/RIA) + décennale (pression hydrostatique des colonnes)",
+        contenu: "Contrôle de charge des extincteurs appropriés aux risques (eau pulvérisée, CO2), épreuve hydraulique des colonnes sèches, débit et pression minimale des RIA."
+      },
+      {
+        doc: "Ascenseurs et monte-charges",
+        frequence: "Contrôle technique quinquennal (tous les 5 ans) + entretien toutes les 6 semaines",
+        contenu: "Rapport de contrôle par organisme indépendant et carnet d'entretien du constructeur/mainteneur. Dispositifs de secours et téléalarme 24h/24."
+      },
+      {
+        doc: "Carnet sanitaire de l'eau & Recherche de légionnelles",
+        frequence: "Surveillance mensuelle des températures + analyses semestrielles/annuelles de légionnelle",
+        contenu: "Surveillance de Legionella pneumophila dans les réseaux d'Eau Chaude Sanitaire (ECS). Température de distribution maintenue au-dessus de 50°C aux points d'usage et > 55°C en boucle."
+      },
+      {
+        doc: "Installations de gaz & Chaufferie",
+        frequence: "Annuelle",
+        contenu: "Vérification de l'étanchéité des canalisations, dispositifs de coupure d'urgence extérieure, ventilation des locaux de chauffe et rendement des chaudières."
+      }
+    ]
+  };
+
+  /* --- 9. VISITE DE CONFORMITÉ ARS / CONSEIL DÉPARTEMENTAL (CASF ART. D. 313-11) --- */
+  const CONFORMITY_VISIT_GUIDE = {
+    overview: "La visite de conformité est le contrôle administratif préalable et obligatoire conditionnant la mise en service effective de tout établissement ou service social ou médico-social (ESSMS) nouvellement autorisé, ou ayant réalisé une extension substantielle, une restructuration lourde ou un déménagement (articles L. 313-6 et D. 313-11 à D. 313-14 du Code de l'action sociale et des familles).",
+    legalBasis: "Article D. 313-11 du CASF : 'L'établissement ou le service ne peut accueillir d'usagers tant qu'il n'a pas été procédé à la visite de conformité (...) et que l'autorisation d'ouverture n'a pas été notifiée.'",
+    objectifs: [
+      "Vérifier la stricte concordance entre les réalisations architecturales/matérielles et le projet autorisé lors de l'appel à projets.",
+      "S'assurer que la sécurité des personnes accueillies, l'hygiène et les normes d'accessibilité sont intégralement respectées.",
+      "Vérifier que les effectifs recrutés correspondent en nombre et en qualification aux engagements du projet d'établissement et du CPOM.",
+      "Contrôler la complétude des outils de la loi 2002-2 (livret d'accueil, charte, contrat de séjour, règlement de fonctionnement, DLU/DUI)."
+    ],
+    deroulement: [
+      {
+        etape: "1. Demande de visite par le gestionnaire",
+        details: "Au moins 2 mois avant la date projetée d'ouverture, le directeur adresse au DG de l'ARS et/ou au Président du Conseil Départemental le dossier de demande de visite de conformité avec les pièces d'urbanisme et de sécurité."
+      },
+      {
+        etape: "2. Visite conjointe sur site",
+        details: "Une délégation conjointe d'inspecteurs de l'ARS et de contrôleurs du Conseil Départemental parcourt l'intégralité des locaux : chambres, sanitaires, cuisines, pharmacie, espaces d'activité, bureaux soignants et issues de secours."
+      },
+      {
+        etape: "3. Procès-Verbal de récolement & Constats",
+        details: "La commission établit un procès-verbal de récolement listant les conformités observées et, le cas échéant, les réserves suspensives ou prescriptions à réaliser avant toute admission."
+      },
+      {
+        etape: "4. Notification de l'Arrêté d'Ouverture",
+        details: "Si la visite est concluante et les réserves levées, l'autorité conjointe (ARS / Département) prend l'arrêté autorisant l'ouverture officielle. Sans cet arrêté, toute admission de résident est illégale et engage la responsabilité pénale du directeur."
+      }
+    ],
+    documentsRequis: [
+      "Arrêté initial d'autorisation médico-sociale ou sanitaire",
+      "Procès-verbal favorable de la Commission de Sécurité incendie (ERP)",
+      "Attestation d'accessibilité aux personnes handicapées (PMR)",
+      "Organigramme nominatif et copie des diplômes des professionnels recrutés",
+      "Règlement de fonctionnement intérieur et Livret d'accueil validés",
+      "Projet d'établissement et Projet de soins formalisés",
+      "Contrats d'entretien et de maintenance des installations techniques et dispositifs médicaux",
+      "Convention de pharmacie / PUI pour l'approvisionnement médicamenteux"
+    ]
+  };
+
+  /* --- 10. MATÉRIOVIGILANCE : SURVEILLANCE & SIGNALEMENT DES DISPOSITIFS MÉDICAUX --- */
+  const MATERIOVIGILANCE_GUIDE = {
+    overview: "La matériovigilance a pour objet la surveillance des incidents ou des risques d'incidents résultant de l'utilisation des dispositifs médicaux (DM) après leur mise sur le marché (Code de la santé publique, articles L. 5212-2, R. 5212-1 et suivants). Elle s'applique à tous les DM : lits médicalisés, lève-personnes, matelas anti-escarres, pousse-seringues, défibrillateurs, sondes, fauteuils roulants et implants.",
+    obligationsLegales: [
+      "Désignation obligatoire d'un Correspondant Local de Matériovigilance (souvent pharmacien gérant de PUI, ingénieur biomédical ou cadre de santé) déclaré auprès de l'ANSM.",
+      "Signalement obligatoire sans délai de tout incident ou risque d'incident grave ayant entraîné ou susceptible d'entraîner la mort ou une dégradation grave de l'état de santé d'un patient, d'un résident ou d'un soignant.",
+      "Déclaration centralisée via le portail national des signalements d'événements sanitaires indésirables : signalement-sante.gouv.fr."
+    ],
+    procedureEnCasDIncident: [
+      {
+        action: "1. Prise en charge immédiate de la victime",
+        detail: "Dispenser les soins d'urgence au patient/résident ou professionnel accidenté. Alerter le médecin coordonnateur ou le SAMU si nécessaire."
+      },
+      {
+        action: "2. Mesure conservatoire de quarantaine",
+        detail: "Isoler immédiatement le dispositif médical en cause. NE PAS le nettoyer, NE PAS le réparer, NE PAS modifier ses réglages. Conserver l'ensemble des consommables associés (tubulures, seringues, emballages, numéro de lot) dans un local sécurisé pour expertise contradictoire."
+      },
+      {
+        action: "3. Traçabilité dans le dossier & GMAO",
+        detail: "Noter dans le dossier patient/résident la référence précise de l'appareil, le numéro de série/lot et l'heure exacte de l'incident. Consigner l'incident dans la GMAO (Gestion de Maintenance Assistée par Ordinateur)."
+      },
+      {
+        action: "4. Signalement officiel sous 48h",
+        detail: "Le correspondant local de matériovigilance transmet la déclaration sur signalement-sante.gouv.fr à destination de l'ANSM, informe le fabricant du DM et notifie la direction de l'établissement."
+      },
+      {
+        action: "5. Enquête interne & REX",
+        detail: "Analyser les causes profondes (défaut matériel, usure, défaut de maintenance préventive, erreur humaine par défaut de formation au maniement du matériel) et mettre en place les actions correctives."
+      }
+    ]
+  };
+
+  /* --- 11. SYSTÈME SIRENA (PLATEFORME ARS DE SIGNALEMENT & SUIVI) --- */
+  const SIRENA_SYSTEM_GUIDE = {
+    overview: "SIRENA (Système d'Information de Recueil et d'Enregistrement des Notifications des ARS) est le système d'information national sécurisé utilisé au quotidien par les Agences Régionales de Santé pour le recueil, l'enregistrement, l'instruction, la traçabilité et le pilotage de l'ensemble des réclamations, signalements d'événements indésirables et alertes sanitaires survenus dans les établissements de santé et médico-sociaux.",
+    missions: [
+      "Centraliser tous les flux d'alertes sanitaires : Événements Indésirables Graves associés aux Soins (EIGS), signalements de maltraitance, infections associées aux soins (e-SIN), réclamations d'usagers ou de familles, conflits sociaux majeurs et défaillances techniques.",
+      "Attribuer un numéro de dossier unique pour chaque signalement et assurer le suivi contradictoire entre l'ARS et la direction de l'établissement.",
+      "Aider les inspecteurs de l'ARS à qualifier la gravité de l'événement et à décider des suites appropriées : demande d'explications écrites, inspection sur pièces, inspection inopinée sur site ou saisine du procureur (art. 40 CPP)."
+    ],
+    circuitSignalement: [
+      {
+        acteur: "Établissement (Directeur / Cadre)",
+        role: "Télédéclaration sur le portail national des vigilances sanitaires (signalement-sante.gouv.fr) du Volet 1 de l'EIGS ou de la fiche de signalement d'événement grave sous 48 heures."
+      },
+      {
+        acteur: "CVAGS de l'ARS (Cellule de Veille sanitaire)",
+        role: "Réception dans SIRENA, évaluation immédiate du niveau de gravité, enregistrement de l'alerte et affectation au pôle inspection/régulation territorial."
+      },
+      {
+        acteur: "Instruction ARS",
+        role: "Examen des éléments fournis par l'établissement : plan d'actions correctives, analyse des causes racines (CREX/RMM) et transmission du Volet 2 sous 3 mois."
+      },
+      {
+        acteur: "Clôture ou Suites coercitives",
+        role: "Si les mesures sont jugées satisfaisantes, le dossier SIRENA est clôturé. En cas de carence grave ou récurrence anormale, déclenchement d'une mission d'inspection ou injonction sous astreinte."
+      }
+    ]
+  };
+
+  /* --- 12. NAPIR & MESURES PORTANT ATTEINTE AU DROIT D'ALLER ET VENIR --- */
+  const NAPIR_LIBERTY_GUIDE = {
+    overview: "Le droit d'aller et venir est une liberté fondamentale à valeur constitutionnelle, réaffirmée pour les usagers des établissements de santé et médico-sociaux par la loi du 2 janvier 2002 (art. L. 311-3 du CASF), la Charte des droits et libertés de la personne accueillie, et renforcée par la loi du 8 avril 2024 portant mesures pour bâtir la société du bien vieillir (art. 11 sur le droit de visite et la liberté de déplacement). Toute mesure restreignant cette liberté (appelée dans certaines institutions NAPIR : Note/Notification d'Atteinte à la Personne et d'Interdiction de Rayonnement, ou protocole de restriction d'aller et venir) constitue une atteinte grave qui doit demeurer strictement exceptionnelle, médicalement justifiée et proportionnée.",
+    dispositifsConcernes: [
+      "Contention physique passive : barrières de lit bilatérales, ceintures de maintien au fauteuil ou au lit, tablettes de fauteuil verrouillées.",
+      "Restriction spatiale & isolement : portes d'unités protégées à code d'accès électronique (UVP, PASA, UHR), fermeture à clé de la chambre, interdiction de sortie du service.",
+      "Surveillance électronique : bracelets anti-fugue, détecteurs de passage, balises GPS ou vidéosurveillance des circulations."
+    ],
+    principesCardinaux: [
+      {
+        principe: "1. Subsidiarité absolue",
+        regle: "La restriction ne peut être envisagée qu'en dernier recours, après échec documenté de toutes les alternatives non contraignantes (désamorçage verbal, réassurance, présence soignante, aménagement ergonomique, matelas au sol, abaissement du lit)."
+      },
+      {
+        principe: "2. Prescription médicale obligatoire & individualisée",
+        regle: "Seul un médecin peut prescrire une mesure restrictive de liberté. La prescription doit mentionner l'indication clinique précise, le matériel exact utilisé, les horaires et la durée maximale (réévaluation obligatoire au moins toutes les 24h à 48h)."
+      },
+      {
+        principe: "3. Concertation pluriprofessionnelle & Consentement",
+        regle: "La décision doit être débattue en équipe pluridisciplinaire (médecin coordonnateur, cadre, IDE, psychologue, AS). La personne accueillie doit être informée et son consentement recherché ; son représentant légal (tuteur/curateur) ou sa personne de confiance doit être systématiquement prévenu."
+      },
+      {
+        principe: "4. Traçabilité rigoureuse & Surveillance continue",
+        regle: "Ouverture obligatoire d'une fiche de suivi de la contention/restriction dans le DUI : contrôle de la tolérance cutanée, hydratation, soulagement régulier, surveillance des constantes et levées programmées de la contention."
+      }
+    ],
+    risquesJuridiquesEtPenaux: "Une contention ou un enfermement non justifié, sans prescription médicale valide ou maintenu au-delà du strict nécessaire expose le directeur et les soignants à des poursuites pénales pour séquestration arbitraire (art. 224-1 du Code pénal), violences volontaires ou homicide involontaire en cas de strangulation/chute mortelle avec barrière.",
+    checkListCadre: [
+      "Vérifier que chaque barrière de lit ou ceinture fait l'objet d'une prescription médicale nominative en cours de validité dans le dossier de soins.",
+      "Contrôler que la fiche de surveillance horaire est effectivement remplie par les équipes soignantes de jour comme de nuit.",
+      "S'assurer que les codes d'accès des portes d'unités protégées sont affichés pour les usagers qui disposent de leurs facultés cognitives.",
+      "Organiser une réévaluation collégiale hebdomadaire pour tenter la levée de la mesure dès que possible."
+    ]
+  };
+
+  /* --- 13. RESPONSABILITÉ PÉNALE DU DIRECTEUR D'ÉTABLISSEMENT DE SANTÉ & MÉDICO-SOCIAL --- */
+  const DIRECTOR_PENAL_RESPONSIBILITY_GUIDE = {
+    overview: "La fonction de chef d'établissement (sanitaire public, privé ESPIC ou commercial, médico-social public ou associatif) confère un pouvoir d'organisation, de gestion et de commandement qui s'accompagne d'une responsabilité pénale personnelle de premier plan. Contrairement à la responsabilité civile ou administrative (couverte par l'assurance ou prise en charge par la personne morale), la responsabilité pénale sanctionne une faute personnelle et expose le dirigeant à des amendes pénales et des peines d'emprisonnement non assurables.",
+    fondements: [
+      {
+        principe: "Cumul possible Personne Morale / Personne Physique (Art. 121-2 Code pénal)",
+        detail: "La responsabilité pénale des personnes morales (l'hôpital, l'association gestionnaire, la société commerciale) n'exclut pas celle des personnes physiques auteurs ou complices des mêmes faits. Le directeur peut être poursuivi à titre personnel aux côtés de son établissement."
+      },
+      {
+        principe: "Faute non intentionnelle & Loi Fauchon du 10 juillet 2000 (Art. 121-3 Code pénal)",
+        detail: "La plupart des infractions en santé sont non intentionnelles (imprudence, négligence). La loi distingue l'auteur direct (le soignant qui commet l'acte) et l'auteur indirect (le directeur, qui a créé la situation ayant permis la réalisation du dommage ou qui n'a pas pris les mesures pour l'éviter). Pour condamner le directeur en auteur indirect, la justice doit prouver soit une violation manifestement délibérée d'une obligation particulière de prudence ou de sécurité prévue par la loi, soit une faute caractérisée exposant autrui à un risque d'une particulière gravité qu'il ne pouvait ignorer."
+      }
+    ],
+    principalesInfractions: [
+      {
+        nom: "Homicide involontaire (Art. 221-6 CP) & Blessures involontaires (Art. 222-19 CP)",
+        sanction: "Jusqu'à 3 ans d'emprisonnement et 45 000 € d'amende (portés à 5 ans et 75 000 € en cas de manquement délibéré)",
+        exemplesJurisprudence: [
+          "Fugue mortelle d'un résident désorienté en hiver par une issue de secours dont l'alarme était défectueuse ou désactivée.",
+          "Chute mortelle d'un patient par défenestration en l'absence d'entrebâilleurs réglementaires sur les fenêtres des étages.",
+          "Erreur d'administration médicamenteuse létale consécutive à un sous-effectif critique chronique alerté par écrit sans mesure palliative prise par la direction.",
+          "Intoxication alimentaire collective (TIAC) liée au non-respect des règles HACCP et rupture de la chaîne du froid.",
+          "Asphyxie par incendie dans un établissement n'ayant pas réalisé les vérifications de désenfumage ou n'ayant pas formé le personnel."
+        ]
+      },
+      {
+        nom: "Mise en danger délibérée de la personne d'autrui (Art. 223-1 CP)",
+        sanction: "1 an d'emprisonnement et 15 000 € d'amende (même en l'absence de tout accident effectif)",
+        exemplesJurisprudence: [
+          "Poursuite de l'exploitation d'un ERP sous avis défavorable de la commission de sécurité sans réaliser les travaux prescrits en matière d'évacuation incendie.",
+          "Maintien en service d'installations électriques vétustes présentant des risques avérés d'électrocution ou de départ de feu (rapports Q18 restés sans suite).",
+          "Défaut d'entretien des tours aéroréfrigérantes ou du réseau d'eau chaude générant une prolifération massive de légionnelles."
+        ]
+      },
+      {
+        nom: "Non-assistance à personne en péril (Art. 223-6 alinéa 2 CP)",
+        sanction: "5 ans d'emprisonnement et 75 000 € d'amende",
+        exemplesJurisprudence: [
+          "Refus injustifié d'admission en urgence d'une personne en détresse vitale se présentant à l'entrée de l'établissement.",
+          "Absence de déclenchement des secours médicaux extérieurs (SAMU) face à une dégradation brutale de l'état d'un résident."
+        ]
+      },
+      {
+        nom: "Non-dénonciation de maltraitances sur personnes vulnérables (Art. 434-3 CP)",
+        sanction: "3 ans d'emprisonnement et 45 000 € d'amende",
+        exemplesJurisprudence: [
+          "Le directeur qui a connaissance de sévices, violences physiques, humiliations ou privations infligées à un résident ou patient vulnérable (mineur, personne âgée ou handicapée) a l'obligation légale absolue d'en informer sans délai les autorités judiciaires (Procureur de la République) ou administratives (ARS/Département).",
+          "Dérogation expresse au secret professionnel : l'article 226-14 du Code pénal délie expressément le directeur et les professionnels du secret pour dénoncer ces sévices."
+        ]
+      },
+      {
+        nom: "Infractions aux règles de santé et de sécurité au travail (Code du travail)",
+        sanction: "Amendes pénales jusqu'à 10 000 € par salarié concerné et sanctions d'emprisonnement en cas de récidive",
+        exemplesJurisprudence: [
+          "Défaut d'élaboration ou de mise à jour annuelle du Document Unique d'Évaluation des Risques Professionnels (DUERP).",
+          "Accident du travail grave d'un soignant lors de la manipulation d'un lève-personne non entretenu ou faute de formation à la manutention (PRAP).",
+          "Absence d'équipements de protection individuelle (EPI) lors de manipulations de produits cytotoxiques ou désinfectants dangereux."
+        ]
+      }
+    ],
+    delegationPouvoir: {
+      principe: "La délégation de pouvoir est le mécanisme juridique par lequel le chef d'établissement transfère à un subordonné (directeur adjoint, cadre supérieur, directeur technique) la compétence, l'autorité et les moyens nécessaires pour faire respecter une réglementation déterminée, transférant ainsi la responsabilité pénale afférente sur le délégataire.",
+      conditionsValidite: [
+        {
+          critere: "C · Compétence",
+          exigence: "Le délégataire doit posséder les connaissances techniques, juridiques et professionnelles requises pour la mission (diplômes, formations spécifiques en sécurité incendie, gestion des risques, etc.)."
+        },
+        {
+          critere: "A · Autorité",
+          exigence: "Le délégataire doit disposer d'un véritable pouvoir de commandement et de décision, sans avoir à solliciter systématiquement l'accord du directeur. Il doit pouvoir donner des ordres et disposer du pouvoir de sanctionner les manquements."
+        },
+        {
+          critere: "M · Moyens",
+          exigence: "Le délégataire doit disposer de moyens financiers autonomes (budget délégué suffisant pour engager des travaux urgents de mise en conformité) et de moyens humains et matériels adéquats."
+        }
+      ],
+      limites: [
+        "La délégation générale et globale est nulle : le directeur ne peut pas se décharger de l'intégralité de sa fonction.",
+        "Le directeur reste toujours responsable de la surveillance de ses délégataires et de l'organisation générale de l'établissement.",
+        "Pas de sous-délégation sans autorisation expresse de l'acte initial de délégation."
+      ]
+    },
+    guideReflexeGardeAVue: [
+      "1. Prendre contact immédiatement avec l'avocat de l'établissement ou son avocat personnel spécialisé en droit pénal de la santé.",
+      "2. Exercer son droit au silence : ne faire aucune déclaration à chaud sans avoir consulté l'avocat et pris connaissance des faits précis reprochés.",
+      "3. Demander systématiquement un examen médical et l'assistance de l'avocat dès la première minute de la garde à vue.",
+      "4. En cas de perquisition : exiger la présentation de la commission rogatoire ou de l'autorisation du juge, faire consigner les observations et conserver copie de l'inventaire des scellés.",
+      "5. Ne jamais altérer, modifier ou détruire un document, registre ou dossier médical après un incident (risque d'entrave à la justice et de détention provisoire)."
+    ]
+  };
+
   /* --- 7. GLOSSAIRE EXHAUSTIF DES SIGLES DE LA SANTÉ & MÉDICO-SOCIAL --- */
   const GLOSSARY_TERMS = [
+
+    { sigle: "BAES", full: "Bloc Autonome d'Éclairage de Sécurité", cat: "Qualité & Soins", def: "Dispositif d'éclairage de secours obligatoire dans les ERP assurant le balisage des issues et cheminements d'évacuation en cas de coupure du courant général." },
+    { sigle: "CS", full: "Commission de Sécurité (contre les risques d'incendie et de panique)", cat: "Instances & Tutelles", def: "Organisme officiel pluridisciplinaire (SDIS, Préfecture, Mairie, DDT) contrôlant la conformité incendie des ERP et délivrant un avis conforme (favorable ou défavorable)." },
+    { sigle: "ERP", full: "Établissement Recevant du Public", cat: "Qualité & Soins", def: "Bâtiment dans lequel des personnes extérieures sont admises. Classé en 5 catégories et types d'activités (Type U pour les soins, Type J pour le médico-social) soumis à une stricte réglementation incendie." },
+    { sigle: "MV", full: "Matériovigilance", cat: "Qualité & Soins", def: "Système de surveillance et de déclaration obligatoire auprès de l'ANSM des incidents ou risques d'incidents résultant de l'utilisation de dispositifs médicaux (DM)." },
+    { sigle: "NAPIR", full: "Mesure portant atteinte au droit d'aller et venir (Note d'Atteinte à la Personne et d'Interdiction de Rayonnement)", cat: "RH & Droit", def: "Protocole d'encadrement strict et d'évaluation des mesures privatives ou restrictives de liberté (contention physique, isolement, unités fermées, bracelets anti-fugue) dans le respect de la loi 2002-2 et de la loi Bien Vieillir 2024." },
+    { sigle: "Q18", full: "Rapport de vérification périodique des installations électriques", cat: "Qualité & Soins", def: "Rapport annuel obligatoire établi par un organisme agréé vérifiant la conformité et la sécurité des installations électriques dans un ERP, exigé par les assureurs et commissions." },
+    { sigle: "Q19", full: "Certificat de contrôle thermographique infrarouge", cat: "Qualité & Soins", def: "Contrôle préventif annuel des armoires électriques par caméra thermique pour détecter les échauffements anormaux et court-circuits avant tout départ d'incendie." },
+    { sigle: "RIA", full: "Robinet d'Incendie Armé", cat: "Qualité & Soins", def: "Équipement de première intervention incendie alimenté en eau sous pression permanente, vérifié annuellement pour permettre au personnel d'attaquer un feu naissant." },
+    { sigle: "SIRENA", full: "Système d'Information de Recueil et d'Enregistrement des Notifications des ARS", cat: "Instances & Tutelles", def: "Plateforme informatique sécurisée des Agences Régionales de Santé centralisant l'enregistrement, l'instruction et le suivi de l'ensemble des réclamations, alertes et EIGS." },
+    { sigle: "SSI", full: "Système de Sécurité Incendie", cat: "Qualité & Soins", def: "Ensemble des matériels assurant la détection automatique ou manuelle d'un incendie, la mise en sécurité de l'ERP (compartimentage, désenfumage, déverrouillage des issues) et l'évacuation (catégorie A obligatoire en type U et J)." },
+    { sigle: "VC", full: "Visite de Conformité (CASF D. 313-11)", cat: "Instances & Tutelles", def: "Contrôle sur site obligatoire effectué conjointement par l'ARS et/ou le Conseil Départemental avant la première admission d'usagers dans tout ESSMS nouvellement autorisé ou après restructuration lourde." },
+
     { sigle: "AAH", full: "Allocation aux Adultes Handicapés", cat: "Médico-social", def: "Prestation financière versée par la CAF/MSA assurant un minimum de ressources aux personnes en situation de handicap, attribuée sur décision de la CDAPH au sein de la MDPH." },
     { sigle: "AES", full: "Accompagnant Éducatif et Social (ou Accident d'Exposition au Sang)", cat: "RH & Droit", def: "Professionnel soignant diplômé d'État accompagnant au quotidien les personnes vulnérables (ex-AMP/AVS) ; ou dans le contexte de sécurité des soins : Accident d'Exposition au Sang nécessitant une prise en charge urgente." },
     { sigle: "AFGSU", full: "Attestation de Formation aux Gestes et Soins d'Urgence", cat: "Qualité & Soins", def: "Formation réglementaire obligatoire pour les professionnels de santé (niveaux 1 et 2), renouvelable tous les 4 ans pour garantir la réactivité face aux urgences vitales." },
@@ -2553,7 +2897,8 @@
     { id: "reunions", label: "Réunions & instances", icon: "calendar", group: "Pilotage & Gestion" },
     { id: "rh", label: "Questions RH & Équipe", icon: "users", group: "Pilotage & Gestion", badge: "Enrichi" },
     { id: "droit-sante", label: "Droit de la santé", icon: "shield", group: "Pilotage & Gestion" },
-    { id: "glossaire", label: "Glossaire des sigles", icon: "book", group: "Pilotage & Gestion", badge: "118 sigles" },
+    { id: "responsabilite-penale", label: "Responsabilité pénale", icon: "shield", group: "Pilotage & Gestion", badge: "Directeur" },
+    { id: "glossaire", label: "Glossaire des sigles", icon: "book", group: "Pilotage & Gestion", badge: "130 sigles" },
 
     { id: "secu", label: "Sécurité Sociale & Liens", icon: "shield", group: "Stratégie" },
     { id: "politique", label: "Politique de santé & Lois", icon: "clipboard", group: "Stratégie" },
@@ -2696,5 +3041,5 @@
     }
   ];
 
-  window.MOSAQUE_DATA = { SOURCES, ESTABLISHMENTS, JOBS, MEETINGS, DOCUMENTS, ACTORS, FAQ, CONVENTIONS, SOFTWARES, MAP_NODES, MAP_EDGES, RESEARCH_AREAS, NAV, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS, RH_LEAVE_TYPES, RH_THERAPEUTIC_PART_TIME, RH_PLANNING_CHANGE, RH_INTERNS_APPRENTICES, ARS_INSPECTION_GUIDE, MANAGEMENT_TRANSITION_GUIDE, GLOSSARY_TERMS };
+  window.MOSAQUE_DATA = { SOURCES, ESTABLISHMENTS, JOBS, MEETINGS, DOCUMENTS, ACTORS, FAQ, CONVENTIONS, SOFTWARES, MAP_NODES, MAP_EDGES, RESEARCH_AREAS, NAV, QUALITY_TOOLS, ADVERSE_EVENTS, SUPPORT_JOBS, REX_GUIDE, HEALTH_POLICY, SAMPLE_PEERS, AUDIT_GUIDE, SECURITY_SOCIALE, PRICING_DATA, TIMELINE_POSTS, SAMPLE_NOTIFICATIONS, RH_LEAVE_TYPES, RH_THERAPEUTIC_PART_TIME, RH_PLANNING_CHANGE, RH_INTERNS_APPRENTICES, ARS_INSPECTION_GUIDE, MANAGEMENT_TRANSITION_GUIDE, GLOSSARY_TERMS, ERP_SECURITY_GUIDE, CONFORMITY_VISIT_GUIDE, MATERIOVIGILANCE_GUIDE, SIRENA_SYSTEM_GUIDE, NAPIR_LIBERTY_GUIDE, DIRECTOR_PENAL_RESPONSIBILITY_GUIDE };
 })();

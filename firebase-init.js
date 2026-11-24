@@ -16,6 +16,7 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  getDoc,
   where
 } from "firebase/firestore";
 import {
@@ -473,3 +474,49 @@ window.updateMosaqueName = updateMosaqueName;
 window.resendMosaqueEmail = resendMosaqueEmail;
 window.signOutMosaque = signOutMosaque;
 window.redeemPremiumCode = redeemPremiumCode;
+
+/**
+ * Lancement du paiement sécurisé Stripe Checkout via le Cloudflare Worker
+ */
+export async function startPremiumCheckout(priceId) {
+  if (!auth?.currentUser) {
+    throw new Error("Veuillez d'abord vous connecter ou créer votre compte.");
+  }
+  const user = auth.currentUser;
+  const token = await user.getIdToken();
+  const workerUrl = window.MOSAQUE_CLOUDFLARE_WORKER_URL || "https://mosaique-sante-stripe.workers.dev";
+
+  try {
+    const res = await fetch(`${workerUrl}/create-checkout-session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        priceId,
+        uid: user.uid,
+        email: user.email,
+        returnUrl: window.location.href.split("#")[0]
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || `Erreur de passerelle Cloudflare (${res.status})`);
+    }
+
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error("L'URL de paiement Stripe n'a pas été renvoyée par le serveur.");
+    }
+  } catch (err) {
+    console.warn("[Stripe Cloudflare Checkout]", err);
+    throw new Error(`Paiement sécurisé : ${err.message}. Vous pouvez aussi activer un code campus ou demander une convention.`);
+  }
+}
+
+window.startPremiumCheckout = startPremiumCheckout;
+window.redeemPremiumCodeMosaque = redeemPremiumCode;
