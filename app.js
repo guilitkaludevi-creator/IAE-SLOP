@@ -1858,48 +1858,174 @@ function renderPenalResponsibility() {
 
       ${renderAccessStatusBar()}
 
-      <!-- 1. LES FONDEMENTS JURIDIQUES -->
+      <!-- 1. LES FONDEMENTS JURIDIQUES (APPLE DESIGN RESTYLING) -->
       <div class="section-block" data-page-theme="Fondements">
-        <div class="section-title-row">
+        <div class="section-title-row" style="margin-bottom:20px">
           <div>
-            <span class="eyebrow">CADRE LÉGAL OPPOSABLE</span>
-            <h2>Les 2 principes clés de la responsabilité pénale</h2>
-            <p>Comprendre la mécanique de l'imputation pénale en droit de la santé et du travail.</p>
+            <span class="eyebrow" style="color:var(--mint);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">CADRE LÉGAL OPPOSABLE</span>
+            <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Les 2 principes clés de la responsabilité pénale</h2>
+            <p style="font-size:13px;color:var(--text-soft);margin:0">Comprendre la mécanique de l'imputation pénale en droit de la santé et du travail.</p>
           </div>
         </div>
-        <div class="grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
-          ${guide.fondements.map(f => `
-            <article class="content-card glass-panel" style="border-top:3px solid var(--accent-mint)">
-              <h3 style="font-size:15px;margin:0 0 8px;color:var(--text)">${esc(f.principe)}</h3>
-              <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0">${esc(f.detail)}</p>
-            </article>
-          `).join("")}
+
+        <div class="penal-principles-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:20px">
+          
+          <!-- CARTE 1 : ART 121-2 DU CODE PÉNAL - CUMUL PERSONNE MORALE / PHYSIQUE -->
+          <article class="content-card glass-panel apple-card penal-principle-card" style="padding:24px;border-top:4px solid var(--mint);display:flex;flex-direction:column;justify-content:space-between">
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <span class="apple-pill" style="background:rgba(117,224,194,0.14);color:var(--mint);font-weight:750">
+                  ${icon("shield", 12)} ARTICLE 121-2 DU CODE PÉNAL
+                </span>
+                <span class="tag compact-tag" style="font-size:10.5px">Principe de Cumul</span>
+              </div>
+
+              <h3 style="font-size:18px;font-weight:750;letter-spacing:-0.02em;margin:0 0 10px;color:var(--text)">
+                Cumul : Personne Morale & Personne Physique
+              </h3>
+
+              <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0 0 18px">
+                La responsabilité pénale de la structure (l'établissement de santé, l'association gestionnaire ou la société commerciale) n'exclut jamais celle du directeur pour les mêmes faits.
+              </p>
+
+              <div class="penal-duo-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:16px">
+                <div class="penal-sub-box" style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:750;color:var(--text);margin-bottom:8px">
+                    🏢 <span>L'Établissement</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-soft);line-height:1.55">
+                    <strong style="color:var(--mint)">Personne Morale</strong><br>
+                    • Amendes décuplées (taux x5)<br>
+                    • Fermeture temporaire ou définitive<br>
+                    • Affichage public du jugement
+                  </div>
+                </div>
+
+                <div class="penal-sub-box" style="padding:14px;background:rgba(244,63,94,0.05);border:1px solid rgba(244,63,94,0.22);border-radius:14px">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:750;color:#ff6b81;margin-bottom:8px">
+                    👤 <span>Le Directeur</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-soft);line-height:1.55">
+                    <strong style="color:#ff6b81">Personne Physique</strong><br>
+                    • Peines d'emprisonnement ferme/sursis<br>
+                    • Amendes pénales personnelles<br>
+                    • <span style="color:#ff6b81;font-weight:750">STRICTEMENT NON ASSURABLE</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="penal-takeaway" style="padding:12px 14px;background:rgba(117,224,194,0.06);border-radius:12px;border:1px solid rgba(117,224,194,0.2);display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.55">
+              ${icon("shield", 14)}
+              <span><strong>Règle d'or jurisprudentielle :</strong> Le Parquet assigne quasi-systématiquement les deux entités de concert afin de sanctionner la faute organisationnelle globale et la chaîne managériale.</span>
+            </div>
+          </article>
+
+          <!-- CARTE 2 : LOI FAUCHON ART 121-3 DU CODE PÉNAL - AUTEUR DIRECT VS INDIRECT -->
+          <article class="content-card glass-panel apple-card penal-principle-card" style="padding:24px;border-top:4px solid var(--gold);display:flex;flex-direction:column;justify-content:space-between">
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <span class="apple-pill" style="background:rgba(245,158,11,0.14);color:var(--gold);font-weight:750">
+                  ${icon("balance", 12)} LOI FAUCHON · ART. 121-3 DU CODE PÉNAL
+                </span>
+                <span class="tag warning" style="font-size:10.5px">Fautes Involontaires</span>
+              </div>
+
+              <h3 style="font-size:18px;font-weight:750;letter-spacing:-0.02em;margin:0 0 10px;color:var(--text)">
+                Distinction clé : Auteur Direct vs Auteur Indirect
+              </h3>
+
+              <p style="font-size:13px;line-height:1.6;color:var(--text-soft);margin:0 0 18px">
+                La loi du 10 juillet 2000 (dite loi Fauchon) protège les décideurs institutionnels : en matière non intentionnelle, la responsabilité pénale du directeur exige des fautes d'une gravité exceptionnelle.
+              </p>
+
+              <div class="penal-duo-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:16px">
+                <div class="penal-sub-box" style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:750;color:var(--text);margin-bottom:8px">
+                    🩺 <span>Auteur Direct</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-soft);line-height:1.55">
+                    <strong style="color:var(--text)">Professionnel de terrain</strong><br>
+                    • A commis le geste matériel ou l'acte de soin<br>
+                    • Seuil de condamnation : <strong style="color:var(--gold)">Faute simple</strong> (simple inattention, négligence ou maladresse ordinaire)
+                  </div>
+                </div>
+
+                <div class="penal-sub-box" style="padding:14px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:14px">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:750;color:var(--gold);margin-bottom:8px">
+                    🎯 <span>Auteur Indirect</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-soft);line-height:1.55">
+                    <strong style="color:var(--gold)">Le Directeur / Organisateur</strong><br>
+                    • A créé la situation de risque sans causer directement le dommage<br>
+                    • <strong>Double filtre strict Loi Fauchon :</strong><br>
+                    <span style="display:inline-block;margin-top:3px;color:var(--text);font-weight:650">1. Faute caractérisée</span> (risque grave connu et non traité)<br>
+                    <span style="display:inline-block;margin-top:2px;color:var(--text);font-weight:650">2. Violation délibérée</span> d'une règle de sécurité
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="penal-takeaway" style="padding:12px 14px;background:rgba(245,158,11,0.06);border-radius:12px;border:1px solid rgba(245,158,11,0.22);display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.55">
+              ${icon("alert", 14)}
+              <span><strong>Bouclier de gestion :</strong> Une difficulté budgétaire ou un manque d'effectif conjoncturel ne suffit pas à caractériser la faute pénale. La preuve d'actions engagées et d'alertes tracées auprès de l'ARS exonère le directeur.</span>
+            </div>
+          </article>
+
         </div>
       </div>
 
-      <!-- 2. CARTOGRAPHIE DES INFRACTIONS MAJEURES -->
-      <div class="section-block" data-page-theme="Infractions" style="margin-top:28px">
-        <div class="section-title-row">
+      <!-- 2. CARTOGRAPHIE DES INFRACTIONS MAJEURES (APPLE DESIGN RESTYLING) -->
+      <div class="section-block" data-page-theme="Infractions" style="margin-top:36px">
+        <div class="section-title-row" style="margin-bottom:20px">
           <div>
-            <span class="eyebrow" style="color:var(--accent-coral)">JURISPRUDENCE & RISQUES CONCRETS</span>
-            <h2>Les 5 infractions majeures engageant le chef d'établissement</h2>
-            <p>Analyse des chefs de poursuite les plus fréquents en milieu hospitalier et médico-social.</p>
+            <span class="eyebrow" style="color:var(--accent-coral);font-size:11px;font-weight:750;letter-spacing:0.08em;text-transform:uppercase">JURISPRUDENCE & RISQUES CONCRETS</span>
+            <h2 style="font-size:24px;font-weight:750;letter-spacing:-0.025em;margin:4px 0 6px">Les 5 infractions majeures engageant le chef d'établissement</h2>
+            <p style="font-size:13px;color:var(--text-soft);margin:0">Analyse des chefs de poursuite les plus fréquents en milieu hospitalier et médico-social.</p>
           </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:16px">
-          ${guide.principalesInfractions.map((inf, idx) => `
-            <article class="content-card glass-panel" style="padding:18px 20px;border-left:4px solid ${idx === 0 ? 'var(--accent-coral)' : idx === 3 ? 'var(--accent-rose)' : 'var(--accent-lavender)'}">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-                <h3 style="font-size:16px;margin:0;color:var(--text)">${esc(inf.nom)}</h3>
-                <span class="tag warning" style="font-size:11px">${esc(inf.sanction)}</span>
-              </div>
-              <div style="font-size:12.5px;font-weight:700;color:var(--gold);margin:8px 0 4px">Cas concrets issus de la jurisprudence :</div>
-              <ul class="bullet-list" style="font-size:13px;line-height:1.6;color:var(--text-soft)">
-                ${inf.exemplesJurisprudence.map(ex => `<li>${esc(ex)}</li>`).join("")}
-              </ul>
-            </article>
-          `).join("")}
+        <div style="display:flex;flex-direction:column;gap:18px">
+          ${guide.principalesInfractions.map((inf, idx) => {
+            const styles = [
+              { border: "var(--accent-coral)", pillBg: "rgba(244,63,94,0.14)", pillColor: "#ff6b81", icon: "alert" },
+              { border: "var(--accent-cyan)", pillBg: "rgba(143,199,245,0.14)", pillColor: "var(--accent-cyan)", icon: "shield" },
+              { border: "var(--gold)", pillBg: "rgba(245,158,11,0.14)", pillColor: "var(--gold)", icon: "target" },
+              { border: "var(--accent-rose)", pillBg: "rgba(251,113,133,0.14)", pillColor: "var(--accent-rose)", icon: "heart" },
+              { border: "var(--mint)", pillBg: "rgba(117,224,194,0.14)", pillColor: "var(--mint)", icon: "users" }
+            ][idx % 5];
+
+            return `
+              <article class="content-card glass-panel apple-card penal-infraction-card" style="padding:22px;border-left:4.5px solid ${styles.border}">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+                  <div style="flex:1;min-width:260px">
+                    <span class="apple-pill" style="background:${styles.pillBg};color:${styles.pillColor};margin-bottom:6px">
+                      ${icon(styles.icon, 12)} INFRACTION N°0${idx+1}
+                    </span>
+                    <h3 style="font-size:17px;font-weight:750;letter-spacing:-0.02em;margin:0;color:var(--text)">
+                      ${esc(inf.nom)}
+                    </h3>
+                  </div>
+                  <div class="penal-sanction-tag" style="padding:6px 14px;border-radius:999px;background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.3);color:#ff6b81;font-size:12px;font-weight:750;display:inline-flex;align-items:center;gap:6px">
+                    ${icon("alert", 13)} ${esc(inf.sanction)}
+                  </div>
+                </div>
+
+                <div style="font-size:12px;font-weight:750;letter-spacing:0.04em;text-transform:uppercase;color:var(--gold);margin:14px 0 8px;display:flex;align-items:center;gap:6px">
+                  ${icon("file", 14)} Cas concrets issus de la jurisprudence hospitalière & médico-sociale :
+                </div>
+
+                <div class="penal-cases-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px">
+                  ${inf.exemplesJurisprudence.map(ex => `
+                    <div class="penal-case-box" style="padding:12px 14px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:12px;font-size:12.5px;line-height:1.55;color:var(--text-soft);display:flex;align-items:flex-start;gap:8px">
+                      <span style="color:${styles.pillColor};font-size:14px;line-height:1;margin-top:2px">▸</span>
+                      <span>${esc(ex)}</span>
+                    </div>
+                  `).join("")}
+                </div>
+              </article>
+            `;
+          }).join("")}
         </div>
       </div>
 
@@ -1973,7 +2099,8 @@ function renderPenalResponsibility() {
 function renderGlossary() {
   const terms = GLOSSARY_TERMS || [];
   const categories = ["Tout", "Sanitaire", "Médico-social", "RH & Droit", "Qualité & Soins", "Instances & Tutelles"];
-  const letters = ["Tout", ...new Set(terms.map(t => t.sigle.charAt(0).toUpperCase()))].sort();
+  const alphaLetters = [...new Set(terms.map(t => t.sigle.charAt(0).toUpperCase()))].sort();
+  const letters = ["Tout", ...alphaLetters];
 
   return `
     <section class="page" aria-labelledby="glossary-title">
@@ -2004,11 +2131,15 @@ function renderGlossary() {
         </div>
 
         <div class="glossary-letter-bar" role="tablist" aria-label="Filtrer par lettre initiale">
-          ${letters.map(letter => `
-            <button type="button" class="glossary-letter-btn ${(state.glossaryLetter || "Tout") === letter ? "is-active" : ""}" data-glossary-letter="${esc(letter)}">
-              ${esc(letter)}
-            </button>
-          `).join("")}
+          ${letters.map(letter => {
+            const isAll = letter === "Tout";
+            const isActive = (state.glossaryLetter || "Tout") === letter;
+            return `
+              <button type="button" class="glossary-letter-btn ${isAll ? "is-all-btn" : ""} ${isActive ? "is-active" : ""}" data-glossary-letter="${esc(letter)}" role="tab" aria-selected="${String(isActive)}">
+                ${isAll ? "Tous" : esc(letter)}
+              </button>
+            `;
+          }).join("")}
         </div>
       </div>
 
@@ -5646,7 +5777,7 @@ document.addEventListener("click", event => {
   if (glossCat) {
     event.preventDefault();
     state.glossaryCategory = glossCat.dataset.glossaryCat;
-    $(".glossary-cat-btn").forEach(b => b.classList.toggle("is-active", b === glossCat));
+    $$(".glossary-cat-btn").forEach(b => b.classList.toggle("is-active", b === glossCat));
     updateGlossaryResults();
     return;
   }
@@ -5654,7 +5785,7 @@ document.addEventListener("click", event => {
   if (glossLetter) {
     event.preventDefault();
     state.glossaryLetter = glossLetter.dataset.glossaryLetter;
-    $(".glossary-letter-btn").forEach(b => b.classList.toggle("is-active", b === glossLetter));
+    $$(".glossary-letter-btn").forEach(b => b.classList.toggle("is-active", b === glossLetter));
     updateGlossaryResults();
     return;
   }
@@ -5914,8 +6045,8 @@ document.addEventListener("click", event => {
     state.glossaryLetter = "Tout";
     const input = $("#glossary-query");
     if (input) input.value = "";
-    $(".glossary-cat-btn").forEach(btn => btn.classList.toggle("is-active", btn.dataset.glossaryCat === "Tout"));
-    $(".glossary-letter-btn").forEach(btn => btn.classList.toggle("is-active", btn.dataset.glossaryLetter === "Tout"));
+    $$(".glossary-cat-btn").forEach(btn => btn.classList.toggle("is-active", btn.dataset.glossaryCat === "Tout"));
+    $$(".glossary-letter-btn").forEach(btn => btn.classList.toggle("is-active", btn.dataset.glossaryLetter === "Tout"));
     updateGlossaryResults();
     return;
   }
