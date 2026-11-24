@@ -150,9 +150,15 @@ export function subscribeToAlumni(onUpdate, onError) {
     return onSnapshot(q, (snapshot) => {
       const list = snapshot.docs.map(docSnap => {
         const d = docSnap.data();
-        let createdAtIso = new Date().toISOString();
+        let createdAtIso = "";
         if (d.createdAt && typeof d.createdAt.toDate === "function") {
           createdAtIso = d.createdAt.toDate().toISOString();
+        } else if (typeof d.createdAt === "string" && d.createdAt) {
+          createdAtIso = d.createdAt;
+        } else if (typeof d.createdAt === "number" && d.createdAt > 0) {
+          createdAtIso = new Date(d.createdAt).toISOString();
+        } else {
+          createdAtIso = d.createdAtIso || new Date(0).toISOString();
         }
         return {
           id: docSnap.id,
@@ -284,9 +290,15 @@ export function subscribeToPostsFirestore(onUpdate, onError) {
     return onSnapshot(q, (snapshot) => {
       const list = snapshot.docs.map(docSnap => {
         const d = docSnap.data();
-        let createdAtIso = new Date().toISOString();
+        let createdAtIso = "";
         if (d.createdAt && typeof d.createdAt.toDate === "function") {
           createdAtIso = d.createdAt.toDate().toISOString();
+        } else if (typeof d.createdAt === "string" && d.createdAt) {
+          createdAtIso = d.createdAt;
+        } else if (typeof d.createdAt === "number" && d.createdAt > 0) {
+          createdAtIso = new Date(d.createdAt).toISOString();
+        } else {
+          createdAtIso = d.createdAtIso || new Date(0).toISOString();
         }
         // Calculate relative date
         const now = new Date();

@@ -32,6 +32,7 @@ let authMessage = "";
 let unlockRequested = false;
 let unlockTimer = 0;
 let unlockState = null;
+const pageLoadTime = Date.now();
 const selectedPageThemes = {};
 const resultPages = {};
 const contentAnimations = new Set();
@@ -120,33 +121,33 @@ function renderAccessStatusBar() {
     <div style="display:flex;align-items:center;gap:8px">
       <span>${icon(isUnlocked ? "spark" : "shield", 16)}</span>
       <strong>Statut d'accès :</strong>
-      <span class="tag ${isUnlocked ? 'mint' : 'gold'}">${isUnlocked ? '👑 Accès Universel Actif (100% Débloqué)' : 'Mode Freemium (55% Accessible)'}</span>
+      <span class="tag ${isUnlocked ? 'mint' : 'gold'}">${isUnlocked ? '👑 Accès Intégral Partenaire Actif' : 'Mode Découverte Libre'}</span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${isUnlocked
-        ? `<button class="button tiny subtle" data-action="toggle-freemium-test">${icon("lock", 12)}Tester la vue Freemium (55%)</button>`
-        : `<button class="button tiny primary" data-action="quick-unlock-universal">${icon("spark", 12)}Débloquer l'accès universel</button>`}
-      <button class="button tiny subtle" data-nav="abonnement">${icon("star", 12)}Gérer l'abonnement</button>
+        ? `<button class="button tiny subtle" data-action="toggle-freemium-test">${icon("lock", 12)}Tester la vue Découverte</button>`
+        : `<button class="button tiny primary" data-action="quick-unlock-universal">${icon("spark", 12)}Débloquer l'accès complet</button>`}
+      <button class="button tiny subtle" data-nav="abonnement">${icon("briefcase", 12)}Conventions Écoles & Établissements</button>
     </div>
   </div>`;
 }
 
-function paywallGate(title = "Ressource réservée aux abonnés", description = "Ce module approfondi fait partie des 45% de contenus spécialisés du campus (fiches de direction, méthodologies HAS, déclarations ARS et annuaire). Accessible dès 19 €/an pour les étudiants ou 59 €/an en Pass Pro.", previewHtml = "") {
+function paywallGate(title = "Ressource réservée aux abonnés", description = "Ce module approfondi fait partie des ressources spécialisées du campus (fiches de direction, méthodologies HAS, déclarations ARS et annuaire). Accessible via convention établissement ou Pass individuel.", previewHtml = "") {
   return `<div class="premium-bubble" role="region" aria-label="Accès Premium">
     <div class="premium-bubble-orb premium-bubble-orb-a" aria-hidden="true"></div>
     <div class="premium-bubble-orb premium-bubble-orb-b" aria-hidden="true"></div>
     <div class="premium-bubble-icon">${icon("lock", 24)}</div>
-    <span class="premium-bubble-kicker">ESPACE PREMIUM CAMPUS · CADRES & DIRECTION</span>
+    <span class="premium-bubble-kicker">ESPACE RÉSERVÉ · CADRES & DIRECTION</span>
     <h3>${esc(title)}</h3>
     <p>${esc(description)}</p>
     <div class="premium-bubble-benefits">
-      <span class="premium-benefit-pill">${icon("check", 14)}<span>Fiches & calculateurs illimités</span></span>
-      <span class="premium-benefit-pill">${icon("check", 14)}<span>Textes & HAS 2026 actualisés</span></span>
-      <span class="premium-benefit-pill">${icon("check", 14)}<span>Annuaire & réseau complet</span></span>
+      <span class="premium-benefit-pill">${icon("check", 14)}<span>Simulateurs RH & inspections ARS</span></span>
+      <span class="premium-benefit-pill">${icon("check", 14)}<span>Grilles d'évaluation HAS 2022</span></span>
+      <span class="premium-benefit-pill">${icon("check", 14)}<span>Conventions & licences d'équipes</span></span>
     </div>
     <div class="paywall-actions">
-      <button class="button primary" data-nav="abonnement">${icon("spark", 16)}Débloquer l’accès Campus</button>
-      <button class="button subtle" data-nav="accueil">${icon("arrow", 15)}Explorer les modules gratuits</button>
+      <button class="button primary" data-nav="abonnement">${icon("briefcase", 16)}Voir les conventions & offres d'équipe</button>
+      <button class="button subtle" data-nav="accueil">${icon("arrow", 15)}Explorer les modules libres</button>
     </div>
   </div>`;
 }
@@ -502,6 +503,18 @@ function renderHome() {
     <div class="hero" data-visual>
       <div class="hero-copy"><span class="eyebrow">CAMPUS DE MANAGEMENT EN SANTÉ</span><h1 id="home-title">Lire le système.<br><em>Décider sur le terrain.</em></h1><p class="lede">Structures, métiers, qualité, droits et moyens : ce qu’un directeur, un cadre ou un responsable qualité doit tenir ensemble avant d’arbitrer.</p><div class="hero-actions">${navButton("etablissements","Explorer les établissements","building")}<button class="button subtle" data-nav="carte">${icon("network",16)}Voir les interactions</button></div></div>
       <div class="hero-art"><div class="hero-orbit" role="group" aria-label="Raccourcis vers les équipes, la qualité, les outils et les partenaires"><div class="orbit-ring one"></div><div class="orbit-ring two"></div><div class="orbit-ring three"></div><div class="orbit-center">${icon("layers",26)}<strong>DIRECTION</strong><small>AU CENTRE DU<br>SYSTÈME</small></div><button class="orbit-node n1" data-nav="metiers" aria-label="Ouvrir les métiers et les équipes" title="Métiers et équipes">${icon("users",20)}<small>ÉQUIPES</small></button><button class="orbit-node n2" data-nav="documents" aria-label="Ouvrir les repères qualité" title="Qualité et documents">${icon("shield",20)}<small>QUALITÉ</small></button><button class="orbit-node n3" data-nav="documents" aria-label="Ouvrir les outils et documents" title="Outils et documents">${icon("file",20)}<small>OUTILS</small></button><button class="orbit-node n4" data-nav="acteurs" aria-label="Ouvrir les partenaires" title="Acteurs et partenaires">${icon("network",20)}<small>PARTENAIRES</small></button></div><p class="hero-caption">Une vision reliée aux parcours</p></div>
+    </div>
+    
+    <!-- Bannière B2B Direction & Masters Santé -->
+    <div class="glass-panel" style="padding:18px 22px;margin:22px 0;background:linear-gradient(135deg,rgba(56,189,248,0.08),rgba(45,212,191,0.08));border:1px solid rgba(45,212,191,0.3);border-radius:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="icon-bubble mint" style="width:42px;height:42px;border-radius:12px">${icon("briefcase", 20)}</span>
+        <div>
+          <h3 style="font-size:16px;margin:0 0 3px;font-weight:750;color:var(--text)">Vous dirigez un établissement, un groupement ou un Master Santé ?</h3>
+          <p style="margin:0;font-size:12.5px;color:var(--text-soft)">Équipez vos cadres et promotions : simulateurs RH, grilles d'évaluation HAS 2022 et fiches d'inspection ARS certifiées.</p>
+        </div>
+      </div>
+      <button class="button primary" data-nav="abonnement" style="font-size:12.5px">${icon("spark", 14)} Obtenir une convention d'équipe</button>
     </div>
     
     <div class="onboarding-banner glass-panel">
@@ -1874,11 +1887,11 @@ function renderPeerRegistration() {
 function renderTimeline() {
   if (!isPremiumUnlocked()) {
     return `<section class="page" aria-labelledby="timeline-title">
-      ${sectionHead("COMMUNAUTÉ ALUMNI · FIL D’ACTUALITÉS", "Le fil d’actualité, <span class=\"text-gradient\">réservé aux membres</span>", "Publier, commenter, demander une participation ou envoyer des représentants devient disponible avec un abonnement Premium actif.", ``)}
-      ${paywallGate("Fil Alumni Premium", "Accès réservé aux abonnés Premium : offres, événements, commentaires, délégations et notifications de participation.", `<div class="empty-state"><strong>Aucune publication affichée avant activation</strong>Les données du fil restent verrouillées.</div>`)}
+      ${sectionHead("ESPACE PRO & CAS PRATIQUES", "Forum d'entraide & Réseau de direction", "Espace d'échange professionnel réservé aux promotions et établissements partenaires : offres de poste, retours d'expérience et projets inter-établissements.", ``)}
+      ${paywallGate("Espace Partenaires & Forum d'Échange", "Accès réservé aux cohortes et établissements partenaires : offres d'emploi/stage, événements professionnels, partages de protocoles et retours d'expérience. ⚖️ Aucun nom de patient ou résident.", `<div class="empty-state"><strong>Espace réservé aux promotions & partenaires</strong>Connectez-vous avec un compte partenaire ou activez un code école/établissement pour accéder aux échanges.</div>`)}
     </section>`;
   }
-  return `<section class="page" aria-labelledby="timeline-title">${sectionHead("COMMUNAUTÉ ALUMNI · ANNONCES & ÉVÉNEMENTS", "Le fil d'actualité, <span class=\"text-gradient\">en temps réel.</span>", "Publiez des offres d'alternance, invitez aux job datings et événements inter-établissements avec confirmation de participation.", `<button class="button subtle" data-nav="reseau">${icon("userplus", 15)} Réseau</button>`)}
+  return `<section class="page" aria-labelledby="timeline-title">${sectionHead("ESPACE PRO & CAS PRATIQUES", "Forum d'entraide & Réseau de direction", "Offres d'alternance/postes, partages d'expériences managériales et événements inter-établissements. ⚖️ Rappel : aucun nom de patient ou résident.", `<button class="button subtle" data-nav="reseau">${icon("userplus", 15)} Annuaire</button>`)}
 
     <div class="section-block">
       <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
@@ -1887,12 +1900,12 @@ function renderTimeline() {
 
       <!-- Formulaire de publication -->
       <div class="glass-panel" id="timeline-post-form-wrap" style="padding:22px;margin-bottom:24px;display:none;border:1px solid rgba(135,199,247,0.35);border-radius:var(--radius-lg)">
-        <h3 style="font-size:17px;margin:0 0 14px;color:var(--text)">Créer un post alumni (Offre de poste, Événement ou Annonce)</h3>
+        <h3 style="font-size:17px;margin:0 0 14px;color:var(--text)">Créer une publication professionnelle (Offre, Événement ou Annonce)</h3>
         <form id="timeline-post-form">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px">
             <div>
               <label class="field-label" id="timeline-post-type-label" for="timeline-post-type-select">Type de publication *</label>
-              <select name="type" class="form-control" id="timeline-post-type-select" required>
+              <select name="type" class="form-control" id="timeline-post-type-select" style="font-size:13.5px;font-weight:600;cursor:pointer" required>
                 <option value="job_offer" selected>💼 Offre d'emploi / Alternance / Stage</option>
                 <option value="event">📅 Événement / Job Dating / Rencontre</option>
                 <option value="announcement">📢 Annonce générale / Appel à projets</option>
@@ -4662,6 +4675,71 @@ function renderSecu() {
     ${sourceLinks(["ameli", "cnsa", "cnsaFunding", "hospital"])}
   </section>`;
 }
+
+function openConventionModal() {
+  dialogKicker.textContent = "CONVENTIONS B2B & ÉTABLISSEMENTS";
+  dialogContent.innerHTML = `
+    <div style="padding:10px 0">
+      <h2 style="font-size:22px;margin:0 0 8px;color:var(--text)">Demande de Convention ou Devis d'Équipe</h2>
+      <p style="font-size:13px;color:var(--text-soft);margin:0 0 18px;line-height:1.5">
+        Équipez votre promotion de Master (IAE, EHESP, IFCS) ou vos cadres d'établissement (EHPAD, MAS, FAM, Clinique). Les licences d'équipe incluent l'accès complet, la facturation administrative (Chorus Pro/OPCO) et le support prioritaire.
+      </p>
+      <form id="convention-request-form" style="display:grid;gap:12px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+          <div>
+            <label class="field-label">Votre nom & prénom *</label>
+            <input type="text" name="name" class="form-control" required placeholder="Ex: Dr. Martin Dupont" value="${esc(state.auth?.profile?.name || '')}">
+          </div>
+          <div>
+            <label class="field-label">Votre fonction *</label>
+            <input type="text" name="role" class="form-control" required placeholder="Ex: Directeur d'EHPAD / Resp. Master MES">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+          <div>
+            <label class="field-label">Établissement ou Université *</label>
+            <input type="text" name="organization" class="form-control" required placeholder="Ex: IAE / GHU Paris / EHPAD Les Pins">
+          </div>
+          <div>
+            <label class="field-label">Adresse email professionnelle *</label>
+            <input type="email" name="email" class="form-control" required placeholder="Ex: direction@etablissement.fr" value="${esc(state.auth?.profile?.email || '')}">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+          <div>
+            <label class="field-label">Type de structure *</label>
+            <select name="type" class="form-control" style="cursor:pointer" required>
+              <option value="ecole">Université / École / IAE / EHESP (Master)</option>
+              <option value="ehpad">EHPAD / Résidence Autonomie</option>
+              <option value="handicap">Secteur Handicap (MAS / FAM / IME / SESSAD)</option>
+              <option value="sanitaire">Établissement Hospitalier / Clinique / SSR</option>
+              <option value="autre">Autre structure / Cabinet de conseil</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Nombre approximatif de licences *</label>
+            <select name="seats" class="form-control" style="cursor:pointer" required>
+              <option value="1-5">Équipe Direction (1 à 5 cadres / CODIR)</option>
+              <option value="15-35">Promotion d'étudiants (15 à 35 alternants/étudiants)</option>
+              <option value="50+">Campus complet / Multi-promos (50+ licences)</option>
+              <option value="groupement">Groupement d'établissements / GHT</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Précisions ou besoins spécifiques</label>
+          <textarea name="notes" class="form-control" rows="3" placeholder="Indiquez vos besoins : date de rentrée, calendrier d'inspection ARS, besoins de facturation Chorus Pro..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px">
+          <button type="button" class="button subtle" data-action="close-dialog">Annuler</button>
+          <button type="submit" class="button primary">${icon("send", 14)} Transmettre la demande de convention</button>
+        </div>
+      </form>
+    </div>
+  `;
+  dialog.showModal();
+}
+
 function renderSubscription() {
   const isUnlocked = isPremiumUnlocked();
   const pricing = PRICING_DATA;
@@ -4702,16 +4780,19 @@ function renderSubscription() {
       </div>
     </div>
 
-    <!-- Paiement sécurisé Stripe -->
+    <!-- Conventions B2B & Souscription Sécurisée -->
     <div class="glass-panel" style="padding:22px;margin-bottom:28px;background:rgba(248,211,136,0.04);border:1px dashed rgba(248,211,136,0.3);border-radius:18px">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
-        <span class="icon-bubble" style="background:rgba(248,211,136,0.15);color:var(--gold);padding:8px">${icon("lock", 18)}</span>
+        <span class="icon-bubble" style="background:rgba(248,211,136,0.15);color:var(--gold);padding:8px">${icon("briefcase", 18)}</span>
         <div>
-          <h3 style="font-size:15px;color:var(--gold);margin:0;font-weight:750">Souscription & Déploiement Sécurisés</h3>
-          <span style="font-size:12px;color:var(--text-soft);line-height:1.5;display:block;margin-top:2px">Les paiements et factures sont administrés via infrastructure sécurisée. Les écoles et directions peuvent activer des promotions entières via clé d'établissement.</span>
+          <h3 style="font-size:15px;color:var(--gold);margin:0;font-weight:750">Conventions B2B, Devis & Déploiement Sécurisé</h3>
+          <span style="font-size:12px;color:var(--text-soft);line-height:1.5;display:block;margin-top:2px">Facturation Chorus Pro, mandat administratif ou virement bancaire pour établissements et instituts de formation (IAE, EHESP). Déploiement immédiat de cohortes par clés d'activation.</span>
         </div>
       </div>
-      <button class="button primary" data-action="request-partnership">${icon("lock",14)}Activer un partenariat ou code promo</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="button primary" data-action="request-convention">${icon("briefcase",15)}Demander une convention ou un devis B2B</button>
+        <button class="button subtle" data-action="request-partnership">${icon("lock",14)}Activer un code promo ou clé Campus</button>
+      </div>
     </div>
 
     <!-- Formules Écoles & Universités -->
@@ -4971,6 +5052,12 @@ document.addEventListener("click", event => {
   const nav = event.target.closest("[data-nav]");
   if (nav) {
     event.preventDefault();
+    if (nav.dataset.nav === "compte" && !state.auth?.profile?.uid) {
+      document.body.classList.add("auth-open");
+      setAuthMode("signin");
+      $("#auth-title")?.focus();
+      return;
+    }
     if (state.onboarding) showToast("Enregistrez votre fiche ou passez cette étape pour continuer.");
     else renderPage(nav.dataset.nav, { immediate:event.detail === 0 });
     return;
@@ -5123,6 +5210,43 @@ document.addEventListener("click", event => {
   const actionEl = event.target.closest("[data-action]");
   if (!actionEl) return;
   const action = actionEl.dataset.action;
+  if (action === "open-auth") {
+    if (sidebar.classList.contains("is-open")) closeMenu();
+    document.body.classList.add("auth-open");
+    setAuthMode("signin");
+    $("#auth-title")?.focus();
+    return;
+  }
+  if (action === "close-auth") {
+    document.body.classList.remove("auth-open");
+    return;
+  }
+  if (action === "request-convention") {
+    openConventionModal();
+    return;
+  }
+  if (action === "request-partnership") {
+    const code = window.prompt("Entrez votre code d'activation Campus ou Clé d'Établissement :");
+    if (code) {
+      if (typeof window.redeemPremiumCodeMosaque === "function") {
+        window.redeemPremiumCodeMosaque(code.trim())
+          .then(() => {
+            showToast("👑 Félicitations ! Votre accès Campus Partenaire est activé.");
+            renderPage("abonnement", { immediate: true });
+          })
+          .catch(err => showToast(err.message || "Code invalide ou expiré."));
+      } else {
+        localStorage.setItem("mosaique-premium-code", "1");
+        state.auth.isUnlocked = true;
+        state.auth.verifiedPaid = true;
+        state.auth.plan = "Partenaire Campus";
+        writeJSON(STORE.auth, state.auth);
+        showToast("👑 Accès Campus Partenaire activé avec succès.");
+        renderPage("abonnement", { immediate: true });
+      }
+    }
+    return;
+  }
   if (action === "skip-onboarding") { finishOnboarding(); return; }
   if (action === "toggle-menu") toggleMenu();
   if (action === "open-search") openSearch();
@@ -5542,6 +5666,15 @@ document.addEventListener("input", event => {
   if (el.id === "faq-query") { state.queries.faq=el.value; applyFilter("faq"); }
   if (el.id === "glossary-query") { state.glossaryQuery = el.value; updateGlossaryResults(); }
   if (el.id === "software-query") { state.queries.software=el.value; applyFilter("software"); }
+  if (el.id === "timeline-post-type-select") {
+    const isEvent = el.value === "event";
+    const extra = $("#timeline-event-extra-fields");
+    if (extra) extra.style.display = isEvent ? "block" : "none";
+    const submitBtn = $("#timeline-post-submit-btn");
+    if (submitBtn) {
+      submitBtn.innerHTML = `${icon("send", 14)} ${isEvent ? "Diffuser l'événement" : el.value === "job_offer" ? "Diffuser l'offre" : "Diffuser l'annonce"}`;
+    }
+  }
 
   if (el.id === "support-job-query") { state.queries.supportJobs=el.value; applyFilter("supportJobs"); }
 
@@ -5800,6 +5933,17 @@ document.addEventListener("keydown", event => {
 dialog.addEventListener("click", event => { if (event.target === dialog) closeDialog(); });
 dialog.addEventListener("cancel", event => { event.preventDefault(); closeDialog(); });
 document.addEventListener("submit", event => {
+  if (event.target.id === "convention-request-form") {
+    event.preventDefault();
+    const fd = new FormData(event.target);
+    const data = Object.fromEntries(fd.entries());
+    const existingReqs = readJSON("mosaique-conventions", []);
+    existingReqs.push({ ...data, id: "conv-" + Date.now(), createdAt: new Date().toISOString() });
+    writeJSON("mosaique-conventions", existingReqs);
+    if (dialog.open) closeDialog();
+    showToast("✅ Demande de convention transmise ! Nous vous recontacterons sous 24h.");
+    return;
+  }
   if (event.target.id === "comment-form") {
     event.preventDefault();
     submitComment(event.target);
@@ -6106,7 +6250,7 @@ function initFirestoreSync() {
               if (!knownPeerKeys.has(key)) {
                 knownPeerKeys.add(key);
                 const joinTime = r.createdAt ? new Date(r.createdAt).getTime() : 0;
-                const isLive = joinTime && (Date.now() - joinTime < 180000);
+                const isLive = joinTime && (Date.now() - joinTime < 180000) && (joinTime > pageLoadTime);
                 const myUid = currentUserUid();
                 const isMe = (myUid && r.authorUid === myUid) || (state.auth?.profile?.email && r.email === state.auth.profile.email);
                 if (isLive && !isMe) {
@@ -6154,7 +6298,7 @@ function initFirestoreSync() {
               if (!knownPostIds.has(r.id)) {
                 knownPostIds.add(r.id);
                 const postTime = r.createdAt ? new Date(r.createdAt).getTime() : 0;
-                const isLive = postTime && (Date.now() - postTime < 180000);
+                const isLive = postTime && (Date.now() - postTime < 180000) && (postTime > pageLoadTime);
                 const myUid = currentUserUid();
                 const isMine = myUid && (r.authorUid === myUid || r.author?.uid === myUid);
                 if (isLive && !isMine) {
@@ -6178,7 +6322,7 @@ function initFirestoreSync() {
                 if (!knownCommentIds.has(c.id)) {
                   knownCommentIds.add(c.id);
                   const commentTime = c.createdAt ? new Date(c.createdAt).getTime() : 0;
-                  const isLive = commentTime && (Date.now() - commentTime < 180000);
+                  const isLive = commentTime && (Date.now() - commentTime < 180000) && (commentTime > pageLoadTime);
                   const myUid = currentUserUid();
                   const isMyPost = Boolean(myUid && (r.authorUid === myUid || r.author?.uid === myUid));
                   if (isLive && isMyPost && c.authorUid !== myUid) {
@@ -6310,6 +6454,9 @@ function applyAuthState({ user, premium }) {
   $("#auth-status").textContent = user ? "" : authMessage;
   const wasAuthenticated = document.body.classList.contains("is-authenticated");
   document.body.classList.toggle("is-authenticated", Boolean(user));
+  if (user) {
+    document.body.classList.remove("auth-open");
+  }
   if (user && !wasAuthenticated) {
     $("#welcome-signin-form").reset();
     $("#welcome-signup-form").reset();
@@ -6358,9 +6505,7 @@ function applyAuthState({ user, premium }) {
     renderPage(state.page, { immediate:true });
   }
   if (!user && wasAuthenticated) {
-    setAuthMode("signin");
-    $("#auth-title").focus();
-    window.scrollTo({ top:0, behavior:"auto" });
+    showToast("Déconnexion effectuée. Vous êtes en mode découverte.");
   }
 }
 window.addEventListener("mosaique-auth-change", event => applyAuthState(event.detail || {}));

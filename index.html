@@ -96,6 +96,7 @@
           </form>
           <p class="auth-hint">Un email de validation vous sera envoyé après l’inscription.</p>
         </div>
+        <button class="quiet-link" type="button" data-action="close-auth" style="margin-top:16px;display:block;width:100%;text-align:center;font-size:12px;color:var(--mint);padding:8px">Accéder librement à l'application (Mode Découverte) →</button>
       </section>
     </main>
     <div class="app-shell">
@@ -118,8 +119,10 @@
           </div>
         </div>
         <div class="sidebar-footer">
+          <button class="button subtle" style="width:100%;margin-bottom:10px;font-size:12px;padding:8px" data-nav="abonnement"><span class="icon-wrap" data-icon="briefcase"></span> Conventions Écoles & Établissements</button>
           <button class="quiet-link" data-action="open-sources"><span class="icon-wrap" data-icon="book"></span> Sources & limites</button>
-          <button class="quiet-link" type="button" data-action="sign-out"><span class="icon-wrap" data-icon="logout"></span> Se déconnecter</button>
+          <button class="quiet-link auth-only" type="button" data-action="sign-out"><span class="icon-wrap" data-icon="logout"></span> Se déconnecter</button>
+          <button class="quiet-link guest-only" type="button" data-action="open-auth"><span class="icon-wrap" data-icon="spark"></span> Se connecter / S'inscrire</button>
           <div class="profile-mini"><div class="profile-orb">MES</div><div><strong>Parcours MES</strong><small>Direction · qualité · RH</small></div><span class="online-dot" aria-label="Prototype local"></span></div>
         </div>
       </aside>
@@ -132,11 +135,11 @@
           </div>
           <div class="breadcrumb"><span>ESPACE MANAGER</span><span class="crumb-slash">/</span><strong id="page-label">Accueil</strong></div>
           <div class="topbar-actions">
-            <button class="campus-chip" data-nav="abonnement" aria-label="Abonnement et Campus" title="Abonnement et offres Campus"><span data-icon="star"></span><span>Campus</span></button>
+            <button class="campus-chip" data-nav="abonnement" aria-label="Abonnement et Campus" title="Abonnement et offres Campus"><span data-icon="star"></span><span>Campus & B2B</span></button>
             <button class="search-trigger" data-action="open-search" aria-label="Rechercher dans les repères"><span data-icon="search"></span><span>Rechercher</span><kbd id="search-shortcut">Ctrl K</kbd></button>
             <button class="icon-button notif-toggle" data-action="toggle-notifications" aria-label="Notifications" title="Notifications réseau" style="position:relative"><span data-icon="bell"></span><span class="notif-badge" id="notif-badge" hidden>0</span></button>
             <button class="icon-button theme-toggle" data-action="toggle-theme" aria-label="Changer le thème"><span data-icon="sun"></span></button>
-            <button class="avatar-button" data-nav="compte" aria-label="Ouvrir mon compte">G</button>
+            <button class="avatar-button" data-nav="compte" aria-label="Ouvrir mon compte" title="Mon compte / Connexion">G</button>
           </div>
         </header>
         <div id="notif-popover" class="notif-popover" hidden></div>
@@ -159,7 +162,11 @@
           <span>Espace partenaire</span>
           <button type="button" data-nav="abonnement">Retirer les publicités avec Premium</button>
         </aside>
-        <footer class="main-footer"><span>Repères relus le 22 novembre 2026 · Prototype de travail</span><button class="quiet-link" data-action="open-sources">Comprendre les limites <span data-icon="arrow-up-right"></span></button></footer>
+        <footer class="main-footer">
+          <div style="font-size:11px;color:var(--text-soft);margin-bottom:6px">⚖️ <strong>Outil d'aide à la décision managériale</strong> — Conformité RGPD : Ne pas saisir de données nominatives de patients, résidents ou soignants (Application Non-HDS).</div>
+          <span>Mosaïque Santé · Prototype professionnel de gestion sanitaire et médico-sociale</span>
+          <button class="quiet-link" data-action="open-sources">Comprendre les limites <span data-icon="arrow-up-right"></span></button>
+        </footer>
       </div>
     </div>
 
