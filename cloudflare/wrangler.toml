@@ -1,0 +1,10 @@
+name = "mosaique-sante-stripe"
+main = "worker.js"
+compatibility_date = "2024-04-01"
+
+[vars]
+FIREBASE_PROJECT_ID = "iae-slop-3f7be"
+
+# Les secrets suivants doivent être configurés via la CLI wrangler :
+# npx wrangler secret put STRIPE_SECRET_KEY
+# npx wrangler secret put STRIPE_WEBHOOK_SECRET
